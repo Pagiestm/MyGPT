@@ -1,0 +1,27 @@
+echo "💅 Formatage du code..."
+npm run format
+if [ $? -ne 0 ]; then
+  echo "❌ Le formatage a échoué."
+  exit 1
+fi
+
+
+echo "🔧 Vérification du server..."
+npm run lint:server
+if [ $? -ne 0 ]; then
+  echo "❌ Le linting du server a échoué. Corrigez les erreurs avant de commiter."
+  exit 1
+fi
+
+
+echo "🔧 Vérification du client..."
+npm run lint:client
+if [ $? -ne 0 ]; then
+  echo "❌ Le linting du client a échoué. Corrigez les erreurs avant de commiter."
+  exit 1
+fi
+
+
+git add .
+
+echo "✅ Les vérifications de code sont passées !"

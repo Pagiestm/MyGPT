@@ -1,0 +1,94 @@
+# ========================================================================
+# WORKFLOW: Vérification de la qualité du code et tests
+# ========================================================================
+# Ce workflow:
+# 1. Vérifie le formatage du code (client et serveur)
+# 2. Vérifie le linting du code (client et serveur)
+# 3. Exécute les tests du serveur
+# ========================================================================
+
+name: Code Quality and Tests
+
+# Déclencheurs du workflow
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ======== JOB 1: VALIDATION DU CODE ========
+  quality-check:
+    name: Format and Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Utilisation de Node.js v20 LTS
+
+      # Installation des dépendances racine (Husky, CommitLint, etc.)
+      - name: Install root dependencies
+        run: npm ci
+      
+      # Installation des dépendances client
+      - name: Install client dependencies
+        run: cd client && npm ci
+      
+      # Installation des dépendances serveur
+      - name: Install server dependencies
+        run: cd server && npm ci
+
+      # Vérification du formatage
+      - name: Check formatting
+        run: npm run format
+        
+      # Vérification des règles de code avec ESLint
+      - name: Verify linting
+        run: npm run lint
+
+  # ======== JOB 2: TESTS SERVEUR ========
+  server-tests:
+    name: Server Tests
+    needs: quality-check  # Ce job ne s'exécute que si quality-check réussit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      # Installation des dépendances serveur
+      - name: Install server dependencies
+        run: cd server && npm ci
+        
+      # Tests unitaires
+      - name: Run unit tests
+        run: cd server && npm test
+      
+      # Tests end-to-end (optionnels, peuvent nécessiter une base de données)
+      - name: Run e2e tests
+        run: cd server && npm run test:e2e
+        # Vous pouvez ajouter "continue-on-error: true" si vous ne voulez pas
+        # que l'échec des tests e2e fasse échouer le workflow entier
+        continue-on-error: true
+        
+      # Rapport de couverture de test (optionnel)
+      - name: Generate test coverage
+        run: cd server && npm run test:cov
+        
+      # Archivage des rapports de couverture (optionnel)
+      - name: Archive test coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: server/coverage/
+          if-no-files-found: ignore  # ne pas échouer si le répertoire n'existe pas
