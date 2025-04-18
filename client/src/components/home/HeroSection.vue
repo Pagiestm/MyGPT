@@ -29,9 +29,7 @@
                         </router-link>
                     </div>
                 </div>
-                <div
-                    class="lg:w-1/2 flex justify-center lg:justify-end"
-                >
+                <div class="lg:w-1/2 flex justify-center lg:justify-end">
                     <div
                         class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-2xl"
                     >

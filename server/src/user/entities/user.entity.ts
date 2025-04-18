@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Conversation } from '../../conversation/entities/conversation.entity';
 
 @Entity('users')
 export class User {
@@ -35,6 +37,9 @@ export class User {
   })
   @Column()
   password: string;
+
+  @OneToMany(() => Conversation, (conversation) => conversation.user)
+  conversations: Conversation[];
 
   @ApiProperty({
     description: 'Date de création du compte',
