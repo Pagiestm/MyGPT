@@ -49,7 +49,6 @@ describe('MessageController', () => {
     findAll: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
-    remove: jest.fn(),
     searchInConversation: jest.fn(),
   };
 
@@ -442,7 +441,12 @@ describe('MessageController', () => {
       mockMessageService.update.mockResolvedValue(updatedMessage);
 
       // Act
-      const result = await controller.update(req, messageId, updateDto, false);
+      const result = await controller.update(
+        req,
+        messageId,
+        updateDto,
+        'false',
+      );
 
       // Assert
       expectCalledWith(mockMessageService.findOne, messageId);
@@ -484,7 +488,7 @@ describe('MessageController', () => {
       mockMessageService.update.mockResolvedValue(updatedMessage);
 
       // Act
-      const result = await controller.update(req, messageId, updateDto, true);
+      const result = await controller.update(req, messageId, updateDto, 'true');
 
       // Assert
       expectCalledWith(mockMessageService.update, messageId, updateDto, true);
@@ -522,71 +526,6 @@ describe('MessageController', () => {
         controller.update(req, messageId, updateDto),
       ).rejects.toThrow(BadRequestException);
       expectNotCalled(mockMessageService.update);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove a message when user owns the conversation', async () => {
-      // Arrange
-      const req = createMockRequest();
-      const messageId = 'msg-123';
-      const conversationId = 'conv-123';
-
-      const mockMessage = {
-        id: messageId,
-        content: 'To be deleted',
-        conversationId,
-        isFromAi: false,
-      } as Message;
-
-      const mockConversation = {
-        id: conversationId,
-        userId: req.user.id,
-        isPublic: false,
-      } as Conversation;
-
-      // Mock services
-      mockMessageService.findOne.mockResolvedValue(mockMessage);
-      mockConversationService.findOne.mockResolvedValue(mockConversation);
-      mockMessageService.remove.mockResolvedValue(undefined);
-
-      // Act
-      await controller.remove(req, messageId);
-
-      // Assert
-      expectCalledWith(mockMessageService.findOne, messageId);
-      expectCalledWith(mockConversationService.findOne, conversationId);
-      expectCalledWith(mockMessageService.remove, messageId);
-    });
-
-    it('should throw BadRequestException when user does not own the conversation', async () => {
-      // Arrange
-      const req = createMockRequest();
-      const messageId = 'msg-123';
-      const conversationId = 'conv-123';
-
-      const mockMessage = {
-        id: messageId,
-        content: 'To be deleted',
-        conversationId,
-        isFromAi: false,
-      } as Message;
-
-      const mockConversation = {
-        id: conversationId,
-        userId: 'other-user',
-        isPublic: false,
-      } as Conversation;
-
-      // Mock services
-      mockMessageService.findOne.mockResolvedValue(mockMessage);
-      mockConversationService.findOne.mockResolvedValue(mockConversation);
-
-      // Act & Assert
-      await expect(controller.remove(req, messageId)).rejects.toThrow(
-        BadRequestException,
-      );
-      expectNotCalled(mockMessageService.remove);
     });
   });
 });

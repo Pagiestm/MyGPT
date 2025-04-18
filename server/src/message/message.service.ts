@@ -81,7 +81,7 @@ export class MessageService {
   async update(
     id: string,
     updateMessageDto: UpdateMessageDto,
-    regenerateAiResponse: boolean = false,
+    regenerateAiResponse: boolean = true,
   ): Promise<Message> {
     const message = await this.findOne(id);
 
@@ -94,47 +94,46 @@ export class MessageService {
     message.content = updateMessageDto.content;
     await this.messagesRepository.save(message);
 
-    // Si demandé, régénérer la réponse de l'IA
     if (regenerateAiResponse) {
-      // Trouver le message de l'IA qui suit ce message
-      const nextAiMessage = await this.messagesRepository
+      const subsequentMessages = await this.messagesRepository
         .createQueryBuilder('message')
         .where('message.conversationId = :conversationId', {
           conversationId: message.conversationId,
         })
-        .andWhere('message.isFromAi = :isFromAi', { isFromAi: true })
         .andWhere('message.createdAt > :messageDate', {
           messageDate: message.createdAt,
         })
+        .andWhere('message.id != :messageId', {
+          // Cette ligne garantit que le message modifié n'est pas inclus
+          messageId: message.id,
+        })
         .orderBy('message.createdAt', 'ASC')
-        .limit(1)
-        .getOne();
+        .getMany();
 
-      if (nextAiMessage) {
-        // Récupérer l'historique jusqu'au message modifié
-        const conversationHistory = await this.getConversationHistory(
-          message.conversationId,
-          message.id,
-        );
-
-        // Obtenir une nouvelle réponse de l'IA
-        const newAiResponse = await this.aiAdapter.getAiResponse(
-          updateMessageDto.content,
-          conversationHistory,
-        );
-
-        // Mettre à jour le message de l'IA
-        nextAiMessage.content = newAiResponse;
-        await this.messagesRepository.save(nextAiMessage);
+      // Si des messages suivants existent, les supprimer
+      if (subsequentMessages.length > 0) {
+        await this.messagesRepository.remove(subsequentMessages);
       }
+
+      const conversationHistory = await this.getConversationHistory(
+        message.conversationId,
+      );
+
+      const newAiResponse = await this.aiAdapter.getAiResponse(
+        message.content,
+        conversationHistory,
+      );
+
+      const newAiMessage = this.messagesRepository.create({
+        content: newAiResponse,
+        conversationId: message.conversationId,
+        isFromAi: true,
+      });
+
+      await this.messagesRepository.save(newAiMessage);
     }
 
     return message;
-  }
-
-  async remove(id: string): Promise<void> {
-    const message = await this.findOne(id);
-    await this.messagesRepository.remove(message);
   }
 
   async searchInConversation(searchDto: SearchMessagesDto): Promise<Message[]> {

@@ -297,6 +297,7 @@ describe('MessageService', () => {
 
       messagesRepository.findOne.mockResolvedValue(originalMessage);
       messagesRepository.save.mockResolvedValue(updatedMessage);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
 
       // Act
       const result = await service.update(id, updateDto, false);
@@ -349,25 +350,22 @@ describe('MessageService', () => {
         content: updateDto.content,
       };
 
-      const aiMessage = {
-        id: 'msg-124',
-        content: 'Original answer',
-        conversationId: 'conv-123',
-        isFromAi: true,
-        createdAt: new Date(2023, 1, 2),
-      };
-
-      const updatedAiMessage = {
-        ...aiMessage,
-        content: 'Updated answer',
-      };
+      const subsequentMessages = [
+        {
+          id: 'msg-124',
+          content: 'Original answer',
+          conversationId: 'conv-123',
+          isFromAi: true,
+          createdAt: new Date(2023, 1, 2),
+        },
+      ];
 
       messagesRepository.findOne.mockResolvedValue(userMessage);
       messagesRepository.save.mockResolvedValueOnce(updatedUserMessage);
-      mockQueryBuilder.getOne.mockResolvedValue(aiMessage);
-      mockQueryBuilder.getMany.mockResolvedValue([{ ...userMessage }]);
+      mockQueryBuilder.getMany
+        .mockResolvedValueOnce(subsequentMessages) // Pour les messages à supprimer
+        .mockResolvedValueOnce([{ ...userMessage }]); // Pour l'historique
       aiAdapter.getAiResponse.mockResolvedValue('Updated answer');
-      messagesRepository.save.mockResolvedValueOnce(updatedAiMessage);
 
       // Act
       const result = await service.update(id, updateDto, true);
@@ -376,43 +374,29 @@ describe('MessageService', () => {
       expect(messagesRepository.findOne).toHaveBeenCalled();
       expect(messagesRepository.save).toHaveBeenCalledWith(updatedUserMessage);
       expect(mockQueryBuilder.where).toHaveBeenCalled();
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledTimes(3);
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalled();
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'message.createdAt > :messageDate',
+        expect.any(Object),
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'message.id != :messageId',
+        expect.any(Object),
+      );
+      expect(messagesRepository.remove).toHaveBeenCalledWith(
+        subsequentMessages,
+      );
       expect(aiAdapter.getAiResponse).toHaveBeenCalledWith(
         updateDto.content,
         expect.any(Array),
       );
-      expect(messagesRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ content: 'Updated answer' }),
+      expect(messagesRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'Updated answer',
+          conversationId: 'conv-123',
+          isFromAi: true,
+        }),
       );
       expect(result).toEqual(updatedUserMessage);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove a message', async () => {
-      // Arrange
-      const id = 'msg-123';
-      const message = { id, content: 'To be deleted' };
-
-      messagesRepository.findOne.mockResolvedValue(message);
-
-      // Act
-      await service.remove(id);
-
-      // Assert
-      expect(messagesRepository.findOne).toHaveBeenCalled();
-      expect(messagesRepository.remove).toHaveBeenCalledWith(message);
-    });
-
-    it('should throw NotFoundException if message to remove does not exist', async () => {
-      // Arrange
-      const id = 'non-existent';
-      messagesRepository.findOne.mockResolvedValue(null);
-
-      // Act & Assert
-      await expect(service.remove(id)).rejects.toThrow(NotFoundException);
-      expect(messagesRepository.remove).not.toHaveBeenCalled();
     });
   });
 

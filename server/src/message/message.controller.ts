@@ -5,12 +5,10 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
   UseGuards,
   Request,
   BadRequestException,
-  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -193,13 +191,14 @@ export class MessageController {
   @UseGuards(AuthenticatedGuard)
   @ApiCookieAuth()
   @ApiOperation({
-    summary: "Mettre à jour un message et regénérer la réponse de l'IA",
+    summary: "Mettre à jour un message et la réponse de l'IA",
   })
   @ApiParam({ name: 'id', description: 'ID unique du message' })
   @ApiQuery({
     name: 'regenerateAi',
     required: false,
-    description: "Indique s'il faut regénérer la réponse de l'IA",
+    description:
+      "Indique s'il faut regénérer la réponse de l'IA (true par défaut)",
     type: Boolean,
   })
   @ApiResponse({
@@ -213,7 +212,7 @@ export class MessageController {
     @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateMessageDto: UpdateMessageDto,
-    @Query('regenerateAi') regenerateAi?: boolean,
+    @Query('regenerateAi') regenerateAi?: string,
   ): Promise<Message> {
     const message = await this.messageService.findOne(id);
 
@@ -227,38 +226,8 @@ export class MessageController {
       );
     }
 
-    return this.messageService.update(
-      id,
-      updateMessageDto,
-      regenerateAi === true,
-    );
-  }
+    const shouldRegenerateAi = regenerateAi !== 'false';
 
-  @Delete(':id')
-  @UseGuards(AuthenticatedGuard)
-  @ApiCookieAuth()
-  @HttpCode(204)
-  @ApiOperation({ summary: 'Supprimer un message' })
-  @ApiParam({ name: 'id', description: 'ID unique du message' })
-  @ApiResponse({ status: 204, description: 'Message supprimé' })
-  @ApiResponse({ status: 404, description: 'Message non trouvé' })
-  @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async remove(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<void> {
-    const message = await this.messageService.findOne(id);
-
-    // Vérifier que l'utilisateur a accès à la conversation de ce message
-    const conversation = await this.conversationService.findOne(
-      message.conversationId,
-    );
-    if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only delete messages in your own conversations',
-      );
-    }
-
-    return this.messageService.remove(id);
+    return this.messageService.update(id, updateMessageDto, shouldRegenerateAi);
   }
 }

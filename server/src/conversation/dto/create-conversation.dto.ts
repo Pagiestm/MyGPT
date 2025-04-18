@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsString,
@@ -16,12 +16,13 @@ export class CreateConversationDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({
-    description: "ID de l'utilisateur propriétaire",
-    example: 'c1f1e1e2-1234-4fd5-a4e2-bb123456789a',
-  })
   @IsUUID()
-  userId: string;
+  @IsOptional()
+  @ApiPropertyOptional({
+    description: 'ID utilisateur (ajouté automatiquement par le serveur)',
+    readOnly: true,
+  })
+  userId?: string;
 
   @ApiProperty({
     description: 'Indique si la conversation est publique',
