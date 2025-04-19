@@ -1,5 +1,5 @@
 <template>
-    <div class="animate-fade-in-up">
+    <div class="animate-fade-in-up p-2">
         <MessageHeader :message="message" :is-regenerating="isRegenerating" />
 
         <div

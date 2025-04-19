@@ -3,6 +3,16 @@
         <ConversationHeader
             :title="conversation?.name || 'Chargement...'"
             @update:title="updateTitle"
+            @toggle-search="toggleSearch"
+        />
+
+        <!-- Barre de recherche -->
+        <MessageSearch
+            v-if="isSearchOpen"
+            class="px-4 py-2 border-b border-gray-200 bg-white"
+            :conversation-id="conversationId || ''"
+            @scroll-to-message="scrollToMessage"
+            @close="isSearchOpen = false"
         />
 
         <div
@@ -24,8 +34,12 @@
             <div v-else class="space-y-6 py-4">
                 <div
                     v-for="message in filteredMessages"
+                    :id="`message-${message.id}`"
                     :key="message.id"
                     class="group"
+                    :class="{
+                        'highlight-message': highlightedMessageId === message.id
+                    }"
                 >
                     <MessageBubble
                         :message="message"
@@ -67,6 +81,7 @@ import MessageBubble from '../../components/chat/message/MessageBubble.vue';
 import MessageInput from '../../components/chat/message/MessageInput.vue';
 import LoadingDots from '../../components/chat/message/LoadingDots.vue';
 import EmptyState from '../../components/chat/EmptyState.vue';
+import MessageSearch from '../../components/chat/message/MessageSearch.vue';
 
 // Services
 const route = useRoute();
@@ -90,6 +105,10 @@ const isUpdatingMessage = ref(false);
 const editingMessage = ref<Message | null>(null);
 const regeneratingMessageId = ref<string | null>(null);
 const pendingAiMessageId = ref<string | null>(null);
+
+// États de la recherche
+const isSearchOpen = ref(false);
+const highlightedMessageId = ref<string | null>(null);
 
 // Computed properties
 const filteredMessages = computed(() => {
@@ -128,6 +147,9 @@ watch(
         if (newId !== conversationId.value) {
             conversationId.value = newId as string;
             await loadConversationData();
+            // Réinitialiser l'état de la recherche lors du changement de conversation
+            isSearchOpen.value = false;
+            highlightedMessageId.value = null;
         }
     }
 );
@@ -140,11 +162,53 @@ async function loadConversationData() {
     scrollToBottom();
 }
 
+function toggleSearch() {
+    isSearchOpen.value = !isSearchOpen.value;
+    if (!isSearchOpen.value) {
+        highlightedMessageId.value = null;
+    }
+}
+
 function updateTitle(newTitle: string) {
     if (conversation.value && conversationId.value && parentUpdateTitle) {
         conversation.value.name = newTitle;
         parentUpdateTitle(conversationId.value, newTitle);
     }
+}
+
+// Fonction pour faire défiler vers un message trouvé
+function scrollToMessage(messageId: string) {
+    highlightedMessageId.value = messageId;
+
+    nextTick(() => {
+        const messageElement = document.getElementById(`message-${messageId}`);
+
+        if (messageElement && messagesContainer.value) {
+            // 1. Ajouter la classe d'animation
+            messageElement.classList.add('highlight-message');
+
+            // 2. Faire défiler vers le message
+            messagesContainer.value.scrollTo({
+                top: messageElement.offsetTop - 100,
+                behavior: 'smooth'
+            });
+
+            // 3. Préparer la sortie fluide après un délai
+            setTimeout(() => {
+                // D'abord, ajouter une classe de sortie (fade-out)
+                messageElement.classList.add('highlight-fade-out');
+
+                // Puis, après la fin de l'animation de sortie, retirer toutes les classes
+                setTimeout(() => {
+                    messageElement.classList.remove(
+                        'highlight-message',
+                        'highlight-fade-out'
+                    );
+                    highlightedMessageId.value = null;
+                }, 1000); // Durée de l'animation de sortie
+            }, 3000);
+        }
+    });
 }
 
 async function fetchConversation() {
@@ -278,3 +342,31 @@ function scrollToBottom() {
     }
 }
 </script>
+
+<style scoped>
+/* Animation d'entrée et maintien */
+.highlight-message {
+    animation: highlight-appear 0.5s ease;
+    background-color: rgba(99, 102, 241, 0.1);
+    border-radius: 0.5rem;
+    transition: all 1s ease-out;
+}
+
+/* Animation de sortie */
+.highlight-fade-out {
+    background-color: rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 rgba(99, 102, 241, 0);
+}
+
+@keyframes highlight-appear {
+    0% {
+        background-color: rgba(99, 102, 241, 0);
+    }
+    50% {
+        background-color: rgba(99, 102, 241, 0.3);
+    }
+    100% {
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+}
+</style>

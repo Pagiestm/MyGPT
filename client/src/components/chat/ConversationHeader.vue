@@ -41,8 +41,27 @@
             </div>
         </div>
 
-        <!-- Boutons de navigation -->
         <div class="flex items-center space-x-3 ml-4">
+            <!-- Bouton de recherche -->
+            <button
+                class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
+                title="Rechercher dans la conversation"
+                @click="$emit('toggleSearch')"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="w-5 h-5"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z"
+                        clip-rule="evenodd"
+                    />
+                </svg>
+            </button>
+
             <button
                 class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
                 title="Accueil"
@@ -62,6 +81,7 @@
                     />
                 </svg>
             </button>
+
             <button
                 class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
                 title="Mon profil"
@@ -80,6 +100,7 @@
                     />
                 </svg>
             </button>
+
             <button
                 class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
                 title="Partager"
@@ -107,7 +128,10 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const props = defineProps<{ title: string }>();
-const emit = defineEmits<{ (e: 'update:title', title: string): void }>();
+const emit = defineEmits<{
+    (e: 'update:title', title: string): void;
+    (e: 'toggleSearch'): void;
+}>();
 
 const isEditing = ref(false);
 const editValue = ref('');
