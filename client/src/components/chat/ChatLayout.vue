@@ -1,15 +1,34 @@
 <template>
-    <div class="flex h-screen bg-gray-50">
-        <!-- Sidebar des conversations -->
-        <ConversationSidebar
-            :conversations="conversations"
-            :is-loading="isLoadingSidebar"
-            :active-conversation-id="conversationId"
-            @create="createNewConversation"
-            @select="selectConversation"
-            @delete="deleteConversation"
-            @search="searchConversations"
-        />
+    <div class="flex flex-col md:flex-row h-screen bg-gray-50">
+        <!-- Sidebar des conversations (responsive) -->
+        <div
+            :class="[
+                'transition-all duration-300 ease-in-out',
+                isMobile ? 'fixed z-40 h-screen' : 'w-72',
+                isSidebarOpen
+                    ? 'translate-x-0'
+                    : '-translate-x-full md:translate-x-0'
+            ]"
+        >
+            <ConversationSidebar
+                :conversations="conversations"
+                :is-loading="isLoadingSidebar"
+                :active-conversation-id="conversationId"
+                @create="createNewConversation"
+                @select="selectConversation"
+                @delete="deleteConversation"
+                @delete-confirm="showDeleteConfirm($event)"
+                @search="searchConversations"
+                @close-sidebar="isSidebarOpen = false"
+            />
+        </div>
+
+        <!-- Overlay pour mobile quand la sidebar est ouverte -->
+        <div
+            v-if="isMobile && isSidebarOpen"
+            class="fixed inset-0 bg-black opacity-30 z-30"
+            @click="isSidebarOpen = false"
+        ></div>
 
         <!-- Zone principale du chat -->
         <div class="flex-1 flex flex-col overflow-hidden bg-white shadow-lg">
@@ -23,14 +42,24 @@
         >
             {{ notificationMessage }}
         </div>
+
+        <!-- Modal de confirmation de suppression - positionnée au niveau du layout -->
+        <DeleteConfirmModal
+            v-if="showDeleteConfirmModal"
+            title="Supprimer la conversation"
+            message="Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible."
+            @confirm="confirmDeleteConversation"
+            @cancel="showDeleteConfirmModal = false"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, provide, watch } from 'vue';
+import { ref, onMounted, provide, watch, computed, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useToast, TYPE } from 'vue-toastification';
 import ConversationSidebar from './ConversationSidebar.vue';
+import DeleteConfirmModal from './DeleteConfirmModal.vue';
 import Database from '../../utils/database.utils';
 import { Conversation } from '../../interfaces/conversation.interface';
 
@@ -45,10 +74,55 @@ const isLoadingSidebar = ref(true);
 const conversationId = ref<string | null>(null);
 const showNotification = ref(false);
 const notificationMessage = ref('');
+const windowWidth = ref(window.innerWidth);
+const isSidebarOpen = ref(false);
+
+// Gestion de la suppression
+const showDeleteConfirmModal = ref(false);
+const conversationIdToDelete = ref<string | null>(null);
+
+function showDeleteConfirm(id: string) {
+    conversationIdToDelete.value = id;
+    showDeleteConfirmModal.value = true;
+}
+
+function confirmDeleteConversation() {
+    if (conversationIdToDelete.value) {
+        // Effectuer la suppression
+        deleteConversation(conversationIdToDelete.value);
+        showDeleteConfirmModal.value = false;
+    }
+}
+
+// Responsive detection
+const isMobile = computed(() => windowWidth.value < 768);
 
 // Providers
 provide('conversations', conversations);
 provide('updateConversationTitle', updateConversationTitle);
+provide('isMobile', isMobile);
+
+// Fonctions responsive
+function toggleSidebar() {
+    isSidebarOpen.value = !isSidebarOpen.value;
+}
+
+provide('toggleSidebar', toggleSidebar);
+
+function handleResize() {
+    windowWidth.value = window.innerWidth;
+    if (!isMobile.value) {
+        isSidebarOpen.value = false;
+    }
+}
+
+// Sélectionne une conversation (avec fermeture sidebar sur mobile)
+function selectConversation(id: string) {
+    router.push(`/chat/${id}`);
+    if (isMobile.value) {
+        isSidebarOpen.value = false;
+    }
+}
 
 // Surveillance des changements de route
 watch(
@@ -60,7 +134,15 @@ watch(
 );
 
 // Initialisation
-onMounted(fetchConversations);
+onMounted(() => {
+    fetchConversations();
+    window.addEventListener('resize', handleResize);
+    handleResize();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 
 // Récupérer les conversations
 async function fetchConversations() {
@@ -90,11 +172,6 @@ async function searchConversations(keyword: string) {
     } finally {
         isLoadingSidebar.value = false;
     }
-}
-
-// Sélectionne une conversation
-function selectConversation(id: string) {
-    router.push(`/chat/${id}`);
 }
 
 // Crée une nouvelle conversation

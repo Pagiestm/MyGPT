@@ -1,5 +1,5 @@
 <template>
-    <div class="text-gray-800">
+    <div class="text-gray-800 w-full">
         <!-- Texte et listes formatés -->
         <div v-for="(part, index) in formattedParts" :key="`part-${index}`">
             <!-- Listes à puces -->
@@ -32,7 +32,7 @@
         <div
             v-for="(block, index) in codeBlocks"
             :key="`code-${index}`"
-            class="mt-3 mb-4 rounded-lg overflow-hidden shadow-sm"
+            class="mt-3 mb-4 rounded-lg overflow-hidden shadow-sm relative"
         >
             <!-- En-tête -->
             <div
@@ -53,8 +53,8 @@
 
             <!-- Contenu du code -->
             <pre
-                class="bg-gray-800 text-gray-100 p-4 text-sm overflow-x-auto leading-relaxed font-mono"
-            ><code>{{ block.code }}</code></pre>
+                class="bg-gray-800 text-gray-100 p-4 text-sm font-mono code-block-container"
+            ><code class="break-words whitespace-pre-wrap overflow-wrap-anywhere">{{ block.code }}</code></pre>
         </div>
     </div>
 </template>
@@ -211,5 +211,23 @@ function copyCode(code: string, index: number): void {
 <style scoped>
 .formatted-text {
     white-space: pre-wrap;
+}
+
+/* Styles ajoutés pour gérer le scroll horizontal */
+.code-block-container {
+    max-width: 100%;
+    overflow-x: auto;
+    /* Pour les navigateurs modernes */
+    overflow-wrap: break-word;
+}
+
+code {
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+/* Propriété CSS personnalisée pour Firefox et les navigateurs modernes */
+.overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
 }
 </style>

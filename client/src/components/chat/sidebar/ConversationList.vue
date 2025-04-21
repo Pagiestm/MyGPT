@@ -23,10 +23,13 @@
             >
                 <!-- Titre de la conversation -->
                 <div
-                    class="truncate flex-1 font-medium"
+                    class="flex-1 font-medium overflow-hidden"
                     @click="$emit('select', conversation.id)"
                 >
-                    <span>{{ conversation.name }}</span>
+                    <span
+                        class="block truncate max-w-[180px] sm:max-w-[200px] md:max-w-full"
+                        >{{ conversation.name }}</span
+                    >
                 </div>
 
                 <!-- Menu contextuel -->

@@ -1,14 +1,23 @@
 <template>
     <div
-        class="w-72 bg-white shadow-lg flex flex-col h-full border-r border-gray-200 p-4"
+        class="bg-white shadow-lg flex flex-col h-full border-r border-gray-200 p-4 w-full md:w-72"
     >
         <!-- Bouton Nouvelle conversation -->
-        <div class="mb-4">
+        <div class="mb-4 flex items-center justify-between">
             <button
-                class="w-full bg-indigo-500 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center font-semibold"
+                class="flex-1 bg-indigo-500 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center font-semibold"
                 @click="$emit('create')"
             >
                 <i class="fas fa-plus mr-2"></i> Nouvelle conversation
+            </button>
+
+            <!-- Bouton pour fermer la sidebar sur mobile -->
+            <button
+                v-if="isMobile"
+                class="ml-2 p-2 rounded-lg text-gray-500 hover:bg-gray-100 md:hidden"
+                @click="$emit('close-sidebar')"
+            >
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
@@ -42,22 +51,12 @@
                 @delete="confirmDelete"
             />
         </div>
-
-        <!-- Modal de confirmation de suppression -->
-        <DeleteConfirmModal
-            v-if="showDeleteConfirm"
-            title="Supprimer la conversation"
-            message="Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible."
-            @confirm="deleteConversation"
-            @cancel="showDeleteConfirm = false"
-        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { Conversation } from '../../interfaces/conversation.interface';
-import DeleteConfirmModal from './DeleteConfirmModal.vue';
 import SearchBar from './sidebar/SearchBar.vue';
 import LoadingIndicator from './sidebar/LoadingIndicator.vue';
 import EmptyState from './sidebar/EmptyState.vue';
@@ -75,8 +74,13 @@ const emit = defineEmits<{
     (e: 'create'): void;
     (e: 'select', id: string): void;
     (e: 'delete', id: string): void;
+    (e: 'delete-confirm', id: string): void;
     (e: 'search', keyword: string): void;
+    (e: 'close-sidebar'): void;
 }>();
+
+// Détection responsive
+const isMobile = inject('isMobile', ref(false));
 
 // Gestion de la recherche
 const searchQuery = ref('');
@@ -98,21 +102,9 @@ function toggleMenu(id: string) {
     openMenuId.value = openMenuId.value === id ? null : id;
 }
 
-// Gestion de la suppression
-const showDeleteConfirm = ref(false);
-const conversationIdToDelete = ref<string | null>(null);
-
 function confirmDelete(id: string) {
-    conversationIdToDelete.value = id;
-    showDeleteConfirm.value = true;
+    emit('delete-confirm', id);
     openMenuId.value = null;
-}
-
-function deleteConversation() {
-    if (conversationIdToDelete.value) {
-        emit('delete', conversationIdToDelete.value);
-        showDeleteConfirm.value = false;
-    }
 }
 
 // Ferme le menu lorsqu'on clique ailleurs

@@ -4,6 +4,7 @@
             :title="conversation?.name || 'Chargement...'"
             @update:title="updateTitle"
             @toggle-search="toggleSearch"
+            @toggle-sidebar="toggleSidebar"
         />
 
         <!-- Barre de recherche -->
@@ -31,7 +32,7 @@
             <EmptyState v-else-if="messages.length === 0" />
 
             <!-- Messages -->
-            <div v-else class="space-y-6 py-4">
+            <div v-else class="space-y-4 md:space-y-6 py-2 md:py-4">
                 <div
                     v-for="message in filteredMessages"
                     :id="`message-${message.id}`"
@@ -134,6 +135,8 @@ const tempAiMessage = computed(() => ({
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
 }));
+
+const toggleSidebar = inject('toggleSidebar', () => {});
 
 // Initialisation
 onMounted(async () => {
