@@ -7,12 +7,12 @@
             <div class="flex-shrink-0">
                 <router-link to="/" class="flex items-center">
                     <div
-                        class="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md mr-2"
+                        class="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md mr-2"
                     >
                         <span class="text-white font-bold text-xl">M</span>
                     </div>
                     <span
-                        class="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-500 inline-block text-transparent bg-clip-text"
+                        class="font-bold text-xl bg-gradient-to-r from-indigo-500 to-indigo-600 inline-block text-transparent bg-clip-text"
                     >
                         MyGPT
                     </span>
@@ -23,14 +23,16 @@
             <div class="hidden md:flex items-center space-x-1">
                 <router-link
                     to="/"
-                    class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    active-class="bg-indigo-50 text-indigo-700"
                 >
                     Accueil
                 </router-link>
                 <router-link
                     v-if="authStore.isAuthenticated()"
                     to="/chat"
-                    class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    active-class="bg-indigo-50 text-indigo-700"
                 >
                     Chat
                 </router-link>
@@ -45,7 +47,7 @@
                         class="hidden md:block relative"
                     >
                         <button
-                            class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                            class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
                             @click.stop="toggleProfileMenu"
                         >
                             <span>Mon compte</span>
@@ -73,7 +75,7 @@
                         >
                             <router-link
                                 to="/profile"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                             >
                                 <div class="flex items-center">
                                     <svg
@@ -122,7 +124,8 @@
                     <div class="md:hidden flex space-x-1">
                         <router-link
                             to="/profile"
-                            class="p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                            class="p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-indigo-50"
+                            active-class="bg-indigo-50 text-indigo-700"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -141,7 +144,8 @@
                         </router-link>
                         <router-link
                             to="/chat"
-                            class="p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                            class="p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-indigo-50"
+                            active-class="bg-indigo-50 text-indigo-700"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -183,7 +187,7 @@
                 <template v-else>
                     <router-link
                         to="/login"
-                        class="hidden md:flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                        class="hidden md:flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 transition-colors shadow-sm"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -204,7 +208,7 @@
 
                     <router-link
                         to="/login"
-                        class="md:hidden p-2 rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        class="md:hidden p-2 rounded-md text-white bg-indigo-500 hover:bg-indigo-600"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

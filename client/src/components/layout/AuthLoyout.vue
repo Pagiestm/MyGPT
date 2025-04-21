@@ -1,13 +1,13 @@
 <template>
     <div
-        class="min-h-screen flex flex-col bg-gradient-to-r from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8"
+        class="min-h-screen flex flex-col bg-gradient-to-r from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8"
     >
         <!-- Logo/Branding -->
         <div class="text-center mb-8">
             <h1
                 class="text-4xl font-extrabold text-gray-900 flex items-center justify-center"
             >
-                <span class="text-blue-600 mr-2">My</span>GPT
+                <span class="text-indigo-500 mr-2">My</span>GPT
             </h1>
             <p class="mt-2 text-lg text-gray-600">
                 Votre assistant IA personnel
@@ -20,10 +20,10 @@
         >
             <!-- En-tête -->
             <div
-                class="px-6 py-8 bg-gradient-to-r from-blue-600 to-indigo-700 text-white"
+                class="px-6 py-8 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white"
             >
                 <h2 class="text-2xl font-bold text-center">{{ title }}</h2>
-                <p class="mt-2 text-blue-100 text-center">{{ subtitle }}</p>
+                <p class="mt-2 text-indigo-100 text-center">{{ subtitle }}</p>
             </div>
 
             <!-- Contenu -->
@@ -38,7 +38,7 @@
                 <span class="text-sm text-gray-600">{{ footerText }} </span>
                 <router-link
                     :to="footerLink"
-                    class="text-sm text-blue-600 hover:text-blue-700 font-medium ml-1"
+                    class="text-sm text-indigo-500 hover:text-indigo-700 font-medium ml-1"
                 >
                     {{ footerLinkText }}
                 </router-link>
@@ -50,7 +50,7 @@
             <div class="flex items-center justify-center space-x-6">
                 <div class="flex items-center">
                     <svg
-                        class="h-8 w-8 text-blue-600"
+                        class="h-8 w-8 text-indigo-500"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                     >
@@ -66,7 +66,7 @@
                 </div>
                 <div class="flex items-center">
                     <svg
-                        class="h-8 w-8 text-blue-600"
+                        class="h-8 w-8 text-indigo-500"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                     >

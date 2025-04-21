@@ -9,7 +9,7 @@
         <div class="relative">
             <!-- Cercle externe -->
             <div
-                class="w-20 h-20 border-4 border-blue-100/30 border-t-blue-500 rounded-full animate-spin"
+                class="w-20 h-20 border-4 border-indigo-100/30 border-t-indigo-500 rounded-full animate-spin"
             ></div>
 
             <!-- Cercle interne -->
@@ -21,7 +21,7 @@
             <div
                 class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl font-bold text-white"
             >
-                <span class="text-blue-400">M</span
+                <span class="text-indigo-400">M</span
                 ><span class="text-indigo-300">G</span>
             </div>
         </div>

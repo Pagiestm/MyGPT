@@ -1,5 +1,5 @@
 <template>
-    <section class="py-20 bg-gray-100">
+    <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <SectionTitle
                 title="Comment ça marche"
@@ -11,10 +11,10 @@
             >
                 <template v-for="(step, index) in steps" :key="`step-${index}`">
                     <div
-                        class="bg-white rounded-xl shadow-md p-8 mb-8 md:mb-0 w-full md:w-auto md:flex-1"
+                        class="bg-white rounded-xl shadow-md p-8 mb-8 md:mb-0 w-full md:w-auto md:flex-1 border border-gray-100 hover:border-indigo-100 transition-all duration-300"
                     >
                         <div
-                            class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-6 mx-auto"
+                            class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-6 mx-auto"
                         >
                             {{ step.number }}
                         </div>
@@ -30,7 +30,7 @@
 
                     <div
                         v-if="index < steps.length - 1"
-                        class="hidden md:block text-blue-600 mx-4"
+                        class="hidden md:block text-indigo-400 mx-4"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -52,12 +52,12 @@
 
             <!-- Chat Demo -->
             <div
-                class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden"
+                class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
             >
                 <div class="p-6">
                     <div class="flex justify-end mb-4">
                         <div
-                            class="bg-blue-600 text-white rounded-lg py-2 px-4 max-w-xs"
+                            class="bg-indigo-500 text-white rounded-lg py-2 px-4 max-w-xs"
                         >
                             <p>
                                 Comment puis-je améliorer ma productivité au

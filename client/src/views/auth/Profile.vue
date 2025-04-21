@@ -4,7 +4,7 @@
             <!-- En-tête de profil -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
                 <div
-                    class="bg-gradient-to-r from-blue-500 to-indigo-600 h-20"
+                    class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-20"
                 ></div>
                 <div class="p-6">
                     <!-- Avatar et nom d'utilisateur -->
@@ -50,7 +50,7 @@
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 mr-2 text-blue-600"
+                            class="h-5 w-5 mr-2 text-indigo-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -66,7 +66,9 @@
                     </h2>
 
                     <div v-if="profile" class="grid grid-cols-1 gap-4">
-                        <div class="p-3 bg-gray-50 rounded-lg">
+                        <div
+                            class="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-100 transition-all duration-300"
+                        >
                             <div class="text-sm font-medium text-gray-500">
                                 Pseudo
                             </div>
@@ -74,7 +76,9 @@
                                 {{ profile.pseudo }}
                             </div>
                         </div>
-                        <div class="p-3 bg-gray-50 rounded-lg">
+                        <div
+                            class="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-100 transition-all duration-300"
+                        >
                             <div class="text-sm font-medium text-gray-500">
                                 Email
                             </div>
@@ -99,21 +103,71 @@
             <!-- Actions -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                    <h2
+                        class="text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 mr-2 text-indigo-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                        </svg>
                         Actions
                     </h2>
                     <div class="space-y-3">
                         <button
-                            class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm font-medium"
+                            class="w-full py-2 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors text-sm font-medium flex items-center justify-center"
                             @click="logout"
                         >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-4 w-4 mr-2"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                            </svg>
                             Se déconnecter
                         </button>
 
                         <a
                             href="#"
-                            class="block w-full text-center py-2 text-xs text-red-600 hover:text-red-800"
+                            class="w-full text-center py-2 text-xs text-red-600 hover:text-red-800 transition-colors flex items-center justify-center"
                         >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-3 w-3 mr-1"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                            </svg>
                             Supprimer mon compte
                         </a>
                     </div>
