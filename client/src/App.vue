@@ -1,14 +1,28 @@
 <template>
-    <div class="flex flex-col min-h-screen font-sans text-gray-800 antialiased">
-        <Navbar />
-        <main class="flex-grow">
-            <router-view />
-        </main>
-        <Footer />
-    </div>
+    <component :is="layoutComponent">
+        <router-view />
+    </component>
 </template>
 
 <script setup lang="ts">
-import Navbar from './components/Navbar.vue';
-import Footer from './components/Footer.vue';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+// Importation des layouts
+import DefaultLayout from './components/layout/DefaultLayout.vue';
+import ChatLayout from './components/chat/ChatLayout.vue';
+
+const route = useRoute();
+
+// Déterminer le layout à utiliser en fonction de la route
+const layoutComponent = computed(() => {
+    const layout = route.meta.layout || 'default';
+
+    // Retourner le composant de layout approprié
+    if (layout === 'chat') {
+        return ChatLayout;
+    }
+
+    return DefaultLayout;
+});
 </script>

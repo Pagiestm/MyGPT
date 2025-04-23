@@ -1,9 +1,9 @@
 <template>
     <div
-        class="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+        class="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100 hover:border-indigo-100"
     >
         <div
-            class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-6 mx-auto"
+            class="w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mb-6 mx-auto"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"

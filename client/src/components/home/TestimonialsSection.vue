@@ -10,11 +10,11 @@
                 <div
                     v-for="(testimonial, index) in testimonials"
                     :key="`testimonial-${index}`"
-                    class="bg-white rounded-xl shadow-md p-6 relative"
+                    class="bg-white rounded-xl shadow-md p-6 relative border border-gray-100 hover:border-indigo-100 transition-all duration-300"
                 >
                     <div class="text-gray-600 mb-8 relative">
                         <svg
-                            class="absolute -top-4 -left-4 h-10 w-10 text-blue-200 transform -rotate-12 z-0"
+                            class="absolute -top-4 -left-4 h-10 w-10 text-indigo-200 transform -rotate-12 z-0"
                             fill="currentColor"
                             viewBox="0 0 32 32"
                         >
@@ -30,13 +30,13 @@
                         <img
                             :src="testimonial.author.image"
                             :alt="testimonial.author.name"
-                            class="h-12 w-12 rounded-full mr-4"
+                            class="h-12 w-12 rounded-full mr-4 border-2 border-indigo-100"
                         />
                         <div>
                             <h4 class="font-semibold text-gray-900">
                                 {{ testimonial.author.name }}
                             </h4>
-                            <p class="text-gray-500 text-sm">
+                            <p class="text-indigo-500 text-sm">
                                 {{ testimonial.author.role }}
                             </p>
                         </div>

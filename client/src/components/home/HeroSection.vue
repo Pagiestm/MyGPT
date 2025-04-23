@@ -1,5 +1,5 @@
 <template>
-    <section class="bg-gradient-to-r from-blue-50 to-indigo-100 py-20">
+    <section class="bg-gradient-to-r from-indigo-50 to-indigo-100 py-20">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row lg:items-center">
                 <div class="lg:w-1/2 mb-10 lg:mb-0">
@@ -17,27 +17,25 @@
                     >
                         <router-link
                             to="/register"
-                            class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                         >
                             Commencer gratuitement
                         </router-link>
                         <router-link
                             to="/demo"
-                            class="inline-flex justify-center items-center px-6 py-3 border border-blue-600 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            class="inline-flex justify-center items-center px-6 py-3 border border-indigo-500 text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                         >
                             Voir la démo
                         </router-link>
                     </div>
                 </div>
-                <div
-                    class="lg:w-1/2 flex justify-center lg:justify-end"
-                >
+                <div class="lg:w-1/2 flex justify-center lg:justify-end">
                     <div
-                        class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-2xl"
+                        class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-2xl border border-gray-200"
                     >
                         <!-- En-tête du chat -->
                         <div
-                            class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center"
+                            class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4 flex items-center"
                         >
                             <div
                                 class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mr-3"
@@ -61,7 +59,7 @@
                                 <h3 class="text-lg font-medium text-white">
                                     MyGPT Assistant
                                 </h3>
-                                <p class="text-xs text-blue-100">
+                                <p class="text-xs text-indigo-100">
                                     En ligne maintenant
                                 </p>
                             </div>
@@ -74,7 +72,7 @@
                             <!-- Message de l'assistant -->
                             <div class="flex items-start">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 flex-shrink-0"
+                                    class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-2 flex-shrink-0"
                                 >
                                     <span class="text-xs font-bold text-white"
                                         >AI</span
@@ -98,14 +96,14 @@
                             <!-- Message de l'utilisateur -->
                             <div class="flex items-start justify-end">
                                 <div
-                                    class="bg-blue-600 p-3 rounded-lg shadow-sm max-w-xs"
+                                    class="bg-indigo-500 p-3 rounded-lg shadow-sm max-w-xs"
                                 >
                                     <p class="text-white">
                                         Peux-tu m'expliquer comment fonctionne
                                         l'intelligence artificielle ?
                                     </p>
                                     <span
-                                        class="text-xs text-blue-200 mt-1 block"
+                                        class="text-xs text-indigo-200 mt-1 block"
                                         >10:04</span
                                     >
                                 </div>
@@ -114,7 +112,7 @@
                             <!-- Message de l'assistant -->
                             <div class="flex items-start">
                                 <div
-                                    class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 flex-shrink-0"
+                                    class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-2 flex-shrink-0"
                                 >
                                     <span class="text-xs font-bold text-white"
                                         >AI</span
@@ -140,13 +138,13 @@
                             <!-- Indicateur de saisie -->
                             <div class="flex items-center space-x-1 ml-10">
                                 <div
-                                    class="h-2 w-2 rounded-full bg-gray-400 animate-bounce delay-0"
+                                    class="h-2 w-2 rounded-full bg-indigo-300 animate-bounce delay-0"
                                 ></div>
                                 <div
-                                    class="h-2 w-2 rounded-full bg-gray-400 animate-bounce delay-150"
+                                    class="h-2 w-2 rounded-full bg-indigo-300 animate-bounce delay-150"
                                 ></div>
                                 <div
-                                    class="h-2 w-2 rounded-full bg-gray-400 animate-bounce delay-300"
+                                    class="h-2 w-2 rounded-full bg-indigo-300 animate-bounce delay-300"
                                 ></div>
                             </div>
                         </div>
@@ -159,10 +157,10 @@
                                 <input
                                     type="text"
                                     placeholder="Écrivez votre message..."
-                                    class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                    class="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 />
                                 <button
-                                    class="ml-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+                                    class="ml-2 bg-indigo-500 text-white p-2 rounded-full hover:bg-indigo-600 transition-colors"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"

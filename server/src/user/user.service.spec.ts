@@ -21,6 +21,7 @@ describe('UserService', () => {
     pseudo: 'testuser',
     password: 'hashedPassword',
     created_at: new Date(),
+    conversations: [],
   };
 
   const mockCreateUserDto: CreateUserDto = {

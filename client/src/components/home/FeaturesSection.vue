@@ -1,4 +1,25 @@
-// src/components/home/FeaturesSection.vue
+<template>
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionTitle
+                title="Fonctionnalités puissantes"
+                subtitle="Découvrez ce que MyGPT peut faire pour vous"
+            />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <FeatureCard
+                    v-for="(feature, index) in features"
+                    :key="`feature-${index}`"
+                    :icon="feature.icon"
+                    :title="feature.title"
+                    :description="feature.description"
+                    class="hover:border-indigo-100 transition-all duration-300"
+                />
+            </div>
+        </div>
+    </section>
+</template>
+
 <script setup lang="ts">
 import SectionTitle from '../common/SectionTitle.vue';
 import FeatureCard from '../common/FeatureCard.vue';
@@ -30,24 +51,3 @@ const features = [
     }
 ];
 </script>
-
-<template>
-    <section class="py-20">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle
-                title="Fonctionnalités puissantes"
-                subtitle="Découvrez ce que MyGPT peut faire pour vous"
-            />
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <FeatureCard
-                    v-for="(feature, index) in features"
-                    :key="`feature-${index}`"
-                    :icon="feature.icon"
-                    :title="feature.title"
-                    :description="feature.description"
-                />
-            </div>
-        </div>
-    </section>
-</template>

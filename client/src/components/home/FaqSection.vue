@@ -1,5 +1,5 @@
 <template>
-    <section class="py-20 bg-gray-100">
+    <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <SectionTitle
                 title="Questions fréquentes"
@@ -10,7 +10,7 @@
                 <div
                     v-for="(item, index) in faqItems"
                     :key="`faq-${index}`"
-                    class="bg-white rounded-xl shadow-sm overflow-hidden"
+                    class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
                 >
                     <button
                         class="w-full flex justify-between items-center p-4 text-left font-medium focus:outline-none"
@@ -18,7 +18,7 @@
                     >
                         <span>{{ item.question }}</span>
                         <svg
-                            class="h-6 w-6 text-blue-600 transform transition-transform duration-200"
+                            class="h-6 w-6 text-indigo-500 transform transition-transform duration-200"
                             :class="activeFaq === index ? 'rotate-180' : ''"
                             fill="none"
                             viewBox="0 0 24 24"

@@ -148,7 +148,7 @@ async function handleLogin() {
 
         if (result) {
             toast.success('Connexion réussie !');
-            router.push('/');
+            router.push('/chat');
         } else {
             formError.value = userErrorMessages.auth.invalidCredentials;
             toast.error(formError.value);
