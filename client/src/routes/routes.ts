@@ -50,6 +50,26 @@ const routes: RouteRecordRaw[] = [
         }
     },
     {
+        path: '/chat/saved',
+        name: 'shared-conversations',
+        component: () => import('../views/chat/share/SharedConversations.vue'),
+        meta: {
+            title: 'Conversations sauvegardées',
+            layout: 'chat',
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/chat/shared/:shareLink',
+        name: 'shared-conversation',
+        component: () => import('../views/chat/share/SharedConversation.vue'),
+        meta: {
+            title: 'Conversation partagée',
+            layout: 'chat',
+            requiresAuth: true
+        }
+    },
+    {
         path: '/chat/:id',
         name: 'ConversationDetail',
         component: () => import('../views/chat/ConversationDetail.vue'),
@@ -60,17 +80,6 @@ const routes: RouteRecordRaw[] = [
         },
         props: true
     }
-    // Route pour les conversations partagées (optionnelle)
-    // {
-    //     path: '/shared/:shareLink',
-    //     name: 'SharedConversation',
-    //     component: () => import('../views/chat/SharedConversation.vue'),
-    //     meta: {
-    //         title: 'Conversation partagée',
-    //         layout: 'default'
-    //     },
-    //     props: true
-    // }
 ];
 
 export default routes;

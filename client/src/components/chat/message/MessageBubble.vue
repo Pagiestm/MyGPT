@@ -86,7 +86,7 @@ const editTextarea = ref<InstanceType<typeof MessageEditor> | null>(null);
 
 // Classes calculées pour la bulle de message
 const bubbleClasses = computed(() => [
-    'rounded-2xl shadow-sm inline-block',
+    'rounded-2xl shadow-sm overflow-hidden',
     props.message.isFromAi ? 'bg-white border border-gray-200' : 'bg-primary',
     props.isRegenerating && props.message.isFromAi ? 'p-2' : 'p-5'
 ]);

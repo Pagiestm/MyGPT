@@ -48,6 +48,12 @@
                         class="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-lg py-1 w-40 z-10"
                     >
                         <button
+                            class="w-full text-left px-4 py-2 flex items-center text-gray-700 hover:bg-gray-100"
+                            @click.stop="$emit('share', conversation.id)"
+                        >
+                            <i class="fas fa-share-alt mr-2"></i> Partager
+                        </button>
+                        <button
                             class="w-full text-left px-4 py-2 flex items-center text-red-500 hover:bg-gray-100"
                             @click.stop="$emit('delete', conversation.id)"
                         >
@@ -74,6 +80,7 @@ defineEmits<{
     (e: 'select', id: string): void;
     (e: 'toggle-menu', id: string): void;
     (e: 'delete', id: string): void;
+    (e: 'share', id: string): void;
 }>();
 
 function formatDateGroup(dateString: string): string {

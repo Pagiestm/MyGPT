@@ -106,12 +106,6 @@
                     >
                         <i class="fas fa-user mr-2"></i> Mon profil
                     </a>
-                    <a
-                        href="#"
-                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-500"
-                    >
-                        <i class="fas fa-share-alt mr-2"></i> Partager
-                    </a>
                 </div>
             </div>
 
@@ -151,24 +145,6 @@
                         <path
                             fill-rule="evenodd"
                             d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
-                </button>
-
-                <button
-                    class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
-                    title="Partager"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        class="w-5 h-5"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M15.75 4.5a3 3 0 11.825 2.066l-8.421 4.679a3.002 3.002 0 010 1.51l8.421 4.679a3 3 0 11-.729 1.31l-8.421-4.678a3 3 0 110-4.132l8.421-4.679a3 3 0 01-.096-.755z"
                             clip-rule="evenodd"
                         />
                     </svg>

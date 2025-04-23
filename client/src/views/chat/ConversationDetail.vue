@@ -25,7 +25,10 @@
                 v-if="isLoading"
                 class="flex justify-center items-center h-full"
             >
-                <LoadingDots />
+                <LoadingOverlay
+                    :show="isLoading"
+                    message="Chargement en cours..."
+                />
             </div>
 
             <!-- Conversation vide -->
@@ -80,7 +83,7 @@ import { Conversation } from '../../interfaces/conversation.interface';
 import ConversationHeader from '../../components/chat/ConversationHeader.vue';
 import MessageBubble from '../../components/chat/message/MessageBubble.vue';
 import MessageInput from '../../components/chat/message/MessageInput.vue';
-import LoadingDots from '../../components/chat/message/LoadingDots.vue';
+import LoadingOverlay from '../../components/LoadingOverlay.vue';
 import EmptyState from '../../components/chat/EmptyState.vue';
 import MessageSearch from '../../components/chat/message/MessageSearch.vue';
 

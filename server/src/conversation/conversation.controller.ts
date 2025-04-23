@@ -29,6 +29,7 @@ import { ShareConversationDto } from './dto/share-conversation.dto';
 import { SearchConversationDto } from './dto/search-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
+import { SaveSharedConversationDto } from './dto/saveShared-conversation.dto';
 
 interface RequestWithUser extends ExpressRequest {
   user: {
@@ -102,6 +103,47 @@ export class ConversationController {
       userId: req.user.id,
     };
     return this.conversationService.search(searchDto);
+  }
+
+  @Get('saved')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({
+    summary: "Récupérer les conversations sauvegardées par l'utilisateur",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des conversations sauvegardées',
+    type: [Conversation],
+  })
+  @ApiResponse({ status: 401, description: 'Non autorisé' })
+  async getSavedConversations(
+    @Request() req: RequestWithUser,
+  ): Promise<Conversation[]> {
+    return this.conversationService.findSavedByUser(req.user.id);
+  }
+
+  @Post('save-shared')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({
+    summary: 'Sauvegarder une conversation partagée dans sa liste personnelle',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Conversation sauvegardée avec succès',
+    type: Conversation,
+  })
+  @ApiResponse({ status: 400, description: 'Requête invalide' })
+  @ApiResponse({ status: 401, description: 'Non autorisé' })
+  async saveSharedConversation(
+    @Request() req: RequestWithUser,
+    @Body() saveDto: SaveSharedConversationDto,
+  ): Promise<Conversation> {
+    return this.conversationService.saveSharedConversation(
+      req.user.id,
+      saveDto,
+    );
   }
 
   @Get('shared/:shareLink')

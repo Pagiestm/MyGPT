@@ -20,6 +20,7 @@
                 @delete-confirm="showDeleteConfirm($event)"
                 @search="searchConversations"
                 @close-sidebar="isSidebarOpen = false"
+                @share="showShareModal($event)"
             />
         </div>
 
@@ -32,7 +33,9 @@
 
         <!-- Zone principale du chat -->
         <div class="flex-1 flex flex-col overflow-hidden bg-white shadow-lg">
-            <router-view></router-view>
+            <router-view
+                @conversation-saved="handleConversationSaved"
+            ></router-view>
         </div>
 
         <!-- Toast de notification simple -->
@@ -51,6 +54,13 @@
             @confirm="confirmDeleteConversation"
             @cancel="showDeleteConfirmModal = false"
         />
+
+        <!-- Modal de partage -->
+        <ShareModal
+            v-if="showShareConfirmModal && conversationIdToShare"
+            :conversation-id="conversationIdToShare"
+            @close="showShareConfirmModal = false"
+        />
     </div>
 </template>
 
@@ -60,6 +70,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useToast, TYPE } from 'vue-toastification';
 import ConversationSidebar from './ConversationSidebar.vue';
 import DeleteConfirmModal from './DeleteConfirmModal.vue';
+import ShareModal from './ShareModal.vue';
 import Database from '../../utils/database.utils';
 import { Conversation } from '../../interfaces/conversation.interface';
 
@@ -94,6 +105,15 @@ function confirmDeleteConversation() {
     }
 }
 
+// Gestion du partage
+const showShareConfirmModal = ref(false);
+const conversationIdToShare = ref<string | null>(null);
+
+function showShareModal(id: string) {
+    conversationIdToShare.value = id;
+    showShareConfirmModal.value = true;
+}
+
 // Responsive detection
 const isMobile = computed(() => windowWidth.value < 768);
 
@@ -101,6 +121,7 @@ const isMobile = computed(() => windowWidth.value < 768);
 provide('conversations', conversations);
 provide('updateConversationTitle', updateConversationTitle);
 provide('isMobile', isMobile);
+provide('reloadConversations', fetchConversations);
 
 // Fonctions responsive
 function toggleSidebar() {
@@ -154,6 +175,27 @@ async function fetchConversations() {
         console.error(error);
     } finally {
         isLoadingSidebar.value = false;
+    }
+}
+
+// Gère l'événement de sauvegarde d'une conversation
+function handleConversationSaved(newConversation: Conversation | null) {
+    // Ajoute la nouvelle conversation au début de la liste
+    if (newConversation) {
+        // Vérifie s'il n'y a pas déjà une conversation avec cet ID
+        const existingIndex = conversations.value.findIndex(
+            (c) => c.id === newConversation.id
+        );
+        if (existingIndex >= 0) {
+            // Met à jour la conversation existante
+            conversations.value[existingIndex] = newConversation;
+        } else {
+            // Ajoute la nouvelle conversation au début
+            conversations.value.unshift(newConversation);
+        }
+    } else {
+        // Si aucune conversation n'est passée, recharger toutes les conversations
+        fetchConversations();
     }
 }
 

@@ -35,6 +35,15 @@ export class Conversation {
   @Column()
   userId: string;
 
+  @ApiProperty({
+    description:
+      "Identifiant de la conversation source lors d'une sauvegarde d'une conversation partagée",
+    example: 'a2b3c4d5-5678-4abc-bdef-ff123456789a',
+    required: false,
+  })
+  @Column({ nullable: true })
+  sharedFrom: string;
+
   @ManyToOne(() => User, (user) => user.conversations)
   @JoinColumn({ name: 'userId' })
   user: User;

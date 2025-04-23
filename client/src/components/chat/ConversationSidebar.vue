@@ -49,7 +49,19 @@
                 @select="$emit('select', $event)"
                 @toggle-menu="toggleMenu"
                 @delete="confirmDelete"
+                @share="shareConversation"
             />
+        </div>
+
+        <div class="mt-4 border-t border-gray-200 pt-4">
+            <router-link
+                to="/chat/saved"
+                class="flex items-center text-gray-600 hover:text-indigo-600 transition-colors px-2 py-1.5 rounded-md hover:bg-gray-50"
+                @click="isMobile ? $emit('close-sidebar') : null"
+            >
+                <i class="fas fa-bookmark mr-2"></i>
+                Conversations sauvegardées
+            </router-link>
         </div>
     </div>
 </template>
@@ -77,6 +89,7 @@ const emit = defineEmits<{
     (e: 'delete-confirm', id: string): void;
     (e: 'search', keyword: string): void;
     (e: 'close-sidebar'): void;
+    (e: 'share', id: string): void;
 }>();
 
 // Détection responsive
@@ -102,6 +115,13 @@ function toggleMenu(id: string) {
     openMenuId.value = openMenuId.value === id ? null : id;
 }
 
+// Gestion du partage
+function shareConversation(id: string) {
+    emit('share', id);
+    openMenuId.value = null;
+}
+
+// Gestion de la suppression
 function confirmDelete(id: string) {
     emit('delete-confirm', id);
     openMenuId.value = null;

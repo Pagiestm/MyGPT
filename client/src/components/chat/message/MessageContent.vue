@@ -13,8 +13,8 @@
                     class="ml-1"
                 >
                     <span
-                        class="formatted-text"
-                        :data-formatted-text="formatBoldText(item)"
+                        class="formatted-content"
+                        :data-formatted-text="formatText(item)"
                     ></span>
                 </li>
             </ul>
@@ -22,45 +22,27 @@
             <!-- Texte normal -->
             <p v-else class="whitespace-pre-wrap break-words leading-relaxed">
                 <span
-                    class="formatted-text"
-                    :data-formatted-text="formatBoldText(part.text || '')"
+                    class="formatted-content"
+                    :data-formatted-text="formatText(part.text || '')"
                 ></span>
             </p>
         </div>
 
         <!-- Blocs de code -->
-        <div
+        <CodeBlock
             v-for="(block, index) in codeBlocks"
             :key="`code-${index}`"
-            class="mt-3 mb-4 rounded-lg overflow-hidden shadow-sm relative"
-        >
-            <!-- En-tête -->
-            <div
-                class="flex items-center justify-between bg-gray-700 text-gray-200 px-4 py-2 text-xs font-mono"
-            >
-                <span>{{ block.language || 'Code' }}</span>
-                <button
-                    class="text-gray-300 hover:text-white transition-colors"
-                    title="Copier le code"
-                    @click="copyCode(block.code, index)"
-                >
-                    <i
-                        class="fas"
-                        :class="copied === index ? 'fa-check' : 'fa-copy'"
-                    ></i>
-                </button>
-            </div>
-
-            <!-- Contenu du code -->
-            <pre
-                class="bg-gray-800 text-gray-100 p-4 text-sm font-mono code-block-container"
-            ><code class="break-words whitespace-pre-wrap overflow-wrap-anywhere">{{ block.code }}</code></pre>
-        </div>
+            :block="block"
+            :is-mobile="isMobile"
+            :initially-collapsed="isMobile"
+            @copy="onCopyCode"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import CodeBlock from './CodeBlock.vue';
 
 // Types
 interface FormattedPart {
@@ -69,7 +51,7 @@ interface FormattedPart {
     items?: string[];
 }
 
-interface CodeBlock {
+interface CodeBlockData {
     language: string;
     code: string;
 }
@@ -80,30 +62,42 @@ const props = defineProps<{
     isFromAi: boolean;
 }>();
 
-const emit = defineEmits<{
-    (e: 'copyCode', code: string): void;
-}>();
+const emit = defineEmits(['copyCode']);
 
 // État
-const copied = ref<number | null>(null);
+const isMobile = ref(window.innerWidth < 768);
 
 // Regex pour les blocs de code
 const CODE_BLOCK_REGEX = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
 
-// Créer un rendu sécurisé du texte formaté en gras à l'aide d'un directive personnalisée
+// Lifecycle hooks
 onMounted(() => {
-    const formattedElements = document.querySelectorAll('.formatted-text');
-    formattedElements.forEach((element) => {
-        if (element instanceof HTMLElement) {
-            const text = element.dataset.formattedText || '';
-            element.textContent = text.replace(/\*\*(.*?)\*\*/g, '$1'); // Afficher le contenu sans les **
-        }
-    });
+    renderFormattedContent();
+    window.addEventListener('resize', handleResize);
 });
 
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
+
+// Fonction pour rendre le contenu formaté
+function renderFormattedContent() {
+    const elements = document.querySelectorAll('.formatted-content');
+    elements.forEach((element) => {
+        if (element instanceof HTMLElement) {
+            element.innerHTML = element.dataset.formattedText || '';
+        }
+    });
+}
+
+// Gérer le redimensionnement de la fenêtre
+function handleResize() {
+    isMobile.value = window.innerWidth < 768;
+}
+
 // Extraire les blocs de code du contenu
-const codeBlocks = computed<CodeBlock[]>(() => {
-    const blocks: CodeBlock[] = [];
+const codeBlocks = computed<CodeBlockData[]>(() => {
+    const blocks: CodeBlockData[] = [];
     const content = props.content || '';
     let match;
 
@@ -122,7 +116,7 @@ const contentWithoutCode = computed<string>(() => {
     return (props.content || '').replace(CODE_BLOCK_REGEX, '[CODE_BLOCK]');
 });
 
-// Parser le contenu et le formater
+// Traiter le contenu pour obtenir des parties formatées
 const formattedParts = computed<FormattedPart[]>(() => {
     const parts: FormattedPart[] = [];
     const lines = contentWithoutCode.value.split('\n');
@@ -130,57 +124,50 @@ const formattedParts = computed<FormattedPart[]>(() => {
     let currentText = '';
     let listItems: string[] = [];
 
-    // Fonctions utilitaires pour finaliser les parties actuelles
-    const finalizeText = () => {
+    function addText() {
         if (currentText) {
             parts.push({ type: 'text', text: currentText });
             currentText = '';
         }
-    };
+    }
 
-    const finalizeList = () => {
+    function addList() {
         if (listItems.length > 0) {
             parts.push({ type: 'list', items: [...listItems] });
             listItems = [];
         }
-    };
+    }
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         const isLastLine = i === lines.length - 1;
 
-        // Traitement des blocs de code
+        // Cas du bloc de code
         if (line === '[CODE_BLOCK]') {
-            finalizeText();
-            finalizeList();
+            addText();
+            addList();
             continue;
         }
 
-        // Traitement des listes - corriger les expressions régulières en supprimant les échappements inutiles
-        const isListItem = line.match(/^[*-]\s/);
-        if (isListItem) {
-            finalizeText();
+        // Cas de liste à puces
+        if (line.match(/^[*-]\s/)) {
+            addText();
             listItems.push(line.substring(2));
 
-            // Fin de liste si la prochaine ligne n'est pas une liste
             const nextLine = lines[i + 1]?.trim();
             if (isLastLine || !nextLine || !nextLine.match(/^[*-]\s/)) {
-                finalizeList();
+                addList();
             }
         }
-        // Traitement du texte normal
+        // Cas de texte normal
         else {
-            finalizeList();
+            addList();
 
             if (line || isLastLine) {
-                // Ajouter un saut de ligne si nécessaire
                 currentText += (currentText && line ? '\n' : '') + line;
-
-                if (isLastLine) {
-                    finalizeText();
-                }
+                if (isLastLine) addText();
             } else if (currentText) {
-                finalizeText();
+                addText();
             }
         }
     }
@@ -188,46 +175,28 @@ const formattedParts = computed<FormattedPart[]>(() => {
     return parts;
 });
 
-// Formater le texte en gras
-function formatBoldText(text: string): string {
-    return text || '';
+// Formater le texte (gras et code inline)
+function formatText(text: string): string {
+    if (!text) return '';
+
+    // Sécuriser le HTML
+    let result = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Formater le texte en gras
+    result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Formater le code inline
+    return result.replace(/`([^`]+)`/g, (_match, code) => {
+        const wrappedCode = code.replace(/([/._-])/g, '$1<wbr>');
+        return `<code class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 font-mono text-sm break-all md:break-normal">${wrappedCode}</code>`;
+    });
 }
 
-// Copier le code dans le presse-papier
-function copyCode(code: string, index: number): void {
-    navigator.clipboard.writeText(code);
+// Gérer la copie du code
+function onCopyCode(code: string) {
     emit('copyCode', code);
-
-    // Animation de confirmation
-    copied.value = index;
-    setTimeout(() => {
-        if (copied.value === index) {
-            copied.value = null;
-        }
-    }, 2000);
 }
 </script>
-
-<style scoped>
-.formatted-text {
-    white-space: pre-wrap;
-}
-
-/* Styles ajoutés pour gérer le scroll horizontal */
-.code-block-container {
-    max-width: 100%;
-    overflow-x: auto;
-    /* Pour les navigateurs modernes */
-    overflow-wrap: break-word;
-}
-
-code {
-    word-break: break-word;
-    white-space: pre-wrap;
-}
-
-/* Propriété CSS personnalisée pour Firefox et les navigateurs modernes */
-.overflow-wrap-anywhere {
-    overflow-wrap: anywhere;
-}
-</style>

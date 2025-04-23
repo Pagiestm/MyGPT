@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, IsNull, Not } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
@@ -12,6 +12,7 @@ import { ShareConversationDto } from './dto/share-conversation.dto';
 import { SearchConversationDto } from './dto/search-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from '../message/entities/message.entity';
+import { SaveSharedConversationDto } from './dto/saveShared-conversation.dto';
 
 @Injectable()
 export class ConversationService {
@@ -146,5 +147,63 @@ export class ConversationService {
     conversation.shareExpiresAt = null;
 
     await this.conversationsRepository.save(conversation);
+  }
+
+  // Sauvegarde une conversation partagée
+  async saveSharedConversation(
+    userId: string,
+    saveDto: SaveSharedConversationDto,
+  ): Promise<Conversation> {
+    // 1. Vérifier si la conversation partagée existe
+    const sharedConversation = await this.findByShareLink(saveDto.shareLink);
+
+    if (
+      !sharedConversation ||
+      sharedConversation.id !== saveDto.conversationId
+    ) {
+      throw new BadRequestException(
+        'Invalid shared conversation or share link',
+      );
+    }
+
+    // 2. Créer une nouvelle conversation pour l'utilisateur
+    const newConversation = this.conversationsRepository.create({
+      name: saveDto.newName || `${sharedConversation.name} (Copie)`,
+      userId: userId,
+      sharedFrom: sharedConversation.id, // Référence la conversation d'origine
+    });
+
+    // 3. Sauvegarder la nouvelle conversation
+    const savedConversation =
+      await this.conversationsRepository.save(newConversation);
+
+    // 4. Copie les messages de la conversation partagée
+    if (sharedConversation.messages && sharedConversation.messages.length > 0) {
+      const messagePromises = sharedConversation.messages.map((message) => {
+        const newMessage = this.messagesRepository.create({
+          conversationId: savedConversation.id,
+          content: message.content,
+          isFromAi: message.isFromAi,
+        });
+        return this.messagesRepository.save(newMessage);
+      });
+
+      await Promise.all(messagePromises);
+    }
+
+    // 5. Retourne la nouvelle conversation avec ses messages
+    return this.findOne(savedConversation.id);
+  }
+
+  async findSavedByUser(userId: string): Promise<Conversation[]> {
+    // Récupére les conversations où userId correspond et sharedFrom n'est pas null
+    return this.conversationsRepository.find({
+      where: {
+        userId: userId,
+        sharedFrom: Not(IsNull()),
+      },
+      order: { createdAt: 'DESC' },
+      relations: ['messages'],
+    });
   }
 }
