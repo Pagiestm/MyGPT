@@ -100,8 +100,23 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return successful login message', () => {
-      const result = service.login();
-      expect(result).toEqual({ message: 'Connexion réussie' });
+      // Arrange
+      const mockUser = {
+        id: '1',
+        pseudo: 'testuser',
+        email: 'test@example.com',
+      };
+
+      // Act
+      const result = service.login(mockUser);
+
+      // Assert
+      expect(result).toEqual({
+        message: 'Connexion réussie',
+        user: {
+          pseudo: mockUser.pseudo,
+        },
+      });
     });
   });
 

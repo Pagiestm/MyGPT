@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthenticatedGuard } from './authenticated.guard';
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
 describe('AuthenticatedGuard', () => {
   let guard: AuthenticatedGuard;
@@ -36,7 +36,7 @@ describe('AuthenticatedGuard', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false if user is not authenticated', () => {
+    it('should throw UnauthorizedException if user is not authenticated', () => {
       // Arrange: utilisateur non authentifié
       const mockContext = {
         switchToHttp: () => ({
@@ -46,14 +46,16 @@ describe('AuthenticatedGuard', () => {
         }),
       } as ExecutionContext;
 
-      // Act
-      const result = guard.canActivate(mockContext);
-
-      // Assert
-      expect(result).toBe(false);
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        UnauthorizedException,
+      );
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        'Vous devez être connecté pour accéder à cette ressource',
+      );
     });
 
-    it('should return false if isAuthenticated is not a function', () => {
+    it('should throw UnauthorizedException if isAuthenticated is not a function', () => {
       // Arrange: méthode isAuthenticated manquante
       const mockContext = {
         switchToHttp: () => ({
@@ -63,11 +65,13 @@ describe('AuthenticatedGuard', () => {
         }),
       } as ExecutionContext;
 
-      // Act
-      const result = guard.canActivate(mockContext);
-
-      // Assert
-      expect(result).toBe(false);
+      // Act & Assert
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        UnauthorizedException,
+      );
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        'Session non valide',
+      );
     });
   });
 });

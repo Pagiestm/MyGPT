@@ -1,77 +1,86 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import Database from '../utils/database.utils';
 import type { AxiosError } from 'axios';
 
-// Interface pour les informations d'identification
 interface LoginCredentials {
     email: string;
     password: string;
 }
 
-export const useAuthStore = defineStore('auth', () => {
-    const user = ref(null);
-    const error = ref<string | null>(null);
-    const isLoading = ref(true);
+export const useAuthStore = defineStore(
+    'auth',
+    () => {
+        // État principal - stocke uniquement l'utilisateur après connexion réussie
+        const user = ref(null);
+        const error = ref<string | null>(null);
+        const isLoading = ref(false);
 
-    // Vérifie l'authentification
-    const isAuthenticated = () => !!user.value;
+        // Vérification basée uniquement sur l'existence des données utilisateur
+        const isAuthenticated = computed(() => !!user.value);
 
-    // Charge le profil utilisateur au démarrage
-    async function loadUser() {
-        isLoading.value = true;
-        try {
-            const data = await Database.getAll('auth/profile'); // Vérifie la session
-            user.value = data || null;
-        } catch (err) {
-            user.value = null;
-            const axiosError = err as AxiosError<{ message: string }>;
-            error.value =
-                axiosError.response?.data?.message ||
-                'Erreur lors du chargement du profil';
-        } finally {
-            isLoading.value = false;
-        }
-    }
+        // Fonction de connexion
+        async function login(credentials: LoginCredentials) {
+            error.value = null;
+            isLoading.value = true;
 
-    async function login(credentials: LoginCredentials) {
-        error.value = null;
-        try {
-            const result = await Database.create('auth/login', credentials);
-            if (result?.data) {
-                await loadUser();
-                return true;
+            try {
+                const result = await Database.create('auth/login', credentials);
+                if (result?.data?.user) {
+                    // Stocke les données de l'utilisateur de la réponse de login
+                    user.value = result.data.user;
+                    return true;
+                }
+                return false;
+            } catch (err) {
+                const axiosError = err as AxiosError<{ message: string }>;
+                error.value =
+                    axiosError.response?.data?.message || 'Échec de connexion';
+                return false;
+            } finally {
+                isLoading.value = false;
             }
-            return false;
-        } catch (err: unknown) {
-            const axiosError = err as AxiosError<{ message: string }>;
-            error.value =
-                axiosError.response?.data?.message || 'Échec de connexion';
-            return false;
+        }
+
+        // Déconnexion
+        async function logout() {
+            isLoading.value = true;
+            try {
+                await Database.create('auth/logout', {});
+            } catch (err) {
+                console.warn('Erreur lors de la déconnexion:', err);
+            } finally {
+                user.value = null;
+                isLoading.value = false;
+            }
+        }
+
+        return {
+            user,
+            error,
+            isLoading,
+            isAuthenticated,
+            login,
+            logout
+        };
+    },
+    {
+        persist: {
+            key: 'auth',
+            storage: sessionStorage,
+            serializer: {
+                serialize: (state) => {
+                    const { error, isLoading, ...rest } = state;
+
+                    console.debug('Propriétés non persistées:', {
+                        error,
+                        isLoading
+                    });
+
+                    return JSON.stringify(rest);
+                },
+                deserialize: (str) => JSON.parse(str)
+            }
         }
     }
-
-    async function logout() {
-        try {
-            await Database.create('auth/logout', {});
-        } catch (err) {
-            const axiosError = err as AxiosError<{ message: string }>;
-            error.value =
-                axiosError.response?.data?.message ||
-                'Erreur lors de la déconnexion';
-            console.warn('Erreur lors de la déconnexion:', error.value);
-        } finally {
-            user.value = null;
-        }
-    }
-
-    return {
-        user,
-        error,
-        isLoading,
-        login,
-        logout,
-        loadUser,
-        isAuthenticated
-    };
-});
+);
