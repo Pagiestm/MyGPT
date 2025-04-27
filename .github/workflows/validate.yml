@@ -2,9 +2,10 @@
 # WORKFLOW: Vérification de la qualité du code et tests
 # ========================================================================
 # Ce workflow:
-# 1. Vérifie le formatage du code (client et serveur)
-# 2. Vérifie le linting du code (client et serveur)
-# 3. Exécute les tests du serveur
+# 1. Vérifie le formatage et le linting du code
+# 2. Exécute les tests unitaires du serveur
+# 3. Exécute les tests end-to-end avec Playwright
+# 4. Échoue si les tests end-to-end et les tests unitaires échouent
 # ========================================================================
 
 name: Code Quality and Tests
@@ -29,32 +30,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Utilisation de Node.js v20 LTS
+          node-version: '20'
 
-      # Installation des dépendances racine (Husky, CommitLint, etc.)
+      # Installation des dépendances racine
       - name: Install root dependencies
         run: npm ci
       
-      # Installation des dépendances client
+      # Installation des dépendances client et serveur
       - name: Install client dependencies
         run: cd client && npm ci
       
-      # Installation des dépendances serveur
       - name: Install server dependencies
         run: cd server && npm ci
 
-      # Vérification du formatage
+      # Vérifications de qualité
       - name: Check formatting
         run: npm run format
         
-      # Vérification des règles de code avec ESLint
       - name: Verify linting
         run: npm run lint
 
-  # ======== JOB 2: TESTS SERVEUR ========
-  server-tests:
-    name: Server Tests
-    needs: quality-check  # Ce job ne s'exécute que si quality-check réussit
+  # ======== JOB 2: TESTS UNITAIRES SERVEUR ========
+  server-unit-tests:
+    name: Server Unit Tests
+    needs: quality-check
     runs-on: ubuntu-latest
     
     steps:
@@ -73,22 +72,60 @@ jobs:
       # Tests unitaires
       - name: Run unit tests
         run: cd server && npm test
-      
-      # Tests end-to-end (optionnels, peuvent nécessiter une base de données)
-      - name: Run e2e tests
-        run: cd server && npm run test:e2e
-        # Vous pouvez ajouter "continue-on-error: true" si vous ne voulez pas
-        # que l'échec des tests e2e fasse échouer le workflow entier
-        continue-on-error: true
         
-      # Rapport de couverture de test (optionnel)
+      # Rapport de couverture de test
       - name: Generate test coverage
         run: cd server && npm run test:cov
         
-      # Archivage des rapports de couverture (optionnel)
+      # Archivage des rapports de couverture
       - name: Archive test coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: server-coverage-report
           path: server/coverage/
-          if-no-files-found: ignore  # ne pas échouer si le répertoire n'existe pas
+          if-no-files-found: ignore
+
+  # ======== JOB 3: TESTS END-TO-END ========
+  e2e-tests:
+    name: End-to-End Tests
+    needs: server-unit-tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      # Installation des dépendances client
+      - name: Install client dependencies
+        run: cd client && npm ci
+        
+      # Installation des navigateurs Playwright
+      - name: Install Playwright browsers
+        run: cd client && npx playwright install --with-deps
+        
+      # Exécution des tests E2E avec Playwright
+      - name: Run Playwright E2E tests
+        run: cd client && npm run test:e2e
+        
+      # Archivage des rapports Playwright (toujours, même en cas d'échec)
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: client/playwright-report/
+          if-no-files-found: ignore
+          
+      # Archivage des captures d'écran des tests échoués
+      - name: Upload Playwright screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: client/test-results/
+          if-no-files-found: ignore
