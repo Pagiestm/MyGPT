@@ -7,9 +7,9 @@
         "dev": "vite",
         "build": "vue-tsc && vite build",
         "preview": "vite preview",
-        "lint": "eslint . --ext .js,.ts,.vue",
-        "lint:fix": "eslint . --ext .js,.ts,.vue --fix",
-        "format": "prettier --write \"src/**/*.{js,ts,vue}\"",
+        "lint": "eslint \"src/**/*.{js,ts,vue}\" \"tests/**/*.{js,ts}\"",
+        "lint:fix": "eslint \"src/**/*.{js,ts,vue}\" \"tests/**/*.{js,ts}\" --fix",
+        "format": "prettier --write \"src/**/*.{js,ts,vue}\" \"tests/**/*.{js,ts}\"",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:debug": "playwright test --debug"
