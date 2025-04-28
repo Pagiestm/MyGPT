@@ -103,6 +103,10 @@ jobs:
       # Installation des dépendances client
       - name: Install client dependencies
         run: cd client && npm ci
+
+      # Création d'une version de production du client (peut être nécessaire pour les tests)
+      - name: Build client
+        run: cd client && npm run build
         
       # Installation des navigateurs Playwright
       - name: Install Playwright browsers
@@ -111,6 +115,9 @@ jobs:
       # Exécution des tests E2E avec Playwright
       - name: Run Playwright E2E tests
         run: cd client && npm run test:e2e
+        env:
+          CI: true
+          NODE_ENV: test
         
       # Archivage des rapports Playwright (toujours, même en cas d'échec)
       - name: Upload Playwright report
