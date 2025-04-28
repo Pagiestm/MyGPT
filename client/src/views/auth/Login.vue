@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { useAuthStore } from '../../stores/auth';
 import LoadingOverlay from '../../components/LoadingOverlay.vue';
@@ -67,6 +67,7 @@ import { userErrorMessages } from '../../utils/errors/auth/users';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const isLoading = ref(false);
@@ -148,7 +149,14 @@ async function handleLogin() {
 
         if (result) {
             toast.success('Connexion réussie !');
-            router.push('/chat');
+
+            // Vérifie s'il y a un paramètre de redirection
+            const redirectPath = route.query.redirect;
+            if (redirectPath) {
+                router.push(redirectPath.toString());
+            } else {
+                router.push('/chat');
+            }
         } else {
             formError.value = userErrorMessages.auth.invalidCredentials;
             toast.error(formError.value);

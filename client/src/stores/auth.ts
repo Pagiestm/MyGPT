@@ -67,7 +67,7 @@ export const useAuthStore = defineStore(
     {
         persist: {
             key: 'auth',
-            storage: sessionStorage,
+            storage: localStorage,
             serializer: {
                 serialize: (state) => {
                     const { error, isLoading, ...rest } = state;
