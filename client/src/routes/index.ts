@@ -7,24 +7,31 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach((to, _from, next) => {
     document.title = `${to.meta.title || 'Page'}`;
 
     const authStore = useAuthStore();
 
-    // Attend que l'état soit chargé pour éviter les redirections inutiles
-    if (authStore.isLoading) {
-        await authStore.loadUser();
-    }
-
-    // Redirection si l'utilisateur est déjà connecté
-    if (to.meta.guestOnly && authStore.isAuthenticated()) {
-        return next('/');
-    }
-
-    // Redirection si la page nécessite une authentification
-    if (to.meta.requiresAuth && !authStore.isAuthenticated()) {
+    // Vérification des routes protégées
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        // Si c'est une conversation partagée, rediriger vers login avec l'URL en paramètre
+        if (to.path.startsWith('/chat/shared/')) {
+            return next({
+                path: '/login',
+                query: { redirect: to.fullPath }
+            });
+        }
         return next('/login');
+    }
+
+    // Redirection si déjà connecté
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+        // Si on a un paramètre de redirection (venant d'une conversation partagée)
+        const redirectPath = to.query.redirect;
+        if (redirectPath) {
+            return next(redirectPath.toString());
+        }
+        return next('/');
     }
 
     next();

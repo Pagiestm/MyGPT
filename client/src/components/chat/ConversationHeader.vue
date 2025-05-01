@@ -19,7 +19,7 @@
             >
                 <!-- Titre tronqué sur mobile -->
                 <span
-                    class="truncate max-w-[12rem] sm:max-w-[16rem] md:max-w-[24rem] lg:max-w-[32rem] xl:max-w-[40rem]"
+                    class="truncate max-w-[10rem] sm:max-w-[16rem] md:max-w-[24rem] lg:max-w-[32rem] xl:max-w-[40rem]"
                     >{{ title }}</span
                 >
                 <button

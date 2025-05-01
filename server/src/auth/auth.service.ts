@@ -36,8 +36,16 @@ export class AuthService {
     }
   }
 
-  login(): { message: string } {
-    return { message: 'Connexion réussie' };
+  login(user: { pseudo: string }): {
+    message: string;
+    user: { pseudo: string };
+  } {
+    return {
+      message: 'Connexion réussie',
+      user: {
+        pseudo: user.pseudo,
+      },
+    };
   }
 
   async getProfile(userId: string) {

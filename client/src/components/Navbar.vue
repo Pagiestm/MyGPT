@@ -29,7 +29,7 @@
                     Accueil
                 </router-link>
                 <router-link
-                    v-if="authStore.isAuthenticated()"
+                    v-if="authStore.isAuthenticated"
                     to="/chat"
                     class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                     active-class="bg-indigo-50 text-indigo-700"
@@ -40,7 +40,7 @@
 
             <!-- Authentication -->
             <div class="flex items-center space-x-2">
-                <template v-if="authStore.isAuthenticated()">
+                <template v-if="authStore.isAuthenticated">
                     <!-- Menu de profil avec ouverture au clic -->
                     <div
                         ref="profileMenuContainer"

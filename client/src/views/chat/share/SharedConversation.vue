@@ -36,7 +36,7 @@
             <!-- Actions -->
             <div class="flex items-center space-x-2 ml-auto md:ml-0">
                 <button
-                    v-if="authStore.isAuthenticated()"
+                    v-if="authStore.isAuthenticated"
                     class="px-3 py-1.5 rounded-lg flex items-center border border-indigo-500 text-indigo-500 hover:bg-indigo-50 transition-colors"
                     :disabled="isSaving || isSaved"
                     @click="saveToMyList"

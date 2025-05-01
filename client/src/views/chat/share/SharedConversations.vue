@@ -290,7 +290,7 @@ onMounted(async () => {
         closeSidebar();
     }
 
-    if (authStore.isAuthenticated()) {
+    if (authStore.isAuthenticated) {
         await loadSavedConversations();
     } else {
         isLoading.value = false;
