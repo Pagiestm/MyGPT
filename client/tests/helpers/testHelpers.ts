@@ -142,6 +142,87 @@ export async function setupConversationDeletion(
 }
 
 /**
+ * Configure les mocks pour les messages d'une conversation
+ */
+export async function setupMessages(
+    page: Page,
+    conversationId: string,
+    messages: {
+        id: string;
+        content: string;
+        conversationId: string;
+        isFromAi: boolean;
+        createdAt: string;
+        updatedAt: string;
+    }[] = []
+) {
+    // Si aucun message n'est fourni, utiliser des messages par défaut
+    if (messages.length === 0) {
+        messages = [
+            {
+                id: 'msg-1',
+                content: 'Message utilisateur',
+                conversationId,
+                isFromAi: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'msg-2',
+                content: 'Réponse IA',
+                conversationId,
+                isFromAi: true,
+                createdAt: new Date(Date.now() + 1000).toISOString(),
+                updatedAt: new Date(Date.now() + 1000).toISOString()
+            }
+        ];
+    }
+
+    await page.route(
+        `**/messages?conversationId=${conversationId}`,
+        async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify(messages)
+            });
+        }
+    );
+}
+
+/**
+ * Configure le mock pour la création d'un message
+ */
+export async function setupMessageCreation(
+    page: Page,
+    message: {
+        id: string;
+        content: string;
+        conversationId: string;
+        isFromAi: boolean;
+    }
+) {
+    await page.route('**/messages', async (route) => {
+        if (route.request().method() === 'POST') {
+            const postData = JSON.parse(route.request().postData() || '{}');
+            await route.fulfill({
+                status: 201,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    id: message.id || `msg-${Date.now()}`,
+                    content: postData.content || message.content,
+                    conversationId:
+                        postData.conversationId || message.conversationId,
+                    isFromAi: postData.isFromAi || message.isFromAi,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                })
+            });
+        }
+    });
+}
+
+/**
  * Se connecte à l'application
  */
 export async function login(page: Page) {
