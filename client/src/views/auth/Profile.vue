@@ -66,16 +66,94 @@
                     </h2>
 
                     <div v-if="profile" class="grid grid-cols-1 gap-4">
+                        <!-- Information du pseudo avec possibilité de modification -->
                         <div
                             class="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-100 transition-all duration-300"
                         >
-                            <div class="text-sm font-medium text-gray-500">
-                                Pseudo
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm font-medium text-gray-500">
+                                    Pseudo
+                                </div>
+                                <button
+                                    v-if="!isEditingPseudo"
+                                    class="text-xs text-indigo-500 hover:text-indigo-700"
+                                    @click="startEditingPseudo"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                        />
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="mt-1 text-gray-800">
+
+                            <!-- Mode affichage -->
+                            <div
+                                v-if="!isEditingPseudo"
+                                class="mt-1 text-gray-800"
+                            >
                                 {{ profile.pseudo }}
                             </div>
+
+                            <!-- Mode édition -->
+                            <div v-else class="mt-2">
+                                <input
+                                    v-model="newPseudo"
+                                    type="text"
+                                    class="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                    :placeholder="profile.pseudo"
+                                />
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <button
+                                        class="px-3 py-1 bg-indigo-500 text-white rounded-md text-xs hover:bg-indigo-600"
+                                        :disabled="
+                                            isUpdatingPseudo || !isPseudoValid
+                                        "
+                                        @click="savePseudo"
+                                    >
+                                        <span v-if="isUpdatingPseudo">
+                                            <svg
+                                                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    class="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    stroke-width="4"
+                                                ></circle>
+                                                <path
+                                                    class="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                        </span>
+                                        Enregistrer
+                                    </button>
+                                    <button
+                                        class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-xs hover:bg-gray-300"
+                                        @click="cancelEditingPseudo"
+                                    >
+                                        Annuler
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
                         <div
                             class="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-100 transition-all duration-300"
                         >
@@ -178,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import Database from '../../utils/database.utils';
@@ -189,6 +267,21 @@ const profile = ref<User | null>(null);
 const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
+
+// Variables pour l'édition du pseudo
+const isEditingPseudo = ref(false);
+const newPseudo = ref('');
+const isUpdatingPseudo = ref(false);
+const pseudoError = ref('');
+
+// Validation du pseudo
+const isPseudoValid = computed(() => {
+    return (
+        newPseudo.value.length >= 3 &&
+        newPseudo.value.length <= 20 &&
+        newPseudo.value !== profile.value?.pseudo
+    );
+});
 
 async function loadProfile() {
     try {
@@ -209,6 +302,75 @@ async function logout() {
     } catch (error) {
         console.error('Erreur lors de la déconnexion:', error);
         toast.error('Erreur lors de la déconnexion');
+    }
+}
+
+// Fonction pour commencer l'édition du pseudo
+function startEditingPseudo() {
+    if (!profile.value) return;
+    newPseudo.value = profile.value.pseudo;
+    isEditingPseudo.value = true;
+    pseudoError.value = '';
+}
+
+// Fonction pour annuler l'édition du pseudo
+function cancelEditingPseudo() {
+    isEditingPseudo.value = false;
+    newPseudo.value = '';
+    pseudoError.value = '';
+}
+
+// Fonction pour sauvegarder le nouveau pseudo
+async function savePseudo() {
+    if (!profile.value || !isPseudoValid.value) return;
+
+    try {
+        isUpdatingPseudo.value = true;
+        pseudoError.value = '';
+
+        const response = await Database.patch('users/profile/pseudo', {
+            pseudo: newPseudo.value
+        });
+
+        if (response && response.message) {
+            profile.value.pseudo = newPseudo.value;
+            toast.success('Votre pseudo a été mis à jour');
+            isEditingPseudo.value = false;
+        }
+    } catch (error: unknown) {
+        console.error('Erreur lors de la mise à jour du pseudo:', error);
+
+        // Définir un type pour l'erreur avec une structure attendue
+        interface ApiError {
+            response?: {
+                status: number;
+                data?: {
+                    message?: string;
+                };
+            };
+            message?: string;
+        }
+
+        // Extraire les messages d'erreur avec un typage approprié
+        const apiError = error as ApiError;
+
+        if (apiError.response && apiError.response.data) {
+            if (apiError.response.status === 409) {
+                pseudoError.value = 'Ce pseudo est déjà utilisé';
+            } else if (apiError.response.data.message) {
+                pseudoError.value = apiError.response.data.message;
+            } else {
+                pseudoError.value =
+                    'Une erreur est survenue lors de la modification du pseudo';
+            }
+        } else {
+            pseudoError.value =
+                'Une erreur est survenue lors de la modification du pseudo';
+        }
+
+        toast.error(pseudoError.value);
+    } finally {
+        isUpdatingPseudo.value = false;
     }
 }
 

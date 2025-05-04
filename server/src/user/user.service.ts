@@ -32,7 +32,6 @@ export class UserService {
   }
 
   async register(createUserDto: CreateUserDto): Promise<{ message: string }> {
-    // Vérifie si l'email est déjà utilisé
     const existingUserByEmail = await this.usersRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -41,7 +40,6 @@ export class UserService {
       throw new ConflictException('Un utilisateur avec cet email existe déjà');
     }
 
-    // Vérifie si le pseudo est déjà utilisé
     const existingUserByPseudo = await this.usersRepository.findOne({
       where: { pseudo: createUserDto.pseudo },
     });
@@ -51,21 +49,18 @@ export class UserService {
     }
 
     try {
-      // Hashe le mot de passe avec bcrypt
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(
         createUserDto.password,
         saltRounds,
       );
 
-      // Crée l'utilisateur
       const user = this.usersRepository.create({
         email: createUserDto.email,
         pseudo: createUserDto.pseudo,
         password: hashedPassword,
       });
 
-      // Enregistre l'utilisateur
       await this.usersRepository.save(user);
 
       return {
@@ -89,5 +84,38 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async updatePseudo(
+    userId: string,
+    newPseudo: string,
+  ): Promise<{ message: string }> {
+    const user = await this.findOne(userId);
+
+    if (newPseudo === user.pseudo) {
+      return { message: 'Aucune modification nécessaire, même pseudo.' };
+    }
+
+    const existingUserByPseudo = await this.usersRepository.findOne({
+      where: { pseudo: newPseudo },
+    });
+
+    if (existingUserByPseudo) {
+      throw new ConflictException('Ce pseudo est déjà utilisé');
+    }
+
+    try {
+      user.pseudo = newPseudo;
+      await this.usersRepository.save(user);
+
+      return {
+        message: 'Pseudo modifié avec succès!',
+      };
+    } catch (error) {
+      console.error('Erreur lors de la modification du pseudo:', error);
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la modification du pseudo',
+      );
+    }
   }
 }
