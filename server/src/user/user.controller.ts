@@ -5,6 +5,8 @@ import {
   Patch,
   UseGuards,
   Request,
+  HttpCode,
+  Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,7 +18,7 @@ import {
   ApiCookieAuth,
 } from '@nestjs/swagger';
 import { UpdatePseudoDto } from './dto/update-user.dto';
-import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
+import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { Request as ExpressRequest } from 'express';
 
 interface AuthenticatedRequest extends ExpressRequest {
@@ -59,5 +61,26 @@ export class UserController {
   ) {
     const userId = req.user.id;
     return this.userService.updatePseudo(userId, updatePseudoDto.pseudo);
+  }
+
+  @Delete('profile')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @HttpCode(200)
+  @ApiOperation({ summary: "Supprimer le compte de l'utilisateur" })
+  @ApiResponse({
+    status: 200,
+    description: 'Compte supprimé avec succès',
+    schema: { properties: { message: { type: 'string' } } },
+  })
+  async deleteAccount(
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ message: string }> {
+    const result = await this.userService.deleteAccount(req.user.id);
+
+    // Déconnecter l'utilisateur
+    req.session.destroy(() => {});
+
+    return result;
   }
 }

@@ -69,7 +69,7 @@ import { ref, onMounted, provide, watch, computed, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useToast, TYPE } from 'vue-toastification';
 import ConversationSidebar from './ConversationSidebar.vue';
-import DeleteConfirmModal from './DeleteConfirmModal.vue';
+import DeleteConfirmModal from '../DeleteConfirmModal.vue';
 import ShareModal from './ShareModal.vue';
 import Database from '../../utils/database.utils';
 import { Conversation } from '../../interfaces/conversation.interface';

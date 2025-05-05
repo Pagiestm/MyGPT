@@ -228,9 +228,9 @@
                             Se déconnecter
                         </button>
 
-                        <a
-                            href="#"
+                        <button
                             class="w-full text-center py-2 text-xs text-red-600 hover:text-red-800 transition-colors flex items-center justify-center"
+                            @click="showDeleteConfirm"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -247,12 +247,21 @@
                                 />
                             </svg>
                             Supprimer mon compte
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal de confirmation pour la suppression du compte -->
+    <DeleteConfirmModal
+        v-if="showDeleteConfirmModal"
+        title="Supprimer votre compte"
+        message="Attention ! Cette action est irréversible. La suppression de votre compte entraînera la perte de toutes vos conversations et données personnelles. Êtes-vous sûr de vouloir continuer ?"
+        @confirm="deleteAccount"
+        @cancel="showDeleteConfirmModal = false"
+    />
 </template>
 
 <script setup lang="ts">
@@ -262,6 +271,7 @@ import { useAuthStore } from '../../stores/auth';
 import Database from '../../utils/database.utils';
 import { useToast } from 'vue-toastification';
 import { User } from '../../interfaces/user.interface';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal.vue';
 
 const profile = ref<User | null>(null);
 const router = useRouter();
@@ -273,6 +283,10 @@ const isEditingPseudo = ref(false);
 const newPseudo = ref('');
 const isUpdatingPseudo = ref(false);
 const pseudoError = ref('');
+
+// Variable pour le modal de confirmation de suppression
+const showDeleteConfirmModal = ref(false);
+const isDeletingAccount = ref(false);
 
 // Validation du pseudo
 const isPseudoValid = computed(() => {
@@ -302,6 +316,35 @@ async function logout() {
     } catch (error) {
         console.error('Erreur lors de la déconnexion:', error);
         toast.error('Erreur lors de la déconnexion');
+    }
+}
+
+// Fonction pour afficher le modal de confirmation
+function showDeleteConfirm() {
+    showDeleteConfirmModal.value = true;
+}
+
+// Fonction pour supprimer le compte
+async function deleteAccount() {
+    if (isDeletingAccount.value) return;
+
+    try {
+        isDeletingAccount.value = true;
+
+        await Database.delete('users/profile');
+
+        // Déconnexion après suppression du compte
+        await authStore.logout();
+
+        // Notification et redirection
+        toast.success('Votre compte a été supprimé avec succès');
+        router.push('/');
+    } catch (error) {
+        console.error('Erreur lors de la suppression du compte:', error);
+        toast.error('Une erreur est survenue lors de la suppression du compte');
+        showDeleteConfirmModal.value = false;
+    } finally {
+        isDeletingAccount.value = false;
     }
 }
 

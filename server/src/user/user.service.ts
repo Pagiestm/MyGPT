@@ -118,4 +118,23 @@ export class UserService {
       );
     }
   }
+
+  async deleteAccount(userId: string): Promise<{ message: string }> {
+    // Vérifier si l'utilisateur existe
+    const user = await this.findOne(userId);
+
+    try {
+      // Supprimer l'utilisateur (les conversations et messages seront supprimés en cascade)
+      await this.usersRepository.remove(user);
+
+      return {
+        message: 'Compte utilisateur supprimé avec succès',
+      };
+    } catch (error) {
+      console.error('Erreur lors de la suppression du compte:', error);
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la suppression du compte',
+      );
+    }
+  }
 }
