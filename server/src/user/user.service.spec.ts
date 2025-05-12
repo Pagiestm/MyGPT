@@ -146,4 +146,100 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('updatePseudo', () => {
+    it('should update user pseudo successfully', async () => {
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
+      const updatedUser = {
+        ...mockUser,
+        pseudo: 'newpseudo',
+      };
+      (mockRepository.save as jest.Mock).mockResolvedValue(updatedUser);
+
+      const result = await service.updatePseudo('1', 'newpseudo');
+
+      expect(result).toEqual({
+        message: 'Pseudo modifié avec succès!',
+      });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { pseudo: 'newpseudo' },
+      });
+      expect(mockRepository.save).toHaveBeenCalledWith({
+        ...mockUser,
+        pseudo: 'newpseudo',
+      });
+    });
+
+    it('should not check uniqueness if new pseudo is same as current', async () => {
+      // Mock pour trouver l'utilisateur
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
+
+      // Mock pour la sauvegarde
+      (mockRepository.save as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await service.updatePseudo('1', mockUser.pseudo);
+
+      expect(result).toEqual({
+        message: 'Aucune modification nécessaire, même pseudo.',
+      });
+      // Vérifie qu'on a appelé findOne une seule fois (pour trouver l'utilisateur)
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('deleteAccount', () => {
+    beforeEach(() => {
+      mockRepository.remove = jest.fn();
+
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should delete user account successfully', async () => {
+      // Mock pour trouver l'utilisateur
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
+
+      // Mock pour la suppression réussie
+      (mockRepository.remove as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await service.deleteAccount('1');
+
+      expect(result).toEqual({
+        message: 'Compte utilisateur supprimé avec succès',
+      });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+      });
+      expect(mockRepository.remove).toHaveBeenCalledWith(mockUser);
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
+
+      await expect(service.deleteAccount('999')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw InternalServerErrorException if deletion fails', async () => {
+      // Mock pour trouver l'utilisateur
+      (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
+
+      // Mock pour simuler une erreur lors de la suppression
+      (mockRepository.remove as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
+      );
+
+      await expect(service.deleteAccount('1')).rejects.toThrow(
+        'Une erreur est survenue lors de la suppression du compte',
+      );
+    });
+  });
 });

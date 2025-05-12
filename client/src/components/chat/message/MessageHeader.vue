@@ -26,7 +26,7 @@
             v-if="!isRegeneratingAI"
             class="text-xs font-medium mx-2 text-indigo-600"
         >
-            {{ message.isFromAi ? 'IA' : 'Vous' }}
+            {{ message.isFromAi ? 'IA' : userPseudo }}
         </span>
 
         <!-- Date et heure (masqués pendant la régénération) -->
@@ -42,14 +42,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { Message } from '../../../interfaces/message.interface';
+import Database from '../../../utils/database.utils';
 
 // Props
 const props = defineProps<{
     message: Message;
     isRegenerating?: boolean;
 }>();
+
+// État pour stocker le pseudo de l'utilisateur
+const userPseudo = ref('Vous');
 
 // Raccourci pour vérifier si c'est en cours de régénération de message IA
 const isRegeneratingAI = computed(
@@ -73,5 +77,28 @@ const formattedTime = computed(() => {
         hour: '2-digit',
         minute: '2-digit'
     });
+});
+
+// Récupérer le pseudo de l'utilisateur au chargement du composant
+async function getUserPseudo() {
+    try {
+        const userProfile = await Database.getAll('auth/profile');
+        if (userProfile && userProfile.pseudo) {
+            userPseudo.value = userProfile.pseudo;
+        }
+    } catch (error) {
+        console.error(
+            "Erreur lors de la récupération du pseudo de l'utilisateur:",
+            error
+        );
+        // En cas d'erreur, on garde la valeur par défaut "Vous"
+    }
+}
+
+onMounted(() => {
+    // Si le message vient de l'utilisateur, on récupère son pseudo
+    if (!props.message.isFromAi) {
+        getUserPseudo();
+    }
 });
 </script>

@@ -116,17 +116,6 @@ const highlightedMessageId = ref<string | null>(null);
 
 // Computed properties
 const filteredMessages = computed(() => {
-    if (isGeneratingResponse.value && regeneratingMessageId.value) {
-        return messages.value.filter((message) => {
-            const isTargetAiMessage =
-                message.isFromAi && message.id === regeneratingMessageId.value;
-            const isEditedUserMessage =
-                !message.isFromAi &&
-                editingMessage.value &&
-                message.id === editingMessage.value.id;
-            return !isTargetAiMessage && !isEditedUserMessage;
-        });
-    }
     return messages.value;
 });
 
@@ -289,30 +278,32 @@ async function updateMessage(
     editingMessage.value = message;
 
     try {
+        // Supprimer visuellement tous les messages suivants immédiatement
         if (regenerateAi) {
-            // Identifier le message IA à régénérer
             const currentIndex = messages.value.findIndex(
                 (m) => m.id === message.id
             );
-            if (
-                currentIndex >= 0 &&
-                currentIndex + 1 < messages.value.length &&
-                messages.value[currentIndex + 1].isFromAi
-            ) {
-                regeneratingMessageId.value =
-                    messages.value[currentIndex + 1].id;
+
+            if (currentIndex >= 0) {
+                // 1. Conserver uniquement les messages jusqu'au message modifié inclus
+                messages.value = messages.value.slice(0, currentIndex + 1);
+
+                // 2. Mettre à jour le contenu du message modifié immédiatement
+                messages.value[currentIndex].content = content;
             }
 
+            // Indiquer que l'IA va générer une réponse
             isGeneratingResponse.value = true;
         }
 
-        // Mise à jour du message
+        // Mise à jour du message dans la base de données
         await Database.update('messages', message.id, {
             content,
             regenerateAi
         });
 
         if (!regenerateAi) {
+            // Si on ne régénère pas de réponse IA, on recharge tous les messages
             await fetchMessages();
         } else {
             // Simuler la génération d'une nouvelle réponse
@@ -324,8 +315,9 @@ async function updateMessage(
         console.error(error);
         if (regenerateAi) {
             isGeneratingResponse.value = false;
-            regeneratingMessageId.value = null;
         }
+        // En cas d'erreur, recharger les messages pour revenir à l'état initial
+        await fetchMessages();
     } finally {
         editingMessage.value = null;
         isUpdatingMessage.value = false;
@@ -333,10 +325,13 @@ async function updateMessage(
 }
 
 async function finishAiResponse() {
+    // Récupérer les messages mis à jour du backend
     await fetchMessages();
     isGeneratingResponse.value = false;
     regeneratingMessageId.value = null;
     pendingAiMessageId.value = null;
+
+    // Attendre le rendu avant de scroller
     await nextTick();
     scrollToBottom();
 }
@@ -368,9 +363,11 @@ function scrollToBottom() {
     0% {
         background-color: rgba(99, 102, 241, 0);
     }
+
     50% {
         background-color: rgba(99, 102, 241, 0.3);
     }
+
     100% {
         background-color: rgba(99, 102, 241, 0.1);
     }

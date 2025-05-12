@@ -212,7 +212,7 @@ import { useToast } from 'vue-toastification';
 import { useAuthStore } from '../../../stores/auth';
 import Database from '../../../utils/database.utils';
 import LoadingOverlay from '../../../components/LoadingOverlay.vue';
-import DeleteConfirmModal from '../../../components/chat/DeleteConfirmModal.vue';
+import DeleteConfirmModal from '../../../components/DeleteConfirmModal.vue';
 import { Conversation } from '../../../interfaces/conversation.interface';
 
 const toast = useToast();

@@ -115,6 +115,8 @@ function cancelEdit() {
 
 function saveEdit() {
     if (!editedContent.value.trim()) return;
+    // Animation de sauvegarde
+    isEditing.value = false;
     emit('edit', props.message, editedContent.value.trim(), true);
 }
 

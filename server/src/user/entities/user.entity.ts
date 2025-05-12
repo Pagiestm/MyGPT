@@ -38,7 +38,10 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Conversation, (conversation) => conversation.user)
+  @OneToMany(() => Conversation, (conversation) => conversation.user, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   conversations: Conversation[];
 
   @ApiProperty({

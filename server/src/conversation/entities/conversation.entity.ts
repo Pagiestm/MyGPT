@@ -44,7 +44,9 @@ export class Conversation {
   @Column({ nullable: true })
   sharedFrom: string;
 
-  @ManyToOne(() => User, (user) => user.conversations)
+  @ManyToOne(() => User, (user) => user.conversations, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId' })
   user: User;
 
