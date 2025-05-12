@@ -1,110 +1,20 @@
 <div align="center">
-  <div class="logo-container">
-    <img src="client/public/logo.svg" alt="MyGPT Logo" width="120" height="120" class="animated-logo"/>
-    <div class="glow"></div>
+  <div>
+    <img src="client/public/logo.svg" alt="MyGPT Logo" width="120" height="120"/>
   </div>
   
-  <h1 class="title">MyGPT <span class="version">v1.0</span></h1>
-  <h3 class="subtitle">Assistant IA Conversationnel</h3>
+  <h1>MyGPT <span>v1.0</span></h1>
+  <h3>Assistant IA Conversationnel</h3>
   
-  <div class="badges">
+  <div>
     <img src="https://img.shields.io/badge/Vue.js-3.3+-42b883.svg?style=for-the-badge&logo=vue.js&logoColor=white" alt="Vue.js"/>
     <img src="https://img.shields.io/badge/NestJS-11+-e0234e.svg?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS"/>
     <img src="https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
     <img src="https://img.shields.io/badge/Tailwind-4.0-38bdf8.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind"/>
   </div>
 
-  <p class="description"><em>Une plateforme de conversation IA moderne qui révolutionne vos interactions avec l'intelligence artificielle</em></p>
+  <p><em>Une plateforme de conversation IA moderne qui révolutionne vos interactions avec l'intelligence artificielle</em></p>
 </div>
-
-<style>
-  /* Styles généraux */
-  .logo-container {
-    position: relative;
-    margin: 20px auto;
-    width: 120px;
-    height: 120px;
-  }
-  
-  .animated-logo {
-    animation: float 4s ease-in-out infinite;
-    filter: drop-shadow(0 5px 15px rgba(99, 102, 241, 0.4));
-    z-index: 2;
-    position: relative;
-  }
-  
-  .glow {
-    position: absolute;
-    width: 100%;
-    height: 20px;
-    background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0) 70%);
-    bottom: -10px;
-    left: 0;
-    z-index: 1;
-    border-radius: 50%;
-    animation: glow 4s ease-in-out infinite;
-    filter: blur(8px);
-    transform-origin: center;
-  }
-  
-  /* Animation du logo */
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
-  }
-  
-  @keyframes glow {
-    0% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.1); }
-    100% { opacity: 0.5; transform: scale(1); }
-  }
-  
-  /* Styles pour les titres */
-  .title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin: 10px 0 0;
-    background: linear-gradient(45deg, #6366F1, #8B5CF6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
-  }
-  
-  .version {
-    font-size: 1.2rem;
-    vertical-align: super;
-    background: linear-gradient(45deg, #6366F1, #8B5CF6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 500;
-    margin-left: 5px;
-  }
-  
-  .subtitle {
-    font-size: 1.5rem;
-    font-weight: 400;
-    margin-top: 0;
-    color: #6B7280;
-  }
-  
-  /* Styles pour la description */
-  .description {
-    max-width: 600px;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin: 20px auto;
-  }
-  
-  /* Styles pour les badges */
-  .badges {
-    margin: 20px 0;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-</style>
 
 ## 📋 Présentation
 
