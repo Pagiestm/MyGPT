@@ -20,6 +20,12 @@
 
 MyGPT est une application web permettant aux utilisateurs de converser avec un modèle d'intelligence artificielle via une interface intuitive et élégante. Développée avec des technologies modernes, elle offre une expérience utilisateur fluide et des fonctionnalités avancées pour tirer le meilleur parti des modèles d'IA conversationnels.
 
+## 🖥️ Aperçu de l'application
+
+MyGPT offre une expérience utilisateur moderne et intuitive:
+
+https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
+
 ### 🌟 Fonctionnalités clés
 
 - **Conversations IA interactives** : Dialoguez en temps réel avec le modèle Gemini de Google qui répond à vos questions, génère du contenu créatif et vous aide dans vos tâches quotidiennes
@@ -193,6 +199,10 @@ npm run test:cov      # Exécuter les tests avec couverture
 npm run test:debug    # Exécuter les tests en mode debug
 ```
 
+Exemple de tests unitaires en action : 
+
+https://github.com/user-attachments/assets/faf5ac6b-41f5-45c2-8487-6794d810c52e
+
 ### Tests E2E (frontend)
 
 Les tests end-to-end sont réalisés avec **Playwright**, permettant de tester l'interface utilisateur dans différents navigateurs :
@@ -210,6 +220,10 @@ Playwright permet de tester sur plusieurs navigateurs simultanément :
 - Chromium
 - Firefox
 - WebKit (Safari)
+
+Exemple de tests end-to-end en action :
+
+https://github.com/user-attachments/assets/3ad72488-0684-4037-8e9a-581f421c15e6
 
 ## 🧹 Standards de code et CI/CD
 
