@@ -94,7 +94,7 @@ Pour cibler un workspace : `npm run <script> -w server` ou `-w client`.
 Le projet suit une approche **TDD** (Red → Green → Refactor).
 
 - **Unitaires** — Jest sur les services, contrôleurs, guards et stratégies du serveur.
-- **End-to-end** — Playwright sur Chromium, Firefox et WebKit. Un faux back-end en mémoire (`client/tests/support/fakeApi.ts`) répond à toute l'API : les tests n'ont besoin ni de base de données ni de Gemini.
+- **End-to-end** — Playwright sur Chromium, Firefox et WebKit, contre le build de production (`vite preview`). Un faux back-end en mémoire (`client/tests/support/fakeApi.ts`) répond à toute l'API : les tests n'ont besoin ni de base de données ni de Gemini.
 
 https://github.com/user-attachments/assets/faf5ac6b-41f5-45c2-8487-6794d810c52e
 
