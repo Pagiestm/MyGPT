@@ -1,7 +1,6 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-      <!-- Logo -->
       <div class="flex-shrink-0">
         <router-link to="/" class="flex items-center">
           <div
@@ -17,7 +16,6 @@
         </router-link>
       </div>
 
-      <!-- Navigation Desktop -->
       <div class="hidden md:flex items-center space-x-1">
         <router-link
           to="/"
@@ -36,10 +34,8 @@
         </router-link>
       </div>
 
-      <!-- Authentication -->
       <div class="flex items-center space-x-2">
         <template v-if="authStore.isAuthenticated">
-          <!-- Menu de profil avec ouverture au clic -->
           <div ref="profileMenuContainer" class="hidden md:block relative">
             <button
               class="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
@@ -63,7 +59,6 @@
               </svg>
             </button>
 
-            <!-- Menu déroulant simplifié -->
             <div
               v-show="profileMenuOpen"
               class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-40 border border-gray-100"
@@ -115,7 +110,6 @@
             </div>
           </div>
 
-          <!-- Version mobile -->
           <div class="md:hidden flex space-x-1">
             <router-link
               to="/profile"
@@ -242,7 +236,6 @@ function toggleProfileMenu() {
   profileMenuOpen.value = !profileMenuOpen.value;
 }
 
-// Ferme le menu si on clique ailleurs sur la page
 function handleClickOutside(event: MouseEvent) {
   if (
     profileMenuOpen.value &&

@@ -32,7 +32,6 @@ export class GeminiAiAdapter implements IAiAdapter {
     try {
       this.logger.log(`Getting AI response for prompt: "${prompt.substring(0, 50)}..."`);
 
-      // Obtenir le modèle
       const model = this.generativeAI.getGenerativeModel({
         model: this.model,
         generationConfig: {
@@ -61,12 +60,10 @@ export class GeminiAiAdapter implements IAiAdapter {
         ],
       });
 
-      // Préparer l'historique de conversation pour donner du contexte
       const chat = model.startChat({
         history: this.formatHistoryForGemini(conversationHistory),
       });
 
-      // Envoyer la requête à l'API Gemini
       const result = await chat.sendMessage(prompt);
       const response = result.response.text();
 
@@ -90,14 +87,10 @@ export class GeminiAiAdapter implements IAiAdapter {
 
       this.logger.error(`Error calling Gemini API: ${errorMessage}`);
 
-      // En cas d'erreur, renvoyer un message par défaut
       return "Désolé, je n'ai pas pu générer une réponse pour le moment. Veuillez réessayer plus tard.";
     }
   }
 
-  /**
-   * Formate l'historique de conversation pour l'API Gemini
-   */
   private formatHistoryForGemini(conversationHistory: string[]): Content[] {
     if (!conversationHistory || conversationHistory.length === 0) {
       return [];

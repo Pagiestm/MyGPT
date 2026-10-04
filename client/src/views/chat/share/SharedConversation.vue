@@ -6,11 +6,9 @@
       message="Chargement de la conversation partagée..."
     />
 
-    <!-- En-tête avec navigation et actions -->
     <header
       class="bg-white border-b border-gray-200 px-4 md:px-6 py-3 md:py-4 flex flex-wrap items-center justify-between shadow-sm"
     >
-      <!-- Partie gauche avec navigation et titre -->
       <div class="flex items-center w-full md:w-auto mb-2 md:mb-0">
         <button
           class="md:hidden p-2 -ml-1 mr-2 rounded-lg text-gray-500 hover:bg-gray-100"
@@ -31,7 +29,6 @@
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="flex items-center space-x-2 ml-auto md:ml-0">
         <button
           v-if="authStore.isAuthenticated"
@@ -57,12 +54,10 @@
       </div>
     </header>
 
-    <!-- Corps du message avec la conversation -->
     <div
       ref="messagesContainer"
       class="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-white"
     >
-      <!-- Bannière d'expiration -->
       <div
         v-if="expirationBanner"
         class="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg"
@@ -73,14 +68,12 @@
         </div>
       </div>
 
-      <!-- Contenu normal -->
       <div v-if="conversation" class="space-y-4 md:space-y-6 py-2 md:py-4">
         <div v-for="message in conversation.messages" :key="message.id" class="group">
           <MessageBubble :message="message" :is-read-only="true" />
         </div>
       </div>
 
-      <!-- État d'erreur -->
       <div v-if="!isLoading && error" class="flex flex-col items-center justify-center h-full p-6">
         <div class="text-red-500 text-6xl mb-4">
           <i class="fas fa-exclamation-circle"></i>
@@ -97,7 +90,6 @@
         </router-link>
       </div>
 
-      <!-- Note de fin de conversation -->
       <div
         v-if="conversation && conversation.messages?.length"
         class="text-center text-gray-400 text-sm py-4 mt-6"
@@ -118,7 +110,6 @@ import LoadingOverlay from '../../../components/LoadingOverlay.vue';
 import Database from '../../../utils/database.utils';
 import { Conversation } from '../../../interfaces/conversation.interface';
 
-// Services et utilitaires
 const route = useRoute();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -127,7 +118,6 @@ const reloadConversations = inject('reloadConversations', () => {});
 const toggleSidebar = inject('toggleSidebar', () => {});
 const emit = defineEmits(['conversation-saved']);
 
-// États
 const shareLink = ref(route.params.shareLink as string);
 const conversation = ref<Conversation | null>(null);
 const isLoading = ref(true);
@@ -138,7 +128,6 @@ const isSaved = ref(false);
 const copied = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 
-// Message d'expiration
 const expirationBanner = computed(() => {
   if (!conversation.value?.shareExpiresAt) return null;
 
@@ -158,12 +147,10 @@ const expirationBanner = computed(() => {
   return null;
 });
 
-// Chargement initial
 onMounted(async () => {
   await loadSharedConversation();
 });
 
-// Charger les détails de la conversation partagée
 async function loadSharedConversation() {
   isLoading.value = true;
   error.value = false;
@@ -185,19 +172,16 @@ async function loadSharedConversation() {
   }
 }
 
-// Sauvegarder la conversation dans la liste personnelle
 async function saveToMyList() {
   if (!conversation.value || isSaved.value) return;
 
   isSaving.value = true;
   try {
-    // Appel à l'API pour sauvegarder la conversation
     const savedConversation = await Database.create('conversations/save-shared', {
       conversationId: conversation.value.id,
       shareLink: shareLink.value,
     });
 
-    // Mettre à jour l'état local
     isSaved.value = true;
     toast.success('Conversation ajoutée à votre liste');
 
@@ -216,7 +200,6 @@ async function saveToMyList() {
   }
 }
 
-// Copier le lien de partage dans le presse-papiers
 async function copyLink() {
   try {
     await navigator.clipboard.writeText(window.location.href);
@@ -232,7 +215,6 @@ async function copyLink() {
   }
 }
 
-// Faire défiler vers le bas du conteneur de messages
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;

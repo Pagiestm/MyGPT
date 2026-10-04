@@ -3,9 +3,7 @@
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="fixed inset-0 bg-black opacity-40" @click="emit('close')"></div>
 
-      <!-- Container du modal -->
       <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full">
-        <!-- En-tête -->
         <div
           class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4 text-white rounded-t-xl"
         >
@@ -16,7 +14,6 @@
         </div>
 
         <div class="p-6">
-          <!-- Si un lien existe déjà -->
           <div v-if="shareLink" class="mb-6">
             <h3 class="text-gray-700 font-medium mb-2">Lien de partage</h3>
 
@@ -56,7 +53,6 @@
             </div>
           </div>
 
-          <!-- Options de configuration -->
           <div class="mb-6">
             <h3 class="text-gray-700 font-medium mb-3">Configurer le partage</h3>
 
@@ -84,10 +80,8 @@
             </div>
           </div>
 
-          <!-- Séparateur -->
           <div class="border-t border-gray-200 my-4"></div>
 
-          <!-- Actions -->
           <div class="flex flex-col sm:flex-row sm:justify-between space-y-3 sm:space-y-0">
             <button
               v-if="shareLink"
@@ -153,26 +147,22 @@ const customExpirationDate = ref('');
 const isLoading = ref(false);
 const copied = ref(false);
 
-// URL complète du partage
 const fullShareLink = computed(() => {
   if (!shareLink.value) return '';
   const baseUrl = window.location.origin;
   return `${baseUrl}/chat/shared/${shareLink.value}`;
 });
 
-// Texte d'expiration formaté
 const expirationText = computed(() => {
   if (!expirationDate.value) return "Ce lien n'expire jamais";
 
   const now = new Date();
   const expiry = new Date(expirationDate.value);
 
-  // Si la date est dépassée
   if (expiry < now) {
     return 'Ce lien a expiré';
   }
 
-  // Calculer la différence en jours
   const diffTime = expiry.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -185,7 +175,6 @@ const expirationText = computed(() => {
   }
 });
 
-// Vérifie si le lien a expiré
 const isLinkExpired = computed(() => {
   if (!expirationDate.value) return false;
   const now = new Date();
@@ -193,7 +182,6 @@ const isLinkExpired = computed(() => {
   return expiry < now;
 });
 
-// Calcule la date d'expiration en fonction de l'option sélectionnée
 function getExpirationDate(): string | undefined {
   switch (expirationOption.value) {
     case 'never':
@@ -223,7 +211,6 @@ function getExpirationDate(): string | undefined {
   }
 }
 
-// Génére ou mettre à jour un lien de partage
 async function generateShareLink() {
   isLoading.value = true;
   try {
@@ -232,7 +219,6 @@ async function generateShareLink() {
       expiresAt,
     });
 
-    // Mettre à jour l'état immédiatement
     shareLink.value = response.data.shareLink;
     if (expiresAt) {
       expirationDate.value = new Date(expiresAt);
@@ -240,7 +226,6 @@ async function generateShareLink() {
       expirationDate.value = null;
     }
 
-    // Attendre que Vue termine son cycle de rendu
     setTimeout(() => {
       // Sélectionner l'input pour faciliter la copie
       const inputElement = document.querySelector('input[readonly]') as HTMLInputElement;
@@ -257,7 +242,6 @@ async function generateShareLink() {
   }
 }
 
-// Révoque un lien de partage
 async function revokeShareLink() {
   isLoading.value = true;
   try {
@@ -272,7 +256,6 @@ async function revokeShareLink() {
   }
 }
 
-// Copie le lien dans le presse-papier
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(fullShareLink.value);
@@ -287,7 +270,6 @@ async function copyToClipboard() {
   }
 }
 
-// Vérifie si un lien de partage existe déjà lors du chargement
 async function checkExistingShareLink() {
   isLoading.value = true;
   try {
@@ -324,7 +306,6 @@ async function checkExistingShareLink() {
   }
 }
 
-// Initialisation du composant
 onMounted(() => {
   checkExistingShareLink();
 });

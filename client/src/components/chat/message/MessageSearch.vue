@@ -1,6 +1,5 @@
 <template>
   <div ref="searchContainer" class="border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
-    <!-- Barre de recherche -->
     <div class="flex gap-2">
       <div class="relative flex-1">
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -27,7 +26,6 @@
       </button>
     </div>
 
-    <!-- Résultats -->
     <transition
       enter-active-class="transition ease-out duration-200"
       enter-from-class="opacity-0 translate-y-1"
@@ -37,7 +35,6 @@
         v-if="searchResults.length > 0 || (searchPerformed && !searchResults.length)"
         class="mt-3"
       >
-        <!-- En-tête des résultats -->
         <div class="mb-2 flex justify-between">
           <span class="text-sm text-gray-500 font-medium">
             {{ searchResults.length ? `${searchResults.length} résultat(s)` : 'Aucun résultat' }}
@@ -51,7 +48,6 @@
           </button>
         </div>
 
-        <!-- Liste des résultats -->
         <div v-if="searchResults.length" class="max-h-72 space-y-2 overflow-y-auto pr-1">
           <div
             v-for="message in searchResults"
@@ -59,7 +55,6 @@
             class="cursor-pointer rounded-lg border border-gray-200 p-3 shadow-sm hover:-translate-y-0.5 hover:bg-indigo-50 transition-all"
             @click="scrollToMessage(message.id)"
           >
-            <!-- En-tête du message -->
             <div class="flex justify-between items-center mb-1.5">
               <div class="flex items-center">
                 <div
@@ -78,7 +73,6 @@
               </span>
             </div>
 
-            <!-- Contenu avec surlignage -->
             <div class="line-clamp-2 text-sm text-gray-700">
               <template v-for="(part, idx) in highlightText(message.content)" :key="idx">
                 <mark v-if="part.highlight" class="bg-yellow-200/50 rounded px-0.5 font-medium">
@@ -90,7 +84,6 @@
           </div>
         </div>
 
-        <!-- Message pour aucun résultat -->
         <div
           v-if="searchPerformed && !searchResults.length"
           class="rounded-lg bg-gray-50 border py-5 text-center"
@@ -109,21 +102,18 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Database from '../../../utils/database.utils';
 import { Message } from '../../../interfaces/message.interface';
 
-// Props & Emits
 const props = defineProps<{ conversationId: string }>();
 const emit = defineEmits<{
   (e: 'scrollToMessage', messageId: string): void;
   (e: 'close'): void;
 }>();
 
-// État
 const keyword = ref('');
 const searchResults = ref<Message[]>([]);
 const isSearching = ref(false);
 const searchPerformed = ref(false);
 const searchContainer = ref<HTMLElement | null>(null);
 
-// Recherche
 async function performSearch() {
   if (!keyword.value.trim() || isSearching.value) return;
 
@@ -142,7 +132,6 @@ async function performSearch() {
   }
 }
 
-// Actions
 function clearSearch() {
   keyword.value = '';
   searchResults.value = [];
@@ -154,7 +143,6 @@ function scrollToMessage(messageId: string) {
   emit('close');
 }
 
-// Formatage
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
@@ -165,7 +153,6 @@ function formatDate(dateString: string): string {
   });
 }
 
-// Surlignage
 type TextPart = { text: string; highlight: boolean };
 
 function highlightText(text: string): TextPart[] {
@@ -200,7 +187,6 @@ function highlightText(text: string): TextPart[] {
   }
 }
 
-// Détection clic extérieur
 function handleOutsideClick(event: MouseEvent) {
   if (searchContainer.value && !searchContainer.value.contains(event.target as Node)) {
     emit('close');

@@ -1,21 +1,17 @@
 <template>
   <div class="text-gray-800 w-full">
-    <!-- Texte et listes formatés -->
     <div v-for="(part, index) in formattedParts" :key="`part-${index}`">
-      <!-- Listes à puces -->
       <ul v-if="part.type === 'list'" class="pl-5 my-3 space-y-1 list-disc">
         <li v-for="(item, i) in part.items" :key="`item-${i}`" class="ml-1">
           <span class="formatted-content" :data-formatted-text="formatText(item)"></span>
         </li>
       </ul>
 
-      <!-- Texte normal -->
       <p v-else class="whitespace-pre-wrap break-words leading-relaxed">
         <span class="formatted-content" :data-formatted-text="formatText(part.text || '')"></span>
       </p>
     </div>
 
-    <!-- Blocs de code -->
     <CodeBlock
       v-for="(block, index) in codeBlocks"
       :key="`code-${index}`"
@@ -31,7 +27,6 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import CodeBlock from './CodeBlock.vue';
 
-// Types
 interface FormattedPart {
   type: 'text' | 'list';
   text?: string;
@@ -43,7 +38,6 @@ interface CodeBlockData {
   code: string;
 }
 
-// Props & Emits
 const props = defineProps<{
   content: string;
   isFromAi: boolean;
@@ -51,13 +45,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['copyCode']);
 
-// État
 const isMobile = ref(window.innerWidth < 768);
 
-// Regex pour les blocs de code
 const CODE_BLOCK_REGEX = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
 
-// Lifecycle hooks
 onMounted(() => {
   renderFormattedContent();
   window.addEventListener('resize', handleResize);
@@ -67,7 +58,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
 
-// Fonction pour rendre le contenu formaté
 function renderFormattedContent() {
   const elements = document.querySelectorAll('.formatted-content');
   elements.forEach((element) => {
@@ -77,12 +67,10 @@ function renderFormattedContent() {
   });
 }
 
-// Gérer le redimensionnement de la fenêtre
 function handleResize() {
   isMobile.value = window.innerWidth < 768;
 }
 
-// Extraire les blocs de code du contenu
 const codeBlocks = computed<CodeBlockData[]>(() => {
   const blocks: CodeBlockData[] = [];
   const content = props.content || '';
@@ -98,12 +86,10 @@ const codeBlocks = computed<CodeBlockData[]>(() => {
   return blocks;
 });
 
-// Contenu sans les blocs de code
 const contentWithoutCode = computed<string>(() => {
   return (props.content || '').replace(CODE_BLOCK_REGEX, '[CODE_BLOCK]');
 });
 
-// Traiter le contenu pour obtenir des parties formatées
 const formattedParts = computed<FormattedPart[]>(() => {
   const parts: FormattedPart[] = [];
   const lines = contentWithoutCode.value.split('\n');
@@ -129,14 +115,12 @@ const formattedParts = computed<FormattedPart[]>(() => {
     const line = lines[i].trim();
     const isLastLine = i === lines.length - 1;
 
-    // Cas du bloc de code
     if (line === '[CODE_BLOCK]') {
       addText();
       addList();
       continue;
     }
 
-    // Cas de liste à puces
     if (line.match(/^[*-]\s/)) {
       addText();
       listItems.push(line.substring(2));
@@ -145,9 +129,7 @@ const formattedParts = computed<FormattedPart[]>(() => {
       if (isLastLine || !nextLine || !nextLine.match(/^[*-]\s/)) {
         addList();
       }
-    }
-    // Cas de texte normal
-    else {
+    } else {
       addList();
 
       if (line || isLastLine) {
@@ -162,7 +144,6 @@ const formattedParts = computed<FormattedPart[]>(() => {
   return parts;
 });
 
-// Formater le texte (gras et code inline)
 function formatText(text: string): string {
   if (!text) return '';
 
@@ -179,7 +160,6 @@ function formatText(text: string): string {
   });
 }
 
-// Gérer la copie du code
 function onCopyCode(code: string) {
   emit('copyCode', code);
 }

@@ -1,9 +1,6 @@
 import api from './api.utils';
 
 export default class Database {
-  /**
-   * -- General CRUD
-   */
   static async getAll(collection: string, params?: object) {
     try {
       const response = await api.get(`/${collection}`, { params });

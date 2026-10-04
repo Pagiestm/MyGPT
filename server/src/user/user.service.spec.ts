@@ -7,14 +7,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
-// Mock de bcrypt
 jest.mock('bcrypt');
 
 describe('UserService', () => {
   let service: UserService;
   let mockRepository: Partial<Repository<User>>;
 
-  // Données de test
   const mockUser: User = {
     id: '1',
     email: 'test@example.com',
@@ -31,14 +29,12 @@ describe('UserService', () => {
   };
 
   beforeEach(async () => {
-    // Création d'un mock repository avec typage explicite
     mockRepository = {
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
     };
 
-    // Mock de bcrypt.hash
     (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
 
     const module: TestingModule = await Test.createTestingModule({
@@ -104,7 +100,6 @@ describe('UserService', () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
 
-      // Mock de la création d'utilisateur
       (mockRepository.create as jest.Mock).mockReturnValue({
         ...mockCreateUserDto,
         password: 'hashedPassword',
@@ -171,10 +166,8 @@ describe('UserService', () => {
     });
 
     it('should not check uniqueness if new pseudo is same as current', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour la sauvegarde
       (mockRepository.save as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.updatePseudo('1', mockUser.pseudo);
@@ -199,10 +192,8 @@ describe('UserService', () => {
     });
 
     it('should delete user account successfully', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour la suppression réussie
       (mockRepository.remove as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.deleteAccount('1');
@@ -223,10 +214,8 @@ describe('UserService', () => {
     });
 
     it('should throw InternalServerErrorException if deletion fails', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour simuler une erreur lors de la suppression
       (mockRepository.remove as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(service.deleteAccount('1')).rejects.toThrow(

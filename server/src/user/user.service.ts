@@ -110,7 +110,6 @@ export class UserService {
   }
 
   async deleteAccount(userId: string): Promise<{ message: string }> {
-    // Vérifier si l'utilisateur existe
     const user = await this.findOne(userId);
 
     try {

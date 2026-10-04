@@ -16,17 +16,14 @@ export default defineConfig(
     'client/tests-examples/',
   ]),
 
-  // Base commune
   js.configs.recommended,
   tseslint.configs.recommended,
 
-  // Fichiers de config / scripts Node (racine, vite, playwright...)
   {
     files: ['*.{js,mjs,cjs,ts}', '*/*.config.{js,mjs,cjs,ts}'],
     languageOptions: { globals: globals.node },
   },
 
-  // ---------- Client (Vue 3) ----------
   {
     files: ['client/**/*.{js,ts,vue}'],
     extends: [pluginVue.configs['flat/recommended']],
@@ -43,7 +40,6 @@ export default defineConfig(
     },
   },
 
-  // ---------- Server (NestJS, règles typées) ----------
   {
     files: ['server/**/*.ts'],
     extends: [tseslint.configs.recommendedTypeChecked],

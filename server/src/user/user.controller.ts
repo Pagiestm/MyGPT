@@ -67,7 +67,6 @@ export class UserController {
   async deleteAccount(@Request() req: AuthenticatedRequest): Promise<{ message: string }> {
     const result = await this.userService.deleteAccount(req.user.id);
 
-    // Déconnecter l'utilisateur
     req.session.destroy(() => {});
 
     return result;

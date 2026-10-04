@@ -2,7 +2,6 @@
   <header
     class="bg-white border-b border-gray-200 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between shadow-sm"
   >
-    <!-- Bouton menu sur mobile -->
     <button
       class="md:hidden p-2 -ml-1 rounded-lg text-gray-500 hover:bg-gray-100"
       @click="$emit('toggle-sidebar')"
@@ -11,13 +10,11 @@
     </button>
 
     <div class="flex-1 group">
-      <!-- Mode affichage -->
       <h1
         v-if="!isEditing"
         class="font-semibold text-lg md:text-xl text-gray-800 flex items-center"
         :class="{ 'ml-2': isMobileView }"
       >
-        <!-- Titre tronqué sur mobile -->
         <span
           class="truncate max-w-[10rem] sm:max-w-[16rem] md:max-w-[24rem] lg:max-w-[32rem] xl:max-w-[40rem]"
           >{{ title }}</span
@@ -39,7 +36,6 @@
         </button>
       </h1>
 
-      <!-- Mode édition - adapté pour mobile -->
       <div v-else class="relative inline-block ml-0 md:ml-0" :class="{ 'ml-2': isMobileView }">
         <input
           ref="inputRef"
@@ -55,7 +51,6 @@
     </div>
 
     <div class="flex items-center space-x-1 md:space-x-3 ml-2 md:ml-4">
-      <!-- Bouton de recherche -->
       <button
         class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
         title="Rechercher dans la conversation"
@@ -84,7 +79,6 @@
           <i class="fas fa-ellipsis-v"></i>
         </button>
 
-        <!-- Menu dropdown mobile -->
         <div
           v-if="showMobileMenu"
           class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200"
@@ -105,7 +99,6 @@
         </div>
       </div>
 
-      <!-- Boutons de navigation - visibles sur tablette/desktop -->
       <div class="hidden md:flex items-center space-x-1 md:space-x-3">
         <button
           class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
@@ -162,7 +155,6 @@ const emit = defineEmits<{
   (e: 'toggle-sidebar'): void;
 }>();
 
-// État
 const isEditing = ref(false);
 const editValue = ref('');
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -170,7 +162,6 @@ const isUpdating = ref(false);
 const showMobileMenu = ref(false);
 const isMobileView = ref(window.innerWidth < 768);
 
-// Gestion du responsive
 function checkMobileView() {
   isMobileView.value = window.innerWidth < 768;
 }
@@ -185,11 +176,9 @@ onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);
 });
 
-// Fermer le menu mobile quand on clique ailleurs
 function handleOutsideClick(event: MouseEvent) {
   if (showMobileMenu.value) {
     const target = event.target as HTMLElement;
-    // Vérifier si le clic provient du bouton de menu ou du contenu du menu
     const isMenuButton = target.closest('[data-mobile-menu-button]');
     const isMenuContent = target.closest('[data-mobile-menu-content]');
 
@@ -199,7 +188,6 @@ function handleOutsideClick(event: MouseEvent) {
   }
 }
 
-// Démarrer l'édition du titre
 function startEdit() {
   editValue.value = props.title;
   isEditing.value = true;
@@ -211,13 +199,11 @@ function updateTitle() {
   if (isUpdating.value) return;
   isUpdating.value = true;
 
-  // Valeur par défaut si vide
   const newTitle = editValue.value.trim() || 'Nouvelle conversation';
 
   emit('update:title', newTitle);
   isEditing.value = false;
 
-  // Réinitialiser après un court délai
   setTimeout(() => (isUpdating.value = false), 100);
 }
 </script>

@@ -6,7 +6,6 @@
       <div
         :class="['inline-block max-w-[85%]', message.isFromAi ? 'ml-0 mr-auto' : 'mr-0 ml-auto']"
       >
-        <!-- Mode édition -->
         <MessageEditor
           v-if="isEditing && !message.isFromAi"
           ref="editTextarea"
@@ -16,7 +15,6 @@
           @cancel="cancelEdit"
         />
 
-        <!-- Mode affichage normal -->
         <div v-else :class="bubbleClasses">
           <LoadingDots v-if="isRegenerating && message.isFromAi" />
 
@@ -28,7 +26,6 @@
           />
         </div>
 
-        <!-- Actions sur le message (visibles au survol) -->
         <div
           v-if="!message.isFromAi && !isEditing"
           class="flex justify-end mt-2 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity"
@@ -73,19 +70,16 @@ const emit = defineEmits<{
   (e: 'edit', message: Message, content: string, regenerateAi: boolean): void;
 }>();
 
-// États
 const isEditing = ref(false);
 const editedContent = ref('');
 const editTextarea = ref<InstanceType<typeof MessageEditor> | null>(null);
 
-// Classes calculées pour la bulle de message
 const bubbleClasses = computed(() => [
   'rounded-2xl shadow-sm overflow-hidden',
   props.message.isFromAi ? 'bg-white border border-gray-200' : 'bg-primary',
   props.isRegenerating && props.message.isFromAi ? 'p-2' : 'p-5',
 ]);
 
-// Fonctions
 function startEditing() {
   editedContent.value = props.message.content;
   isEditing.value = true;
@@ -106,7 +100,6 @@ function cancelEdit() {
 
 function saveEdit() {
   if (!editedContent.value.trim()) return;
-  // Animation de sauvegarde
   isEditing.value = false;
   emit('edit', props.message, editedContent.value.trim(), true);
 }

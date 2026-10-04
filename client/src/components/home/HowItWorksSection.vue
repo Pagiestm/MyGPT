@@ -40,7 +40,6 @@
         </template>
       </div>
 
-      <!-- Chat Demo -->
       <div
         class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
       >

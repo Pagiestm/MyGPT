@@ -71,7 +71,6 @@ function insertNewLine() {
 }
 
 onMounted(() => {
-  // Focus automatique sur le textarea au chargement
   if (textareaRef.value) {
     textareaRef.value.focus();
   }

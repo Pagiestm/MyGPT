@@ -20,9 +20,7 @@
             </div>
           </div>
 
-          <!-- Ajout des icônes de navigation -->
           <div class="flex items-center space-x-1 md:space-x-3">
-            <!-- Menu mobile -->
             <div class="relative md:hidden">
               <button
                 class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all"
@@ -32,7 +30,6 @@
                 <i class="fas fa-ellipsis-v"></i>
               </button>
 
-              <!-- Menu dropdown mobile -->
               <div
                 v-if="showMobileMenu"
                 class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200"
@@ -53,7 +50,6 @@
               </div>
             </div>
 
-            <!-- Boutons de navigation - visibles sur tablette/desktop -->
             <div class="hidden md:flex items-center space-x-1 md:space-x-3">
               <router-link
                 to="/"
@@ -100,9 +96,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Contenu principal -->
       <div class="bg-white shadow overflow-hidden rounded-lg">
-        <!-- Liste des conversations sauvegardées -->
         <div v-if="savedConversations.length > 0">
           <ul class="divide-y divide-gray-200">
             <li
@@ -110,9 +104,7 @@
               :key="conversation.id"
               class="px-6 py-4 hover:bg-gray-50 relative"
             >
-              <!-- Conteneur principal avec flexbox adaptatif -->
               <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                <!-- Informations de la conversation -->
                 <div class="flex-1 min-w-0">
                   <router-link :to="`/chat/${conversation.id}`" class="block">
                     <h3 class="text-lg font-medium text-gray-800 truncate">
@@ -125,7 +117,6 @@
                   </router-link>
                 </div>
 
-                <!-- Actions et statut - en dessous sur mobile, à droite sur desktop -->
                 <div class="flex items-center mt-3 md:mt-0">
                   <span
                     class="mr-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
@@ -134,7 +125,6 @@
                     Sauvegardée
                   </span>
 
-                  <!-- Bouton de suppression -->
                   <button
                     class="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-all"
                     title="Supprimer la conversation"
@@ -148,7 +138,6 @@
           </ul>
         </div>
 
-        <!-- État vide -->
         <div v-else class="p-8 text-center">
           <div class="text-gray-400 text-6xl mb-4">
             <i class="fas fa-bookmark"></i>
@@ -183,28 +172,23 @@ import { Conversation } from '../../../interfaces/conversation.interface';
 const toast = useToast();
 const authStore = useAuthStore();
 
-// États
 const savedConversations = ref<Conversation[]>([]);
 const isLoading = ref(true);
 const isMobileView = ref(window.innerWidth < 768);
 const showMobileMenu = ref(false);
 
-// États pour la suppression
 const showDeleteConfirmModal = ref(false);
 const conversationIdToDelete = ref<string | null>(null);
 
-// Fonctions injectées
 const toggleSidebar = inject('toggleSidebar', () => {});
 const closeSidebar = inject('closeSidebar', () => {});
 const reloadConversations = inject('reloadConversations', () => {});
 
-// Afficher la modal de confirmation de suppression
 function showDeleteConfirm(id: string) {
   conversationIdToDelete.value = id;
   showDeleteConfirmModal.value = true;
 }
 
-// Confirmer et exécuter la suppression
 async function confirmDeleteConversation() {
   if (!conversationIdToDelete.value) return;
 
@@ -212,7 +196,6 @@ async function confirmDeleteConversation() {
     // Utiliser l'endpoint de l'API comme dans ChatLayout
     await Database.delete(`conversations/${conversationIdToDelete.value}`);
 
-    // Mettre à jour la liste locale
     savedConversations.value = savedConversations.value.filter(
       (conv) => conv.id !== conversationIdToDelete.value,
     );
@@ -230,16 +213,13 @@ async function confirmDeleteConversation() {
   }
 }
 
-// Gestion du responsive
 function handleResize() {
   isMobileView.value = window.innerWidth < 768;
 }
 
-// Fermer le menu mobile quand on clique ailleurs
 function handleOutsideClick(event: MouseEvent) {
   if (showMobileMenu.value) {
     const target = event.target as HTMLElement;
-    // Vérifier si le clic provient du bouton de menu ou du contenu du menu
     const isMenuButton = target.closest('[data-mobile-menu-button]');
     const isMenuContent = target.closest('[data-mobile-menu-content]');
 
@@ -249,7 +229,6 @@ function handleOutsideClick(event: MouseEvent) {
   }
 }
 
-// Initialisation
 onMounted(async () => {
   if (isMobileView.value) {
     closeSidebar();
@@ -262,7 +241,7 @@ onMounted(async () => {
   }
 
   window.addEventListener('resize', handleResize);
-  document.addEventListener('click', handleOutsideClick); // Ajout de l'écouteur pour le clic extérieur
+  document.addEventListener('click', handleOutsideClick);
 });
 
 onUnmounted(() => {
@@ -270,7 +249,6 @@ onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);
 });
 
-// Charger les conversations sauvegardées depuis l'API
 async function loadSavedConversations() {
   isLoading.value = true;
 
@@ -285,7 +263,6 @@ async function loadSavedConversations() {
   }
 }
 
-// Formater la date
 function formatDate(dateString: string) {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('fr-FR', {

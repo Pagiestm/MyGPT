@@ -1,11 +1,9 @@
 <template>
   <div class="bg-gray-50 min-h-screen py-8">
     <div class="container mx-auto px-4 max-w-3xl">
-      <!-- En-tête de profil -->
       <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-20"></div>
         <div class="p-6">
-          <!-- Avatar et nom d'utilisateur -->
           <div class="flex items-center space-x-4">
             <div
               class="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center border-2 border-white shadow"
@@ -37,7 +35,6 @@
         </div>
       </div>
 
-      <!-- Informations du profil -->
       <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <div class="p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -59,7 +56,6 @@
           </h2>
 
           <div v-if="profile" class="grid grid-cols-1 gap-4">
-            <!-- Information du pseudo avec possibilité de modification -->
             <div
               class="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-100 transition-all duration-300"
             >
@@ -87,12 +83,10 @@
                 </button>
               </div>
 
-              <!-- Mode affichage -->
               <div v-if="!isEditingPseudo" class="mt-1 text-gray-800">
                 {{ profile.pseudo }}
               </div>
 
-              <!-- Mode édition -->
               <div v-else class="mt-2">
                 <input
                   v-model="newPseudo"
@@ -159,7 +153,6 @@
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -233,7 +226,6 @@
     </div>
   </div>
 
-  <!-- Modal de confirmation pour la suppression du compte -->
   <DeleteConfirmModal
     v-if="showDeleteConfirmModal"
     title="Supprimer votre compte"
@@ -257,17 +249,14 @@ const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
 
-// Variables pour l'édition du pseudo
 const isEditingPseudo = ref(false);
 const newPseudo = ref('');
 const isUpdatingPseudo = ref(false);
 const pseudoError = ref('');
 
-// Variable pour le modal de confirmation de suppression
 const showDeleteConfirmModal = ref(false);
 const isDeletingAccount = ref(false);
 
-// Validation du pseudo
 const isPseudoValid = computed(() => {
   return (
     newPseudo.value.length >= 3 &&
@@ -298,12 +287,10 @@ async function logout() {
   }
 }
 
-// Fonction pour afficher le modal de confirmation
 function showDeleteConfirm() {
   showDeleteConfirmModal.value = true;
 }
 
-// Fonction pour supprimer le compte
 async function deleteAccount() {
   if (isDeletingAccount.value) return;
 
@@ -312,10 +299,8 @@ async function deleteAccount() {
 
     await Database.delete('users/profile');
 
-    // Déconnexion après suppression du compte
     await authStore.logout();
 
-    // Notification et redirection
     toast.success('Votre compte a été supprimé avec succès');
     router.push('/');
   } catch (error) {
@@ -327,7 +312,6 @@ async function deleteAccount() {
   }
 }
 
-// Fonction pour commencer l'édition du pseudo
 function startEditingPseudo() {
   if (!profile.value) return;
   newPseudo.value = profile.value.pseudo;
@@ -335,14 +319,12 @@ function startEditingPseudo() {
   pseudoError.value = '';
 }
 
-// Fonction pour annuler l'édition du pseudo
 function cancelEditingPseudo() {
   isEditingPseudo.value = false;
   newPseudo.value = '';
   pseudoError.value = '';
 }
 
-// Fonction pour sauvegarder le nouveau pseudo
 async function savePseudo() {
   if (!profile.value || !isPseudoValid.value) return;
 
@@ -362,7 +344,6 @@ async function savePseudo() {
   } catch (error: unknown) {
     console.error('Erreur lors de la mise à jour du pseudo:', error);
 
-    // Définir un type pour l'erreur avec une structure attendue
     interface ApiError {
       response?: {
         status: number;
@@ -373,7 +354,6 @@ async function savePseudo() {
       message?: string;
     }
 
-    // Extraire les messages d'erreur avec un typage approprié
     const apiError = error as ApiError;
 
     if (apiError.response && apiError.response.data) {

@@ -12,7 +12,6 @@ router.beforeEach((to, _from, next) => {
 
   const authStore = useAuthStore();
 
-  // Vérification des routes protégées
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     // Si c'est une conversation partagée, rediriger vers login avec l'URL en paramètre
     if (to.path.startsWith('/chat/shared/')) {
@@ -24,7 +23,6 @@ router.beforeEach((to, _from, next) => {
     return next('/login');
   }
 
-  // Redirection si déjà connecté
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     // Si on a un paramètre de redirection (venant d'une conversation partagée)
     const redirectPath = to.query.redirect;

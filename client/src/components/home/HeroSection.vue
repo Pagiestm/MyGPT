@@ -30,7 +30,6 @@
           <div
             class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-2xl border border-gray-200"
           >
-            <!-- En-tête du chat -->
             <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4 flex items-center">
               <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center mr-3">
                 <svg
@@ -54,9 +53,7 @@
               </div>
             </div>
 
-            <!-- Corps du chat -->
             <div class="bg-gray-50 p-6 h-96 overflow-y-auto flex flex-col space-y-4">
-              <!-- Message de l'assistant -->
               <div class="flex items-start">
                 <div
                   class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-2 flex-shrink-0"
@@ -72,7 +69,6 @@
                 </div>
               </div>
 
-              <!-- Message de l'utilisateur -->
               <div class="flex items-start justify-end">
                 <div class="bg-indigo-500 p-3 rounded-lg shadow-sm max-w-xs">
                   <p class="text-white">
@@ -82,7 +78,6 @@
                 </div>
               </div>
 
-              <!-- Message de l'assistant -->
               <div class="flex items-start">
                 <div
                   class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center mr-2 flex-shrink-0"
@@ -99,7 +94,6 @@
                 </div>
               </div>
 
-              <!-- Indicateur de saisie -->
               <div class="flex items-center space-x-1 ml-10">
                 <div class="h-2 w-2 rounded-full bg-indigo-300 animate-bounce delay-0"></div>
                 <div class="h-2 w-2 rounded-full bg-indigo-300 animate-bounce delay-150"></div>
@@ -107,7 +101,6 @@
               </div>
             </div>
 
-            <!-- Zone de saisie -->
             <div class="bg-white px-4 py-4 border-t border-gray-200">
               <div class="flex items-center">
                 <input

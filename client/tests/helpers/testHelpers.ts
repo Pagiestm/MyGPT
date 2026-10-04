@@ -1,8 +1,5 @@
 import { Page, expect } from '@playwright/test';
 
-/**
- * Configure les mocks pour l'authentification
- */
 export async function setupAuthentication(page: Page) {
   await page.route('**/auth/login', async (route) => {
     await route.fulfill({
@@ -35,9 +32,6 @@ export async function setupAuthentication(page: Page) {
   });
 }
 
-/**
- * Configure les mocks pour les conversations
- */
 export async function setupConversations(
   page: Page,
   conversations: {
@@ -48,7 +42,6 @@ export async function setupConversations(
     updatedAt: string;
   }[] = [],
 ) {
-  // Si aucune conversation n'est fournie, utiliser une conversation par défaut
   if (conversations.length === 0) {
     conversations = [
       {
@@ -72,9 +65,6 @@ export async function setupConversations(
   });
 }
 
-/**
- * Configure le mock pour une conversation spécifique
- */
 export async function setupSingleConversation(page: Page, conversationId: string, name: string) {
   await page.route(`**/conversations/${conversationId}`, async (route) => {
     if (route.request().method() === 'GET') {
@@ -117,9 +107,6 @@ export async function setupSingleConversation(page: Page, conversationId: string
   });
 }
 
-/**
- * Configure le mock pour la suppression d'une conversation
- */
 export async function setupConversationDeletion(page: Page, conversationId: string) {
   await page.route(`**/conversations/${conversationId}`, async (route) => {
     if (route.request().method() === 'DELETE') {
@@ -131,9 +118,6 @@ export async function setupConversationDeletion(page: Page, conversationId: stri
   });
 }
 
-/**
- * Configure les mocks pour les messages d'une conversation
- */
 export async function setupMessages(
   page: Page,
   conversationId: string,
@@ -146,7 +130,6 @@ export async function setupMessages(
     updatedAt: string;
   }[] = [],
 ) {
-  // Si aucun message n'est fourni, utiliser des messages par défaut
   if (messages.length === 0) {
     messages = [
       {
@@ -177,9 +160,6 @@ export async function setupMessages(
   });
 }
 
-/**
- * Configure le mock pour la création d'un message
- */
 export async function setupMessageCreation(
   page: Page,
   message: {
@@ -208,9 +188,6 @@ export async function setupMessageCreation(
   });
 }
 
-/**
- * Se connecte à l'application
- */
 export async function login(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Email').fill('test@example.com');

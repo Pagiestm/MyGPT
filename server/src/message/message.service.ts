@@ -22,24 +22,19 @@ export class MessageService {
     // Vérifier que la conversation existe
     await this.conversationService.findOne(createMessageDto.conversationId);
 
-    // Créer et sauvegarder le message de l'utilisateur
     const userMessage = this.messagesRepository.create(createMessageDto);
     await this.messagesRepository.save(userMessage);
 
-    // Si le message n'est pas de l'IA, générer une réponse de l'IA
     if (!createMessageDto.isFromAi) {
-      // Récupérer l'historique de la conversation pour plus de contexte
       const conversationHistory = await this.getConversationHistory(
         createMessageDto.conversationId,
       );
 
-      // Obtenir une réponse de l'IA via l'adaptateur
       const aiResponse = await this.aiAdapter.getAiResponse(
         createMessageDto.content,
         conversationHistory,
       );
 
-      // Créer et sauvegarder la réponse de l'IA
       const aiMessage = this.messagesRepository.create({
         content: aiResponse,
         conversationId: createMessageDto.conversationId,
@@ -80,12 +75,10 @@ export class MessageService {
   ): Promise<Message> {
     const message = await this.findOne(id);
 
-    // Si le message est de l'IA, on ne peut pas le modifier
     if (message.isFromAi) {
       throw new BadRequestException('Cannot update AI messages');
     }
 
-    // Mettre à jour le contenu du message
     message.content = updateMessageDto.content;
     await this.messagesRepository.save(message);
 
@@ -105,7 +98,6 @@ export class MessageService {
         .orderBy('message.createdAt', 'ASC')
         .getMany();
 
-      // Si des messages suivants existent, les supprimer
       if (subsequentMessages.length > 0) {
         await this.messagesRepository.remove(subsequentMessages);
       }

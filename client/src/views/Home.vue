@@ -1,4 +1,3 @@
-// src/views/Home.vue
 <script setup lang="ts">
 import HeroSection from '../components/home/HeroSection.vue';
 import FeaturesSection from '../components/home/FeaturesSection.vue';

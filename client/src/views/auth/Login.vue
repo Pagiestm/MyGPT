@@ -8,7 +8,6 @@
     security-badge-text="Connexion sécurisée"
   >
     <form class="space-y-6" @submit.prevent="handleLogin">
-      <!-- Email -->
       <InputForm
         v-model="form.email.$value"
         label-value="Email"
@@ -21,7 +20,6 @@
       >
       </InputForm>
 
-      <!-- Mot de passe -->
       <div class="mb-4">
         <label for="password" class="block text-gray-700">Mot de passe</label>
         <InputForm
@@ -37,7 +35,6 @@
         </InputForm>
       </div>
 
-      <!-- Bouton de connexion -->
       <div>
         <SubmitButton
           :loading="isLoading"
@@ -98,9 +95,6 @@ const form = defineForm({
   ),
 });
 
-/**
- * Récupère le message d'erreur basé sur le statut HTTP
- */
 function getErrorMessage(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (
@@ -138,7 +132,6 @@ async function handleLogin() {
     if (result) {
       toast.success('Connexion réussie !');
 
-      // Vérifie s'il y a un paramètre de redirection
       const redirectPath = route.query.redirect;
       if (redirectPath) {
         router.push(redirectPath.toString());

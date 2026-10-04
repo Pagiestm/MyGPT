@@ -2,7 +2,6 @@
   <div
     class="min-h-screen flex flex-col bg-gradient-to-r from-indigo-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8"
   >
-    <!-- Logo/Branding -->
     <div class="text-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900 flex items-center justify-center">
         <span class="text-indigo-500 mr-2">My</span>GPT
@@ -10,20 +9,16 @@
       <p class="mt-2 text-lg text-gray-600">Votre assistant IA personnel</p>
     </div>
 
-    <!-- Card principale -->
     <div class="max-w-md w-full mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
-      <!-- En-tête -->
       <div class="px-6 py-8 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
         <h2 class="text-2xl font-bold text-center">{{ title }}</h2>
         <p class="mt-2 text-indigo-100 text-center">{{ subtitle }}</p>
       </div>
 
-      <!-- Contenu -->
       <div class="p-6 sm:p-8">
         <slot></slot>
       </div>
 
-      <!-- Pied de carte -->
       <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center">
         <span class="text-sm text-gray-600">{{ footerText }} </span>
         <router-link
@@ -35,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Illustration ou badge de confiance -->
     <div class="mt-10 text-center">
       <div class="flex items-center justify-center space-x-6">
         <div class="flex items-center">

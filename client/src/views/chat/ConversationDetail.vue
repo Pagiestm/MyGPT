@@ -7,7 +7,6 @@
       @toggle-sidebar="toggleSidebar"
     />
 
-    <!-- Barre de recherche -->
     <MessageSearch
       v-if="isSearchOpen"
       class="px-4 py-2 border-b border-gray-200 bg-white"
@@ -20,15 +19,12 @@
       ref="messagesContainer"
       class="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-white"
     >
-      <!-- Chargement -->
       <div v-if="isLoading" class="flex justify-center items-center h-full">
         <LoadingOverlay :show="isLoading" message="Chargement en cours..." />
       </div>
 
-      <!-- Conversation vide -->
       <EmptyState v-else-if="messages.length === 0" />
 
-      <!-- Messages -->
       <div v-else class="space-y-4 md:space-y-6 py-2 md:py-4">
         <div
           v-for="message in filteredMessages"
@@ -47,7 +43,6 @@
           />
         </div>
 
-        <!-- Animation de chargement pour la réponse IA -->
         <div v-if="isGeneratingResponse" class="group">
           <MessageBubble :message="tempAiMessage" :is-regenerating="true" />
         </div>
@@ -64,7 +59,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Database from '../../utils/database.utils';
 
-// Import des interfaces séparément
 import { Message } from '../../interfaces/message.interface';
 import { Conversation } from '../../interfaces/conversation.interface';
 
@@ -75,20 +69,17 @@ import LoadingOverlay from '../../components/LoadingOverlay.vue';
 import EmptyState from '../../components/chat/EmptyState.vue';
 import MessageSearch from '../../components/chat/message/MessageSearch.vue';
 
-// Services
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const parentUpdateTitle = inject('updateConversationTitle') as
   ((id: string, title: string) => void) | undefined;
 
-// États
 const conversationId = ref<string | null>(null);
 const conversation = ref<Conversation | null>(null);
 const messages = ref<Message[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
 
-// États UI
 const isLoading = ref(false);
 const isSending = ref(false);
 const isGeneratingResponse = ref(false);
@@ -97,11 +88,9 @@ const editingMessage = ref<Message | null>(null);
 const regeneratingMessageId = ref<string | null>(null);
 const pendingAiMessageId = ref<string | null>(null);
 
-// États de la recherche
 const isSearchOpen = ref(false);
 const highlightedMessageId = ref<string | null>(null);
 
-// Computed properties
 const filteredMessages = computed(() => {
   return messages.value;
 });
@@ -117,7 +106,6 @@ const tempAiMessage = computed(() => ({
 
 const toggleSidebar = inject('toggleSidebar', () => {});
 
-// Initialisation
 onMounted(async () => {
   conversationId.value = route.params.id as string;
   await loadConversationData();
@@ -136,7 +124,6 @@ watch(
   },
 );
 
-// Fonctions
 async function loadConversationData() {
   await fetchConversation();
   await fetchMessages();
@@ -158,7 +145,6 @@ function updateTitle(newTitle: string) {
   }
 }
 
-// Fonction pour faire défiler vers un message trouvé
 function scrollToMessage(messageId: string) {
   highlightedMessageId.value = messageId;
 
@@ -166,10 +152,8 @@ function scrollToMessage(messageId: string) {
     const messageElement = document.getElementById(`message-${messageId}`);
 
     if (messageElement && messagesContainer.value) {
-      // 1. Ajouter la classe d'animation
       messageElement.classList.add('highlight-message');
 
-      // 2. Faire défiler vers le message
       messagesContainer.value.scrollTo({
         top: messageElement.offsetTop - 100,
         behavior: 'smooth',
@@ -177,7 +161,6 @@ function scrollToMessage(messageId: string) {
 
       // 3. Préparer la sortie fluide après un délai
       setTimeout(() => {
-        // D'abord, ajouter une classe de sortie (fade-out)
         messageElement.classList.add('highlight-fade-out');
 
         // Puis, après la fin de l'animation de sortie, retirer toutes les classes
@@ -234,7 +217,6 @@ async function sendMessage(content: string) {
     await nextTick();
     scrollToBottom();
 
-    // Indiquer que l'IA génère une réponse
     isGeneratingResponse.value = true;
     pendingAiMessageId.value = null;
 
@@ -260,25 +242,20 @@ async function updateMessage(message: Message, content: string, regenerateAi: bo
       const currentIndex = messages.value.findIndex((m) => m.id === message.id);
 
       if (currentIndex >= 0) {
-        // 1. Conserver uniquement les messages jusqu'au message modifié inclus
         messages.value = messages.value.slice(0, currentIndex + 1);
 
-        // 2. Mettre à jour le contenu du message modifié immédiatement
         messages.value[currentIndex].content = content;
       }
 
-      // Indiquer que l'IA va générer une réponse
       isGeneratingResponse.value = true;
     }
 
-    // Mise à jour du message dans la base de données
     await Database.update('messages', message.id, {
       content,
       regenerateAi,
     });
 
     if (!regenerateAi) {
-      // Si on ne régénère pas de réponse IA, on recharge tous les messages
       await fetchMessages();
     } else {
       // Simuler la génération d'une nouvelle réponse
@@ -300,7 +277,6 @@ async function updateMessage(message: Message, content: string, regenerateAi: bo
 }
 
 async function finishAiResponse() {
-  // Récupérer les messages mis à jour du backend
   await fetchMessages();
   isGeneratingResponse.value = false;
   regeneratingMessageId.value = null;
@@ -319,7 +295,6 @@ function scrollToBottom() {
 </script>
 
 <style scoped>
-/* Animation d'entrée et maintien */
 .highlight-message {
   animation: highlight-appear 0.5s ease;
   background-color: rgba(99, 102, 241, 0.1);
@@ -327,7 +302,6 @@ function scrollToBottom() {
   transition: all 1s ease-out;
 }
 
-/* Animation de sortie */
 .highlight-fade-out {
   background-color: rgba(99, 102, 241, 0);
   box-shadow: 0 0 0 rgba(99, 102, 241, 0);

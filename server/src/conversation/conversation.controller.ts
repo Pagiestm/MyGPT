@@ -60,7 +60,6 @@ export class ConversationController {
     @Request() req: RequestWithUser,
     @Body() createConversationDto: CreateConversationDto,
   ): Promise<Conversation> {
-    // Utiliser l'ID utilisateur de la session
     createConversationDto.userId = req.user.id;
     return this.conversationService.create(createConversationDto);
   }

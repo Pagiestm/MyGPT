@@ -1,12 +1,10 @@
 <template>
   <div>
     <div v-for="[date, group] in groupedConversations" :key="date" class="mb-4">
-      <!-- Titre du groupe -->
       <h3 class="text-xs font-semibold text-gray-500 mb-2 px-2">
         {{ date }}
       </h3>
 
-      <!-- Conversations du groupe -->
       <div
         v-for="conversation in group"
         :key="conversation.id"
@@ -16,14 +14,12 @@
           'hover:bg-gray-100': activeId !== conversation.id,
         }"
       >
-        <!-- Titre de la conversation -->
         <div class="flex-1 font-medium overflow-hidden" @click="$emit('select', conversation.id)">
           <span class="block truncate max-w-[180px] sm:max-w-[200px] md:max-w-full">{{
             conversation.name
           }}</span>
         </div>
 
-        <!-- Menu contextuel -->
         <div class="relative">
           <button
             class="p-1.5 ml-2 text-gray-400 hover:text-indigo-500 transition-colors rounded-full"
@@ -33,7 +29,6 @@
             <i class="fas fa-ellipsis-v"></i>
           </button>
 
-          <!-- Options du menu -->
           <div
             v-if="openMenuId === conversation.id"
             class="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-lg py-1 w-40 z-10"

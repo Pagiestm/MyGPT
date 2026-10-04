@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col md:flex-row h-screen bg-gray-50">
-    <!-- Sidebar des conversations (responsive) -->
     <div
       :class="[
         'transition-all duration-300 ease-in-out',
@@ -29,12 +28,10 @@
       @click="isSidebarOpen = false"
     ></div>
 
-    <!-- Zone principale du chat -->
     <div class="flex-1 flex flex-col overflow-hidden bg-white shadow-lg">
       <router-view @conversation-saved="handleConversationSaved"></router-view>
     </div>
 
-    <!-- Toast de notification simple -->
     <div
       v-if="showNotification"
       class="fixed bottom-4 right-4 bg-indigo-500 text-white px-4 py-2 rounded-lg shadow-lg"
@@ -51,7 +48,6 @@
       @cancel="showDeleteConfirmModal = false"
     />
 
-    <!-- Modal de partage -->
     <ShareModal
       v-if="showShareConfirmModal && conversationIdToShare"
       :conversation-id="conversationIdToShare"
@@ -70,12 +66,10 @@ import ShareModal from './ShareModal.vue';
 import Database from '../../utils/database.utils';
 import { Conversation } from '../../interfaces/conversation.interface';
 
-// Services
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 
-// États
 const conversations = ref<Conversation[]>([]);
 const isLoadingSidebar = ref(true);
 const conversationId = ref<string | null>(null);
@@ -84,7 +78,6 @@ const notificationMessage = ref('');
 const windowWidth = ref(window.innerWidth);
 const isSidebarOpen = ref(false);
 
-// Gestion de la suppression
 const showDeleteConfirmModal = ref(false);
 const conversationIdToDelete = ref<string | null>(null);
 
@@ -95,13 +88,11 @@ function showDeleteConfirm(id: string) {
 
 function confirmDeleteConversation() {
   if (conversationIdToDelete.value) {
-    // Effectuer la suppression
     deleteConversation(conversationIdToDelete.value);
     showDeleteConfirmModal.value = false;
   }
 }
 
-// Gestion du partage
 const showShareConfirmModal = ref(false);
 const conversationIdToShare = ref<string | null>(null);
 
@@ -110,16 +101,13 @@ function showShareModal(id: string) {
   showShareConfirmModal.value = true;
 }
 
-// Responsive detection
 const isMobile = computed(() => windowWidth.value < 768);
 
-// Providers
 provide('conversations', conversations);
 provide('updateConversationTitle', updateConversationTitle);
 provide('isMobile', isMobile);
 provide('reloadConversations', fetchConversations);
 
-// Fonctions responsive
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value;
 }
@@ -133,7 +121,6 @@ function handleResize() {
   }
 }
 
-// Sélectionne une conversation (avec fermeture sidebar sur mobile)
 function selectConversation(id: string) {
   router.push(`/chat/${id}`);
   if (isMobile.value) {
@@ -141,7 +128,6 @@ function selectConversation(id: string) {
   }
 }
 
-// Surveillance des changements de route
 watch(
   () => route.params.id,
   (newId) => {
@@ -150,7 +136,6 @@ watch(
   { immediate: true },
 );
 
-// Initialisation
 onMounted(() => {
   fetchConversations();
   window.addEventListener('resize', handleResize);
@@ -161,7 +146,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
 
-// Récupérer les conversations
 async function fetchConversations() {
   isLoadingSidebar.value = true;
   try {
@@ -174,17 +158,12 @@ async function fetchConversations() {
   }
 }
 
-// Gère l'événement de sauvegarde d'une conversation
 function handleConversationSaved(newConversation: Conversation | null) {
-  // Ajoute la nouvelle conversation au début de la liste
   if (newConversation) {
-    // Vérifie s'il n'y a pas déjà une conversation avec cet ID
     const existingIndex = conversations.value.findIndex((c) => c.id === newConversation.id);
     if (existingIndex >= 0) {
-      // Met à jour la conversation existante
       conversations.value[existingIndex] = newConversation;
     } else {
-      // Ajoute la nouvelle conversation au début
       conversations.value.unshift(newConversation);
     }
   } else {
@@ -193,7 +172,6 @@ function handleConversationSaved(newConversation: Conversation | null) {
   }
 }
 
-// Recherche des conversations
 async function searchConversations(keyword: string) {
   if (!keyword.trim()) return fetchConversations();
 
@@ -210,7 +188,6 @@ async function searchConversations(keyword: string) {
   }
 }
 
-// Crée une nouvelle conversation
 async function createNewConversation() {
   try {
     const apiResponse = await Database.create('conversations', {
@@ -234,7 +211,6 @@ async function createNewConversation() {
   }
 }
 
-// Supprime une conversation
 async function deleteConversation(id: string) {
   try {
     await Database.delete(`conversations/${id}`);
@@ -253,7 +229,6 @@ async function deleteConversation(id: string) {
   }
 }
 
-// Met à jour le titre d'une conversation
 async function updateConversationTitle(id: string, newTitle: string) {
   try {
     await Database.patch(`conversations/${id}`, { name: newTitle });
@@ -267,7 +242,6 @@ async function updateConversationTitle(id: string, newTitle: string) {
   }
 }
 
-// Helper pour les notifications
 function notify(message: string, type = TYPE.SUCCESS) {
   toast(message, { type });
 }

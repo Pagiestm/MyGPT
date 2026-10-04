@@ -19,7 +19,6 @@ export const useAuthStore = defineStore(
     // Vérification basée uniquement sur l'existence des données utilisateur
     const isAuthenticated = computed(() => !!user.value);
 
-    // Fonction de connexion
     async function login(credentials: LoginCredentials) {
       error.value = null;
       isLoading.value = true;
@@ -27,7 +26,6 @@ export const useAuthStore = defineStore(
       try {
         const result = await Database.create('auth/login', credentials);
         if (result?.data?.user) {
-          // Stocke les données de l'utilisateur de la réponse de login
           user.value = result.data.user;
           return true;
         }
@@ -41,7 +39,6 @@ export const useAuthStore = defineStore(
       }
     }
 
-    // Déconnexion
     async function logout() {
       isLoading.value = true;
       try {

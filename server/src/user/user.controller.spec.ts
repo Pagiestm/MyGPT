@@ -11,7 +11,6 @@ describe('UserController', () => {
   let controller: UserController;
   let service: UserService;
 
-  // Mock repository pour le UserService
   const mockRepository = {
     findOne: jest.fn(),
     create: jest.fn(),
@@ -58,7 +57,6 @@ describe('UserController', () => {
 
   describe('updatePseudo', () => {
     it('should update user pseudo', async () => {
-      // Mock du Request avec l'utilisateur connecté
       const req = {
         user: { id: '1', email: 'test@example.com', pseudo: 'oldpseudo' },
       };
@@ -135,7 +133,6 @@ describe('UserController', () => {
       await expect(controller.deleteAccount(req as any)).rejects.toThrow(
         InternalServerErrorException,
       );
-      // Vérifier que la session n'est pas détruite en cas d'erreur
       expect(req.session.destroy).not.toHaveBeenCalled();
     });
   });
