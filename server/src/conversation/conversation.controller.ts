@@ -150,8 +150,12 @@ export class ConversationController {
   })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 400, description: 'Lien de partage expiré' })
-  async findByShareLink(@Param('shareLink') shareLink: string): Promise<Conversation> {
-    return this.conversationService.findByShareLink(shareLink);
+  async findByShareLink(
+    @Param('shareLink') shareLink: string,
+  ): Promise<Omit<Conversation, 'user'> & { user: { pseudo: string } }> {
+    const { user, ...conversation } = await this.conversationService.findByShareLink(shareLink);
+    // Route publique : seul le pseudo de l'auteur est exposé (ni email ni hash du mot de passe)
+    return { ...conversation, user: { pseudo: user?.pseudo } };
   }
 
   @Get(':id')

@@ -343,7 +343,26 @@ describe('ConversationController', () => {
         const result = await controller.findByShareLink(shareLink);
 
         expect(service.findByShareLink).toHaveBeenCalledWith(shareLink);
-        expect(result).toEqual(conversation);
+        expect(result).toMatchObject({ id: conversation.id, name: conversation.name });
+      });
+
+      it('should only expose the author pseudo, never credentials', async () => {
+        const conversation = createMockConversation({
+          shareLink: 'abc123',
+          user: {
+            id: 'user-123',
+            pseudo: 'alice',
+            email: 'alice@example.com',
+            password: '$2b$10$hash',
+          },
+        });
+        service.findByShareLink.mockResolvedValue(conversation);
+
+        const result = await controller.findByShareLink('abc123');
+
+        expect(result.user).toEqual({ pseudo: 'alice' });
+        expect(JSON.stringify(result)).not.toContain('$2b$10$hash');
+        expect(JSON.stringify(result)).not.toContain('alice@example.com');
       });
     });
   });
