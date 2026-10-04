@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+package-lock.json
+client/playwright-report
+client/test-results
+client/blob-report
+client/tests-examples
+client/public
+LICENSE

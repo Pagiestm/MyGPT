@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 
 interface AuthenticatedRequest extends Request {
@@ -21,9 +16,7 @@ export class AuthenticatedGuard implements CanActivate {
     }
 
     if (!request.isAuthenticated()) {
-      throw new UnauthorizedException(
-        'Vous devez être connecté pour accéder à cette ressource',
-      );
+      throw new UnauthorizedException('Vous devez être connecté pour accéder à cette ressource');
     }
 
     return true;

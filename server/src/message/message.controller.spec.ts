@@ -10,7 +10,6 @@ import { Conversation } from '../conversation/entities/conversation.entity';
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
 
-// Types et interfaces
 interface RequestWithUser extends ExpressRequest {
   user: {
     id: string;
@@ -22,7 +21,6 @@ interface RequestWithUser extends ExpressRequest {
 
 type MockService<T> = Record<keyof T, jest.Mock>;
 
-// Helpers pour les tests
 function createMockRequest(userId: string = 'user-123'): RequestWithUser {
   return {
     user: {
@@ -63,7 +61,6 @@ describe('MessageController', () => {
   let conversationService: MockService<ConversationService>;
 
   beforeEach(async () => {
-    // Crée les services mockés
     messageService = {
       create: jest.fn(),
       findAll: jest.fn(),
@@ -86,7 +83,6 @@ describe('MessageController', () => {
 
     controller = module.get<MessageController>(MessageController);
 
-    // Reset all mocks before each test
     jest.clearAllMocks();
   });
 
@@ -97,7 +93,6 @@ describe('MessageController', () => {
   describe('CRUD Operations', () => {
     describe('create', () => {
       it('should create a message when user owns the conversation', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
         const createDto: CreateMessageDto = {
@@ -118,19 +113,14 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.create.mockResolvedValue(expectedMessage);
 
-        // Act
         const result = await controller.create(req, createDto);
 
-        // Assert
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(messageService.create).toHaveBeenCalledWith(createDto);
         expect(result).toEqual(expectedMessage);
       });
 
       it('should create a message when conversation is public', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
         const createDto = {
@@ -150,15 +140,12 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.create.mockResolvedValue(expectedMessage);
 
-        // Act
         const result = await controller.create(req, createDto);
 
-        // Assert
         expect(result).toEqual(expectedMessage);
       });
 
       it('should throw BadRequestException when user does not have access', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
         const createDto = {
@@ -175,17 +162,13 @@ describe('MessageController', () => {
 
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        // Act & Assert
-        await expect(controller.create(req, createDto)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.create(req, createDto)).rejects.toThrow(BadRequestException);
         expect(messageService.create).not.toHaveBeenCalled();
       });
     });
 
     describe('findAll', () => {
       it('should return all messages for a conversation the user owns', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
 
@@ -206,19 +189,14 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        // Act
         const result = await controller.findAll(req, conversationId);
 
-        // Assert
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(messageService.findAll).toHaveBeenCalledWith(conversationId);
         expect(result).toEqual(mockMessages);
       });
 
       it('should return messages for a public conversation', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
 
@@ -228,22 +206,17 @@ describe('MessageController', () => {
           isPublic: true,
         });
 
-        const mockMessages = [
-          createMockMessage({ id: 'msg-1', content: 'Hello' }),
-        ];
+        const mockMessages = [createMockMessage({ id: 'msg-1', content: 'Hello' })];
 
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        // Act
         const result = await controller.findAll(req, conversationId);
 
-        // Assert
         expect(result).toEqual(mockMessages);
       });
 
       it('should return messages for a shared conversation', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
 
@@ -259,15 +232,12 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        // Act
         const result = await controller.findAll(req, conversationId);
 
-        // Assert
         expect(result).toEqual(mockMessages);
       });
 
       it('should throw BadRequestException when user does not have access', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
 
@@ -279,17 +249,13 @@ describe('MessageController', () => {
 
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        // Act & Assert
-        await expect(controller.findAll(req, conversationId)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.findAll(req, conversationId)).rejects.toThrow(BadRequestException);
         expect(messageService.findAll).not.toHaveBeenCalled();
       });
     });
 
     describe('findOne', () => {
       it('should return a message by ID when user has access', async () => {
-        // Arrange
         const req = createMockRequest();
         const messageId = 'msg-123';
         const conversationId = 'conv-123';
@@ -307,19 +273,14 @@ describe('MessageController', () => {
         messageService.findOne.mockResolvedValue(mockMessage);
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        // Act
         const result = await controller.findOne(req, messageId);
 
-        // Assert
         expect(messageService.findOne).toHaveBeenCalledWith(messageId);
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(result).toEqual(mockMessage);
       });
 
       it('should throw BadRequestException when user does not have access', async () => {
-        // Arrange
         const req = createMockRequest();
         const messageId = 'msg-123';
         const conversationId = 'conv-123';
@@ -338,16 +299,12 @@ describe('MessageController', () => {
         messageService.findOne.mockResolvedValue(mockMessage);
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        // Act & Assert
-        await expect(controller.findOne(req, messageId)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.findOne(req, messageId)).rejects.toThrow(BadRequestException);
       });
     });
 
     describe('update', () => {
       it('should update a message when user owns the conversation', async () => {
-        // Arrange
         const req = createMockRequest();
         const messageId = 'msg-123';
         const conversationId = 'conv-123';
@@ -375,29 +332,15 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.update.mockResolvedValue(updatedMessage);
 
-        // Act
-        const result = await controller.update(
-          req,
-          messageId,
-          updateDto,
-          'false',
-        );
+        const result = await controller.update(req, messageId, updateDto, 'false');
 
-        // Assert
         expect(messageService.findOne).toHaveBeenCalledWith(messageId);
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
-        expect(messageService.update).toHaveBeenCalledWith(
-          messageId,
-          updateDto,
-          false,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
+        expect(messageService.update).toHaveBeenCalledWith(messageId, updateDto, false);
         expect(result).toEqual(updatedMessage);
       });
 
       it('should update a message with AI regeneration', async () => {
-        // Arrange
         const req = createMockRequest();
         const messageId = 'msg-123';
         const conversationId = 'conv-123';
@@ -424,20 +367,9 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.update.mockResolvedValue(updatedMessage);
 
-        // Act
-        const result = await controller.update(
-          req,
-          messageId,
-          updateDto,
-          'true',
-        );
+        const result = await controller.update(req, messageId, updateDto, 'true');
 
-        // Assert
-        expect(messageService.update).toHaveBeenCalledWith(
-          messageId,
-          updateDto,
-          true,
-        );
+        expect(messageService.update).toHaveBeenCalledWith(messageId, updateDto, true);
         expect(result).toEqual(updatedMessage);
       });
     });
@@ -446,7 +378,6 @@ describe('MessageController', () => {
   describe('Search operations', () => {
     describe('search', () => {
       it('should search messages in a conversation the user owns', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
         const keyword = 'test';
@@ -456,20 +387,14 @@ describe('MessageController', () => {
           userId: req.user.id,
         });
 
-        const mockMessages = [
-          createMockMessage({ id: 'msg-1', content: 'Test message' }),
-        ];
+        const mockMessages = [createMockMessage({ id: 'msg-1', content: 'Test message' })];
 
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.searchInConversation.mockResolvedValue(mockMessages);
 
-        // Act
         const result = await controller.search(req, keyword, conversationId);
 
-        // Assert
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(messageService.searchInConversation).toHaveBeenCalledWith({
           keyword,
           conversationId,
@@ -478,7 +403,6 @@ describe('MessageController', () => {
       });
 
       it('should throw BadRequestException when user does not have access', async () => {
-        // Arrange
         const req = createMockRequest();
         const conversationId = 'conv-123';
         const keyword = 'test';
@@ -491,10 +415,9 @@ describe('MessageController', () => {
 
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        // Act & Assert
-        await expect(
-          controller.search(req, keyword, conversationId),
-        ).rejects.toThrow(BadRequestException);
+        await expect(controller.search(req, keyword, conversationId)).rejects.toThrow(
+          BadRequestException,
+        );
         expect(messageService.searchInConversation).not.toHaveBeenCalled();
       });
     });

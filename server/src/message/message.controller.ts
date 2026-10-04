@@ -63,13 +63,9 @@ export class MessageController {
     @Body() createMessageDto: CreateMessageDto,
   ): Promise<Message> {
     // Vérifier que l'utilisateur a accès à la conversation
-    const conversation = await this.conversationService.findOne(
-      createMessageDto.conversationId,
-    );
+    const conversation = await this.conversationService.findOne(createMessageDto.conversationId);
     if (conversation.userId !== req.user.id && !conversation.isPublic) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
+      throw new BadRequestException('You do not have access to this conversation');
     }
 
     return this.messageService.create(createMessageDto);
@@ -96,14 +92,8 @@ export class MessageController {
   ): Promise<Message[]> {
     // Vérifier que l'utilisateur a accès à la conversation
     const conversation = await this.conversationService.findOne(conversationId);
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
+      throw new BadRequestException('You do not have access to this conversation');
     }
 
     return this.messageService.findAll(conversationId);
@@ -136,14 +126,8 @@ export class MessageController {
   ): Promise<Message[]> {
     // Vérifier que l'utilisateur a accès à la conversation
     const conversation = await this.conversationService.findOne(conversationId);
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
+      throw new BadRequestException('You do not have access to this conversation');
     }
 
     const searchDto: SearchMessagesDto = {
@@ -166,21 +150,12 @@ export class MessageController {
   })
   @ApiResponse({ status: 404, description: 'Message non trouvé' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findOne(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<Message> {
+  async findOne(@Request() req: RequestWithUser, @Param('id') id: string): Promise<Message> {
     const message = await this.messageService.findOne(id);
 
     // Vérifier que l'utilisateur a accès à la conversation de ce message
-    const conversation = await this.conversationService.findOne(
-      message.conversationId,
-    );
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
+    const conversation = await this.conversationService.findOne(message.conversationId);
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
       throw new BadRequestException('You do not have access to this message');
     }
 
@@ -197,8 +172,7 @@ export class MessageController {
   @ApiQuery({
     name: 'regenerateAi',
     required: false,
-    description:
-      "Indique s'il faut regénérer la réponse de l'IA (true par défaut)",
+    description: "Indique s'il faut regénérer la réponse de l'IA (true par défaut)",
     type: Boolean,
   })
   @ApiResponse({
@@ -217,13 +191,9 @@ export class MessageController {
     const message = await this.messageService.findOne(id);
 
     // Vérifier que l'utilisateur a accès à la conversation de ce message
-    const conversation = await this.conversationService.findOne(
-      message.conversationId,
-    );
+    const conversation = await this.conversationService.findOne(message.conversationId);
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only edit messages in your own conversations',
-      );
+      throw new BadRequestException('You can only edit messages in your own conversations');
     }
 
     const shouldRegenerateAi = regenerateAi !== 'false';

@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/coverage
+**/.env
+client/playwright-report
+client/test-results
+.git
+.husky

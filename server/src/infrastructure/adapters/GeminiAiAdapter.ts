@@ -4,14 +4,10 @@ import {
   HarmCategory,
   HarmBlockThreshold,
   Content,
-  Part,
 } from '@google/generative-ai';
 
 export interface IAiAdapter {
-  getAiResponse(
-    prompt: string,
-    conversationHistory?: string[],
-  ): Promise<string>;
+  getAiResponse(prompt: string, conversationHistory?: string[]): Promise<string>;
 }
 
 @Injectable()
@@ -32,16 +28,10 @@ export class GeminiAiAdapter implements IAiAdapter {
     this.model = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
   }
 
-  async getAiResponse(
-    prompt: string,
-    conversationHistory: string[] = [],
-  ): Promise<string> {
+  async getAiResponse(prompt: string, conversationHistory: string[] = []): Promise<string> {
     try {
-      this.logger.log(
-        `Getting AI response for prompt: "${prompt.substring(0, 50)}..."`,
-      );
+      this.logger.log(`Getting AI response for prompt: "${prompt.substring(0, 50)}..."`);
 
-      // Obtenir le modèle
       const model = this.generativeAI.getGenerativeModel({
         model: this.model,
         generationConfig: {
@@ -70,18 +60,14 @@ export class GeminiAiAdapter implements IAiAdapter {
         ],
       });
 
-      // Préparer l'historique de conversation pour donner du contexte
       const chat = model.startChat({
         history: this.formatHistoryForGemini(conversationHistory),
       });
 
-      // Envoyer la requête à l'API Gemini
       const result = await chat.sendMessage(prompt);
       const response = result.response.text();
 
-      this.logger.log(
-        `Received response from Gemini: "${response.substring(0, 50)}..."`,
-      );
+      this.logger.log(`Received response from Gemini: "${response.substring(0, 50)}..."`);
       return response;
     } catch (error: unknown) {
       let errorMessage: string;
@@ -101,14 +87,10 @@ export class GeminiAiAdapter implements IAiAdapter {
 
       this.logger.error(`Error calling Gemini API: ${errorMessage}`);
 
-      // En cas d'erreur, renvoyer un message par défaut
       return "Désolé, je n'ai pas pu générer une réponse pour le moment. Veuillez réessayer plus tard.";
     }
   }
 
-  /**
-   * Formate l'historique de conversation pour l'API Gemini
-   */
   private formatHistoryForGemini(conversationHistory: string[]): Content[] {
     if (!conversationHistory || conversationHistory.length === 0) {
       return [];
@@ -120,12 +102,12 @@ export class GeminiAiAdapter implements IAiAdapter {
       if (message.startsWith('User: ')) {
         formattedHistory.push({
           role: 'user',
-          parts: [{ text: message.substring(6) } as Part],
+          parts: [{ text: message.substring(6) }],
         });
       } else if (message.startsWith('AI: ')) {
         formattedHistory.push({
           role: 'model',
-          parts: [{ text: message.substring(4) } as Part],
+          parts: [{ text: message.substring(4) }],
         });
       }
     }

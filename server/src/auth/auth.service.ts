@@ -58,7 +58,6 @@ export class AuthService {
   }
 
   logout(session: Session | undefined, res: Response): { message: string } {
-    // Destruction de la session
     if (session) {
       session.destroy((err) => {
         if (err) {
