@@ -16,9 +16,15 @@ https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
 
 ## Fonctionnalités
 
-- Conversations avec Gemini, historique persistant, questions modifiables avec régénération de la réponse
+- Conversations avec Gemini : réponses diffusées en direct (SSE), bouton Stop, régénération, questions modifiables
+- Titre de conversation généré automatiquement après le premier échange
+- Pièces jointes (images, PDF, fichiers texte et code, 10 Mo max) lues par l'IA
+- Choix du modèle (Flash, Pro, Flash Lite) à chaque message
+- Dictée vocale et lecture à voix haute des réponses
+- Conversations épinglées, archivées, rangées dans des dossiers avec consignes communes
+- Recherche globale (Ctrl/⌘ + K) dans les conversations et les messages
+- Consignes personnalisées et modèle par défaut dans les réglages
 - Rendu Markdown complet et blocs de code colorés (Shiki), copiables en un clic
-- Recherche de conversations et de messages
 - Partage par lien en lecture seule, accessible sans compte, avec expiration optionnelle
 - Bibliothèque des conversations partagées enregistrées
 - Thème clair, sombre ou système, interface responsive
@@ -121,7 +127,7 @@ client/src/
 
 - **Routes déclarées explicitement** dans `presentation/router/routes.ts`, avec garde d'authentification et redirection des anciennes URL.
 - **Imports explicites** partout, y compris pour les composants Nuxt UI : aucun auto-import.
-- **Pinia Colada** gère le cache des requêtes, les états de chargement et les mises à jour optimistes (la question s'affiche avant la réponse de l'IA).
+- **Pinia Colada** gère le cache des requêtes, les états de chargement et les mises à jour optimistes (la question s'affiche avant la réponse de l'IA, puis la réponse s'écrit au fil du flux).
 
 ## Structure
 
