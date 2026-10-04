@@ -1,13 +1,17 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-1 text-center">
-      <h1 class="text-2xl font-semibold text-highlighted">Connexion</h1>
+  <div class="flex flex-col gap-8">
+    <div class="flex flex-col gap-2 text-center">
+      <h1 class="text-3xl font-semibold tracking-tight text-highlighted">Connexion</h1>
       <p class="text-sm text-muted">Accédez à votre espace personnel</p>
     </div>
     <LoginForm />
     <p class="text-center text-sm text-muted">
       Pas encore de compte ?
-      <ULink to="/register" class="font-medium text-primary">Créer un compte</ULink>
+      <ULink
+        :to="{ name: 'register' }"
+        class="font-medium text-highlighted underline underline-offset-4"
+        >Créer un compte</ULink
+      >
     </p>
   </div>
 </template>

@@ -1,22 +1,39 @@
 <template>
   <UForm :schema="registerSchema" :state="state" class="space-y-5" @submit="onSubmit">
     <UFormField label="Email" name="email">
-      <UInput v-model="state.email" type="email" autocomplete="email" class="w-full" />
+      <UInput
+        v-model="state.email"
+        size="xl"
+        type="email"
+        autocomplete="email"
+        placeholder="nom@exemple.com"
+        class="w-full"
+      />
     </UFormField>
 
-    <UFormField label="Pseudo" name="pseudo" help="Entre 3 et 20 caractères">
-      <UInput v-model="state.pseudo" autocomplete="username" class="w-full" />
+    <UFormField label="Pseudo" name="pseudo" help="Visible sur les conversations que vous partagez">
+      <UInput
+        v-model="state.pseudo"
+        size="xl"
+        autocomplete="username"
+        placeholder="Entre 3 et 20 caractères"
+        class="w-full"
+      />
     </UFormField>
 
-    <UFormField
-      label="Mot de passe"
-      name="password"
-      help="10 caractères minimum, dont une majuscule, un chiffre et un caractère spécial"
-    >
-      <UInput v-model="state.password" type="password" autocomplete="new-password" class="w-full" />
+    <UFormField label="Mot de passe" name="password">
+      <PasswordInput v-model="state.password" autocomplete="new-password" />
     </UFormField>
+    <PasswordChecklist :password="state.password" />
 
-    <UButton type="submit" block :loading="loading">S'inscrire</UButton>
+    <UButton
+      type="submit"
+      block
+      size="xl"
+      class="rounded-full"
+      :loading="loading"
+      label="S'inscrire"
+    />
   </UForm>
 </template>
 
@@ -32,6 +49,8 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { getErrorMessage } from '@/infrastructure/http/client';
 import { useAuthStore } from '@/application/stores/auth.store';
 import { registerSchema, type RegisterInput } from '@/domain/user';
+import PasswordChecklist from './PasswordChecklist.vue';
+import PasswordInput from './PasswordInput.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -49,7 +68,7 @@ async function onSubmit(event: FormSubmitEvent<RegisterInput>) {
       description: 'Vous pouvez vous connecter.',
       color: 'success',
     });
-    await router.push('/login');
+    await router.push({ name: 'login', query: { email: event.data.email } });
   } catch (error) {
     toast.add({ title: getErrorMessage(error, "L'inscription a échoué."), color: 'error' });
   } finally {

@@ -2,15 +2,18 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import ui from '@nuxt/ui/vite';
+import { uiConfig } from './ui.config';
 
 export default defineConfig({
   plugins: [
     vue(),
     // Composants et composables Nuxt UI importés explicitement dans chaque fichier
     ui({
-      ui: { colors: { primary: 'cobalt', neutral: 'stone' } },
+      ui: uiConfig,
       autoImport: false,
       components: false,
+      // Icônes Lucide repérées dans le code et embarquées dans le build (aucun appel au CDN Iconify)
+      icon: { clientBundle: { scan: { globInclude: ['src/**/*.{vue,ts}'], globExclude: [] } } },
     }),
   ],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },

@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel id="conversation">
     <template #header>
-      <UDashboardNavbar :ui="{ title: 'min-w-0' }">
+      <UDashboardNavbar :ui="{ root: 'border-none', title: 'min-w-0' }">
         <template #title>
           <ConversationTitle v-if="conversation" :name="conversation.name" @rename="rename" />
           <USkeleton v-else class="h-5 w-48" />
@@ -31,7 +31,9 @@
           :messages="messages ?? []"
           :thinking="thinking"
           :highlighted="highlighted"
+          :reveal-id="revealId"
           @edit="onEdit"
+          @revealed="revealId = null"
         />
       </UContainer>
     </template>
@@ -41,11 +43,13 @@
         <UChatPrompt
           v-model="input"
           placeholder="Écrivez votre message..."
-          variant="subtle"
+          variant="outline"
+          color="neutral"
           :disabled="thinking"
           @submit="submit"
         >
           <UChatPromptSubmit
+            class="rounded-full"
             :status="thinking ? 'submitted' : 'ready'"
             aria-label="Envoyer le message"
           />
@@ -94,6 +98,24 @@ const { mutateAsync: renameConversation } = useRenameConversation();
 
 const thinking = computed(() => sending.value || editing.value);
 
+// Seule la réponse arrivée après un envoi ou une modification est animée, pas l'historique
+const revealId = ref<string | null>(null);
+let awaitingReply = false;
+let knownIds = new Set<string>();
+
+watch(
+  messages,
+  (list = []) => {
+    const reply = list.at(-1);
+    if (awaitingReply && reply?.isFromAi && !knownIds.has(reply.id)) {
+      revealId.value = reply.id;
+      awaitingReply = false;
+    }
+    knownIds = new Set(list.map((message) => message.id));
+  },
+  { flush: 'pre' },
+);
+
 watch(error, (value) => {
   if (!value) return;
   toast.add({ title: 'Conversation introuvable', color: 'error' });
@@ -114,9 +136,11 @@ watch(
 );
 
 async function sendMessage(content: string) {
+  awaitingReply = true;
   try {
     await send(content);
   } catch {
+    awaitingReply = false;
     toast.add({ title: "Le message n'a pas pu être envoyé", color: 'error' });
   }
 }
@@ -129,9 +153,11 @@ function submit() {
 }
 
 async function onEdit(messageId: string, content: string) {
+  awaitingReply = true;
   try {
     await edit({ messageId, content });
   } catch {
+    awaitingReply = false;
     toast.add({ title: "La modification n'a pas pu être enregistrée", color: 'error' });
   }
 }
@@ -149,6 +175,6 @@ function focusMessage(messageId: string) {
   document
     .getElementById(`message-${messageId}`)
     ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  setTimeout(() => (highlighted.value = null), 2000);
+  setTimeout(() => (highlighted.value = null), 2600);
 }
 </script>

@@ -1,19 +1,28 @@
 <template>
   <UForm :schema="loginSchema" :state="state" class="space-y-5" @submit="onSubmit">
     <UFormField label="Email" name="email">
-      <UInput v-model="state.email" type="email" autocomplete="email" class="w-full" />
-    </UFormField>
-
-    <UFormField label="Mot de passe" name="password">
       <UInput
-        v-model="state.password"
-        type="password"
-        autocomplete="current-password"
+        v-model="state.email"
+        size="xl"
+        type="email"
+        autocomplete="email"
+        placeholder="nom@exemple.com"
         class="w-full"
       />
     </UFormField>
 
-    <UButton type="submit" block :loading="loading">Se connecter</UButton>
+    <UFormField label="Mot de passe" name="password">
+      <PasswordInput v-model="state.password" autocomplete="current-password" />
+    </UFormField>
+
+    <UButton
+      type="submit"
+      block
+      size="xl"
+      class="rounded-full"
+      :loading="loading"
+      label="Se connecter"
+    />
   </UForm>
 </template>
 
@@ -29,13 +38,18 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { getErrorMessage } from '@/infrastructure/http/client';
 import { useAuthStore } from '@/application/stores/auth.store';
 import { loginSchema, type LoginInput } from '@/domain/user';
+import PasswordInput from './PasswordInput.vue';
 
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const state = reactive({ email: '', password: '' });
+// Après une inscription, l'email est prérempli
+const state = reactive({
+  email: typeof route.query.email === 'string' ? route.query.email : '',
+  password: '',
+});
 const loading = ref(false);
 
 async function onSubmit(event: FormSubmitEvent<LoginInput>) {

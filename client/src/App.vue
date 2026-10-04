@@ -1,5 +1,5 @@
 <template>
-  <UApp :toaster="{ position: 'bottom-right' }">
+  <UApp :locale="fr" :toaster="{ position: 'bottom-right' }">
     <component :is="layout">
       <RouterView />
     </component>
@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+import { fr } from '@nuxt/ui/locale';
 import UApp from '@nuxt/ui/components/App.vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';

@@ -1,21 +1,15 @@
 <template>
-  <section id="faq" class="py-24">
-    <UContainer class="grid gap-10 lg:grid-cols-[1fr_2fr]">
-      <div class="flex flex-col gap-3">
-        <p class="font-mono text-sm text-primary">FAQ</p>
-        <h2 class="text-3xl font-semibold tracking-tight text-balance text-highlighted">
-          Questions fréquentes
-        </h2>
-      </div>
+  <section id="faq" class="border-t border-default px-4 py-20">
+    <div v-reveal class="mx-auto flex max-w-3xl flex-col gap-8">
+      <h2 class="text-2xl font-semibold tracking-tight text-highlighted">Questions fréquentes</h2>
       <UAccordion :items="faq" />
-    </UContainer>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { AccordionItem } from '@nuxt/ui';
 import UAccordion from '@nuxt/ui/components/Accordion.vue';
-import UContainer from '@nuxt/ui/components/Container.vue';
 
 const faq: AccordionItem[] = [
   {

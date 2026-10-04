@@ -1,29 +1,31 @@
 <template>
   <UDashboardPanel id="new-chat">
     <template #header>
-      <UDashboardNavbar title="Nouvelle conversation" />
+      <UDashboardNavbar title="Nouvelle conversation" :ui="{ root: 'border-none' }" />
     </template>
 
     <template #body>
-      <UContainer class="flex flex-1 flex-col justify-center gap-6 py-12 sm:max-w-3xl">
-        <h1 class="text-2xl font-semibold text-highlighted sm:text-3xl">
+      <UContainer class="flex flex-1 flex-col justify-center gap-6 pb-[15vh] sm:max-w-3xl">
+        <h1 class="text-center text-2xl font-semibold tracking-tight text-highlighted sm:text-3xl">
           Bonjour {{ auth.user?.pseudo }}, que puis-je faire pour vous ?
         </h1>
 
         <UChatPrompt
           v-model="input"
           placeholder="Écrivez votre message..."
-          variant="subtle"
+          variant="outline"
+          color="neutral"
           :loading="isLoading"
           @submit="start"
         >
           <UChatPromptSubmit
+            class="rounded-full"
             :status="isLoading ? 'submitted' : 'ready'"
             aria-label="Envoyer le message"
           />
         </UChatPrompt>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap justify-center gap-2">
           <UButton
             v-for="suggestion in suggestions"
             :key="suggestion.label"
@@ -54,32 +56,16 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/application/stores/auth.store';
 import { useCreateConversation } from '@/application/composables/useConversations';
 import { setPendingPrompt } from '@/application/composables/usePendingPrompt';
+import { suggestions } from '@/presentation/constants/suggestions';
+import { useDraftPrompt } from '@/presentation/composables/useDraftPrompt';
 
 const auth = useAuthStore();
 const router = useRouter();
 const toast = useToast();
 const { mutateAsync: createConversation, isLoading } = useCreateConversation();
 
-const input = ref('');
-
-const suggestions = [
-  {
-    icon: 'i-lucide-code-xml',
-    label: 'Expliquer du code',
-    prompt: 'Explique-moi ce que fait ce code, ligne par ligne :\n\n',
-  },
-  {
-    icon: 'i-lucide-bug',
-    label: 'Corriger un bug',
-    prompt: "J'ai une erreur dans mon code, aide-moi à la comprendre :\n\n",
-  },
-  {
-    icon: 'i-lucide-list-checks',
-    label: 'Résumer un texte',
-    prompt: 'Résume ce texte en 5 points clés :\n\n',
-  },
-  { icon: 'i-lucide-lightbulb', label: 'Trouver des idées', prompt: 'Propose-moi 10 idées pour ' },
-];
+const { take: takeDraft } = useDraftPrompt();
+const input = ref(takeDraft());
 
 async function start() {
   const prompt = input.value.trim();

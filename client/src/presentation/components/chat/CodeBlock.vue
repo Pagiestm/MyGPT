@@ -9,8 +9,9 @@
         color="neutral"
         variant="ghost"
         :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
+        :label="copied ? 'Copié' : 'Copier'"
         :aria-label="copied ? 'Code copié' : 'Copier le code'"
-        @click="copy(node.code)"
+        @click="copyCode"
       />
     </figcaption>
     <!-- eslint-disable-next-line vue/no-v-html -- HTML généré par Shiki à partir du code échappé -->
@@ -24,6 +25,7 @@
 
 <script setup lang="ts">
 import UButton from '@nuxt/ui/components/Button.vue';
+import { useToast } from '@nuxt/ui/composables';
 import { computed, ref, watchEffect } from 'vue';
 import { useClipboard } from '@vueuse/core';
 
@@ -31,7 +33,17 @@ const props = defineProps<{ node: { language: string; code: string; loading?: bo
 
 const language = computed(() => props.node.language || 'text');
 const html = ref('');
-const { copy, copied } = useClipboard();
+const toast = useToast();
+const { copy, copied } = useClipboard({ copiedDuring: 2000 });
+
+async function copyCode() {
+  try {
+    await copy(props.node.code);
+    toast.add({ title: 'Code copié', icon: 'i-lucide-check', duration: 2000 });
+  } catch {
+    toast.add({ title: 'Impossible de copier le code', color: 'error' });
+  }
+}
 
 watchEffect(async () => {
   const { code } = props.node;
@@ -52,11 +64,5 @@ watchEffect(async () => {
   margin: 0;
   padding: 1rem;
   font-family: var(--font-mono);
-}
-
-:global(.dark) .code-block :deep(.shiki),
-:global(.dark) .code-block :deep(.shiki span) {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
 }
 </style>

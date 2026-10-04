@@ -1,15 +1,31 @@
 <template>
-  <div class="flex min-h-0 flex-1 flex-col gap-4">
-    <UButton to="/chat" icon="i-lucide-square-pen" block>Nouvelle conversation</UButton>
-
-    <UInput
-      v-model="keyword"
-      icon="i-lucide-search"
-      placeholder="Rechercher une conversation"
-      aria-label="Rechercher une conversation"
-      variant="soft"
-      class="w-full"
-    />
+  <div class="flex min-h-0 flex-1 flex-col gap-5">
+    <nav class="flex flex-col gap-0.5" aria-label="Navigation principale">
+      <UButton
+        :to="{ name: 'new-chat' }"
+        icon="i-lucide-square-pen"
+        label="Nouvelle conversation"
+        color="neutral"
+        variant="ghost"
+        class="justify-start"
+      />
+      <UButton
+        :to="{ name: 'library' }"
+        icon="i-lucide-library"
+        label="Bibliothèque"
+        color="neutral"
+        variant="ghost"
+        class="justify-start"
+      />
+      <UInput
+        v-model="keyword"
+        icon="i-lucide-search"
+        placeholder="Rechercher une conversation"
+        aria-label="Rechercher une conversation"
+        variant="ghost"
+        class="w-full"
+      />
+    </nav>
 
     <div class="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
       <div v-if="isPending" class="flex flex-col gap-2 px-2">
@@ -18,7 +34,12 @@
       <p v-else-if="!conversations?.length" class="px-2 py-6 text-center text-sm text-muted">
         {{ keyword ? 'Aucune conversation trouvée' : 'Aucune conversation pour le moment' }}
       </p>
-      <ConversationList v-else :conversations="conversations" @delete="toDelete = $event" />
+      <ConversationList
+        v-else
+        :conversations="conversations"
+        @delete="toDelete = $event"
+        @rename="rename"
+      />
     </div>
 
     <ConfirmModal
@@ -46,6 +67,7 @@ import ConfirmModal from '@/presentation/components/common/ConfirmModal.vue';
 import {
   useConversationList,
   useDeleteConversation,
+  useRenameConversation,
 } from '@/application/composables/useConversations';
 import ConversationList from './ConversationList.vue';
 
@@ -58,6 +80,15 @@ const debouncedKeyword = refDebounced(keyword, 250);
 const { data: conversations, isPending } = useConversationList(debouncedKeyword);
 
 const toDelete = ref<Conversation | null>(null);
+const { mutateAsync: renameConversation } = useRenameConversation();
+
+async function rename(conversation: Conversation, name: string) {
+  try {
+    await renameConversation({ id: conversation.id, name });
+  } catch {
+    toast.add({ title: 'Impossible de renommer la conversation', color: 'error' });
+  }
+}
 const { mutateAsync: deleteConversation, isLoading: isDeleting } = useDeleteConversation();
 
 async function confirmDelete() {

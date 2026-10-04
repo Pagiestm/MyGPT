@@ -1,11 +1,11 @@
 <template>
-  <form v-if="editing" class="flex min-w-0 items-center gap-1" @submit.prevent="save">
+  <form v-if="editing" class="flex min-w-0 items-center" @submit.prevent="save">
     <UInput
       ref="input"
       v-model="draft"
       aria-label="Nom de la conversation"
-      size="sm"
-      class="w-64 max-w-full"
+      class="w-80 max-w-full"
+      :ui="{ base: 'font-semibold text-highlighted' }"
       @keydown.esc="editing = false"
       @blur="save"
     />
