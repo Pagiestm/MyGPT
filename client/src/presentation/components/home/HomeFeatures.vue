@@ -16,7 +16,7 @@
           class="group flex flex-col gap-2"
         >
           <span
-            class="grid size-9 place-items-center rounded-lg border border-default bg-default shadow-xs transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:shadow-sm"
+            class="grid size-9 place-items-center rounded-tile border border-default bg-default shadow-xs transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:shadow-sm"
           >
             <UIcon :name="feature.icon" class="size-4.5 text-highlighted" />
           </span>

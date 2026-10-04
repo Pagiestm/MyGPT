@@ -1,5 +1,5 @@
 <template>
-  <figure class="not-prose my-3 overflow-hidden rounded-md border border-default">
+  <figure class="not-prose my-3 overflow-hidden rounded-card border border-default">
     <figcaption
       class="flex items-center justify-between border-b border-default bg-elevated px-3 py-1.5"
     >

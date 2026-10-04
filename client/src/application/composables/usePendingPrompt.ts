@@ -1,15 +1,22 @@
 import { ref } from 'vue';
+import type { Attachment } from '@/domain/attachment';
 
-// Premier message saisi sur /chat, envoyé une fois la conversation créée et ouverte
-const pending = ref<{ conversationId: string; content: string } | null>(null);
-
-export function setPendingPrompt(conversationId: string, content: string) {
-  pending.value = { conversationId, content };
+export interface PendingPrompt {
+  content: string;
+  attachments: Attachment[];
+  model?: string;
 }
 
-export function takePendingPrompt(conversationId: string) {
+// Premier message saisi sur /chat, envoyé une fois la conversation créée et ouverte
+const pending = ref<{ conversationId: string; prompt: PendingPrompt } | null>(null);
+
+export function setPendingPrompt(conversationId: string, prompt: PendingPrompt) {
+  pending.value = { conversationId, prompt };
+}
+
+export function takePendingPrompt(conversationId: string): PendingPrompt | null {
   if (pending.value?.conversationId !== conversationId) return null;
-  const { content } = pending.value;
+  const { prompt } = pending.value;
   pending.value = null;
-  return content;
+  return prompt;
 }

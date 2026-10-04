@@ -1,15 +1,19 @@
 import { toValue, type MaybeRefOrGetter } from 'vue';
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada';
-import { nameFromPrompt, shareExpiration } from '@/domain/conversation';
+import { nameFromPrompt, shareExpiration, type ConversationPatch } from '@/domain/conversation';
 import { conversationRepository } from '@/infrastructure/repositories/conversation.repository';
 import { queryKeys } from '../queryKeys';
 
 export function useConversationList(keyword: MaybeRefOrGetter<string>) {
   return useQuery({
-    key: () => [...queryKeys.conversations, toValue(keyword).trim()],
+    key: () => [...queryKeys.conversations, 'list', toValue(keyword).trim()],
     query: () => conversationRepository.list(toValue(keyword).trim() || undefined),
     placeholderData: (previous) => previous,
   });
+}
+
+export function useArchivedConversations() {
+  return useQuery({ key: queryKeys.archived, query: conversationRepository.listArchived });
 }
 
 export function useConversation(id: MaybeRefOrGetter<string>) {
@@ -22,16 +26,17 @@ export function useConversation(id: MaybeRefOrGetter<string>) {
 export function useCreateConversation() {
   const cache = useQueryCache();
   return useMutation({
-    mutation: (prompt: string) => conversationRepository.create(nameFromPrompt(prompt)),
+    mutation: ({ prompt, folderId }: { prompt: string; folderId?: string | null }) =>
+      conversationRepository.create(nameFromPrompt(prompt), folderId),
     onSettled: () => cache.invalidateQueries({ key: queryKeys.conversations }),
   });
 }
 
-export function useRenameConversation() {
+export function useUpdateConversation() {
   const cache = useQueryCache();
   return useMutation({
-    mutation: ({ id, name }: { id: string; name: string }) =>
-      conversationRepository.rename(id, name),
+    mutation: ({ id, patch }: { id: string; patch: ConversationPatch }) =>
+      conversationRepository.update(id, patch),
     async onSettled(_data, _error, { id }) {
       await Promise.all([
         cache.invalidateQueries({ key: queryKeys.conversations }),

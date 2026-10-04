@@ -12,22 +12,32 @@ export const uiConfig = {
 
   // Focus discret : la couleur primaire (encre) donnait un halo noir épais autour des champs
   input: { compoundVariants: fieldFocus },
+
+  // Croix centrée sur la première ligne du titre (bouton de 32 px, ligne de 24 px)
+  modal: { slots: { close: 'absolute top-3 end-4' } },
+  slideover: { slots: { close: 'absolute top-3 end-4' } },
   textarea: { compoundVariants: fieldFocus },
 
+  // Toutes les zones de saisie du chat (nouveau message, modification) partagent cette forme
   chatPrompt: {
-    // Plus d'air autour du texte : il ne colle plus au bord arrondi
     slots: {
-      root: 'rounded-3xl shadow-sm ps-5 pe-2.5 py-2.5',
-      base: 'px-0 py-1.5 text-base leading-6 placeholder:text-dimmed',
+      root: 'rounded-(--radius-field) p-4',
+      base: 'px-2 py-1.5 text-base leading-6 placeholder:text-dimmed',
     },
     compoundVariants: [
       {
         color: 'neutral',
         variant: 'outline',
         class: {
-          root: 'has-[textarea:focus-visible]:outline-0 has-[textarea:focus-visible]:ring-accented',
+          root: 'shadow-sm has-[textarea:focus-visible]:outline-0 has-[textarea:focus-visible]:ring-accented',
         },
+      },
+      {
+        color: 'neutral',
+        variant: 'soft',
+        class: { root: 'has-[textarea:focus-visible]:outline-0' },
       },
     ],
   },
+  chatPromptSubmit: { slots: { base: 'rounded-full' } },
 };

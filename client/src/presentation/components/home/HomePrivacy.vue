@@ -13,7 +13,7 @@
           v-for="(point, index) in points"
           :key="point.title"
           v-reveal="index * 90"
-          class="flex flex-col gap-3 rounded-2xl border border-default p-6 transition-colors duration-300 hover:bg-muted"
+          class="flex flex-col gap-3 rounded-card border border-default p-6 transition-colors duration-300 hover:bg-muted"
         >
           <UIcon :name="point.icon" class="size-5 text-highlighted" />
           <h3 class="font-semibold text-highlighted">{{ point.title }}</h3>

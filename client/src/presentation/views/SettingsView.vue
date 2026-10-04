@@ -15,6 +15,14 @@
         </UPageCard>
 
         <UPageCard
+          title="Personnalisation"
+          description="Adaptez les réponses de l'assistant à vos besoins."
+          variant="subtle"
+        >
+          <PreferencesForm />
+        </UPageCard>
+
+        <UPageCard
           title="Apparence"
           description="Choisissez le thème de l'interface."
           variant="subtle"
@@ -37,5 +45,6 @@ import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue';
 import UDashboardPanel from '@nuxt/ui/components/DashboardPanel.vue';
 import UPageCard from '@nuxt/ui/components/PageCard.vue';
 import ProfileForm from '@/presentation/components/account/ProfileForm.vue';
+import PreferencesForm from '@/presentation/components/account/PreferencesForm.vue';
 import DeleteAccount from '@/presentation/components/account/DeleteAccount.vue';
 </script>

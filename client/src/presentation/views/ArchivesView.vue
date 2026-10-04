@@ -1,13 +1,14 @@
 <template>
-  <UDashboardPanel id="library">
+  <UDashboardPanel id="archives">
     <template #header>
-      <UDashboardNavbar title="Bibliothèque" />
+      <UDashboardNavbar title="Archives" />
     </template>
 
     <template #body>
       <UContainer class="flex flex-col gap-6 py-6 sm:max-w-3xl">
         <p class="text-muted">
-          Les conversations partagées par d'autres personnes que vous avez enregistrées.
+          Les conversations archivées n'apparaissent plus dans la barre latérale. Restaurez-les à
+          tout moment.
         </p>
 
         <div v-if="isPending" class="flex flex-col gap-3">
@@ -15,25 +16,34 @@
         </div>
 
         <UEmpty
-          v-else-if="!saved?.length"
-          icon="i-lucide-library"
-          title="Votre bibliothèque est vide"
-          description="Ouvrez un lien de partage et choisissez « Enregistrer dans ma bibliothèque »."
+          v-else-if="!archived?.length"
+          icon="i-lucide-archive"
+          title="Aucune conversation archivée"
+          description="Archivez une conversation depuis son menu dans la barre latérale."
         />
 
         <ConversationRows
           v-else
-          :conversations="saved"
-          icon="i-lucide-bookmark"
-          icon-class="text-primary"
-          :detail="(conversation) => `Enregistrée le ${formatDate(conversation.createdAt)}`"
+          :conversations="archived"
+          icon="i-lucide-archive"
+          icon-class="text-muted"
+          :detail="(conversation) => `Dernière activité le ${formatDate(conversation.updatedAt)}`"
         >
           <template #actions="{ conversation }">
+            <UButton
+              icon="i-lucide-archive-restore"
+              label="Restaurer"
+              color="neutral"
+              variant="ghost"
+              :aria-label="`Restaurer ${conversation.name}`"
+              :ui="{ label: 'max-sm:hidden' }"
+              @click="restore(conversation)"
+            />
             <UButton
               icon="i-lucide-trash-2"
               color="neutral"
               variant="ghost"
-              :aria-label="`Retirer ${conversation.name} de la bibliothèque`"
+              :aria-label="`Supprimer ${conversation.name}`"
               @click="toDelete = conversation"
             />
           </template>
@@ -42,9 +52,9 @@
 
       <ConfirmModal
         :open="toDelete !== null"
-        title="Retirer de la bibliothèque ?"
-        :description="`Votre copie de « ${toDelete?.name} » sera supprimée. La conversation d'origine n'est pas affectée.`"
-        confirm-label="Retirer"
+        title="Supprimer la conversation ?"
+        :description="`« ${toDelete?.name} » et tous ses messages seront définitivement supprimés.`"
+        confirm-label="Supprimer"
         :loading="isDeleting"
         @update:open="toDelete = null"
         @confirm="confirmDelete"
@@ -64,28 +74,39 @@ import { useToast } from '@nuxt/ui/composables';
 import { ref } from 'vue';
 import type { Conversation } from '@/domain/conversation';
 import {
+  useArchivedConversations,
   useDeleteConversation,
-  useSavedConversations,
+  useUpdateConversation,
 } from '@/application/composables/useConversations';
 import ConfirmModal from '@/presentation/components/common/ConfirmModal.vue';
 import ConversationRows from '@/presentation/components/common/ConversationRows.vue';
 
 const toast = useToast();
 
-const { data: saved, isPending } = useSavedConversations();
+const { data: archived, isPending } = useArchivedConversations();
+const { mutateAsync: updateConversation } = useUpdateConversation();
 const { mutateAsync: deleteConversation, isLoading: isDeleting } = useDeleteConversation();
 const toDelete = ref<Conversation | null>(null);
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('fr-FR', { dateStyle: 'long' });
 
+async function restore(conversation: Conversation) {
+  try {
+    await updateConversation({ id: conversation.id, patch: { archived: false } });
+    toast.add({ title: 'Conversation restaurée', color: 'success' });
+  } catch {
+    toast.add({ title: 'Impossible de restaurer la conversation', color: 'error' });
+  }
+}
+
 async function confirmDelete() {
   if (!toDelete.value) return;
   try {
     await deleteConversation(toDelete.value.id);
-    toast.add({ title: 'Conversation retirée de votre bibliothèque', color: 'success' });
+    toast.add({ title: 'Conversation supprimée', color: 'success' });
   } catch {
-    toast.add({ title: 'Impossible de retirer la conversation', color: 'error' });
+    toast.add({ title: 'Impossible de supprimer la conversation', color: 'error' });
   } finally {
     toDelete.value = null;
   }

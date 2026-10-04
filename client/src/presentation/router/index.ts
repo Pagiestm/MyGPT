@@ -5,7 +5,13 @@ import { routes } from './routes';
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: (to) => (to.hash ? { el: to.hash, behavior: 'smooth' } : { top: 0 }),
+  scrollBehavior: (to, from) => {
+    // Les ancres de message (#message-…) sont gérées par la vue de conversation
+    if (to.hash.startsWith('#message-')) return false;
+    if (to.hash) return { el: to.hash, behavior: 'smooth' };
+    // Retrait de l'ancre sur la même page : on garde la position
+    return to.path === from.path ? false : { top: 0 };
+  },
 });
 
 router.beforeEach(async (to) => {

@@ -26,6 +26,8 @@
     </UDashboardSidebar>
 
     <slot />
+
+    <CommandPalette />
   </UDashboardGroup>
 </template>
 
@@ -35,6 +37,7 @@ import UDashboardSidebar from '@nuxt/ui/components/DashboardSidebar.vue';
 import AppLogo from '@/presentation/components/common/AppLogo.vue';
 import UserMenu from '@/presentation/components/common/UserMenu.vue';
 import ChatSidebar from '@/presentation/components/chat/ChatSidebar.vue';
+import CommandPalette from '@/presentation/components/chat/CommandPalette.vue';
 import { ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 

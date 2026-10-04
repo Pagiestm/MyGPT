@@ -1,7 +1,7 @@
 <template>
   <div
     ref="root"
-    class="flex overflow-hidden rounded-2xl border border-default bg-default text-left shadow-xl shadow-black/5"
+    class="flex overflow-hidden rounded-card border border-default bg-default text-left shadow-xl shadow-black/5"
     role="img"
     :aria-label="`Démonstration de MyGPT : ${scenario.question}`"
   >
@@ -40,7 +40,7 @@
           <p
             v-if="phase !== 'typing'"
             :key="`q-${current}`"
-            class="max-w-[85%] self-end rounded-3xl bg-elevated px-4 py-2.5 text-highlighted"
+            class="max-w-[85%] self-end rounded-panel bg-elevated px-4 py-2.5 text-highlighted"
           >
             {{ scenario.question }}
           </p>
@@ -55,7 +55,7 @@
           <template v-for="(block, b) in visibleBlocks" :key="`${current}-${b}`">
             <pre
               v-if="block.kind === 'code'"
-              class="overflow-x-auto rounded-lg border border-default bg-muted p-3 font-mono text-xs leading-relaxed"
+              class="overflow-x-auto rounded-card border border-default bg-muted p-3 font-mono text-xs leading-relaxed"
             ><span v-for="(part, p) in block.parts" :key="p" :class="part.cls">{{ part.text }}</span></pre>
             <p v-else class="leading-relaxed">
               <template v-for="(part, p) in block.parts" :key="p">
@@ -76,7 +76,7 @@
 
       <div class="px-4 pb-4">
         <div
-          class="flex items-center gap-3 rounded-3xl border border-default px-4 py-2.5 text-sm shadow-xs"
+          class="flex items-center gap-3 rounded-field border border-default py-2.5 ps-5 pe-2.5 text-sm shadow-sm"
         >
           <span class="min-w-0 flex-1 truncate" :class="draft ? 'text-highlighted' : 'text-dimmed'">
             {{ draft || 'Écrivez votre message…' }}

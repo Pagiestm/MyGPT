@@ -11,10 +11,14 @@ export function onUnauthorized(handler: () => void) {
   unauthorizedHandler = handler;
 }
 
+export function notifyUnauthorized() {
+  unauthorizedHandler?.();
+}
+
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (isAxiosError(error) && error.response?.status === 401) unauthorizedHandler?.();
+    if (isAxiosError(error) && error.response?.status === 401) notifyUnauthorized();
     return Promise.reject(error);
   },
 );
@@ -25,5 +29,10 @@ export function getErrorMessage(error: unknown, fallback = 'Une erreur est surve
     if (Array.isArray(message)) return message[0];
     if (message) return message;
   }
+  if (error instanceof Error && error.name === 'StreamError') return error.message;
   return fallback;
+}
+
+export function apiUrl(path: string) {
+  return `${import.meta.env.VITE_API_URL ?? ''}${path}`;
 }
