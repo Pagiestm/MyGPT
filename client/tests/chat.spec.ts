@@ -185,49 +185,106 @@ test.describe('Messages', () => {
   });
 });
 
-test.describe("Effet d'écriture", () => {
-  const longReply = `Début de la réponse. ${'Une phrase de remplissage pour allonger le texte. '.repeat(14)}Fin de la réponse.`;
-
-  test('la nouvelle réponse apparaît progressivement', async ({ page }) => {
-    await fakeApi(page, {
-      ...signedIn,
-      conversations: [conversation('c1', 'Écriture')],
-      aiReply: longReply,
-    });
-    await page.goto('/chat/c1');
-
-    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Raconte');
-    await page.keyboard.press('Enter');
-
-    await expect(page.getByText('Début de la réponse.')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Fin de la réponse.')).toBeHidden();
-    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 15000 });
+test.describe('Réponses en flux', () => {
+  const thread = (extra = {}) => ({
+    ...signedIn,
+    conversations: [conversation('c1', 'Flux')],
+    messages: { c1: [message('c1', 'Question'), message('c1', 'Première réponse', true)] },
+    ...extra,
   });
 
-  test("s'affiche d'un coup si l'utilisateur réduit les animations", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await fakeApi(page, {
-      ...signedIn,
-      conversations: [conversation('c1', 'Écriture')],
-      aiReply: longReply,
-    });
-    await page.goto('/chat/c1');
+  test('donne un titre automatique à une nouvelle conversation', async ({ page }) => {
+    await fakeApi(page, { ...signedIn, aiTitle: 'Recette de crêpes' });
+    await page.goto('/chat');
 
-    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Raconte');
-    await page.keyboard.press('Enter');
+    await page.getByPlaceholder('Écrivez votre message...').fill('Comment faire des crêpes ?');
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
 
-    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 1500 });
+    await expect(page.getByRole('heading', { name: 'Recette de crêpes' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Recette de crêpes' })).toBeVisible();
   });
 
-  test("l'historique n'est pas réanimé à l'ouverture", async ({ page }) => {
-    await fakeApi(page, {
+  test('arrête la génération en cours', async ({ page }) => {
+    await fakeApi(page, thread({ streamDelay: 5000, aiReply: 'Réponse trop tardive' }));
+    await page.goto('/chat/c1');
+
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Longue question');
+    await page.keyboard.press('Enter');
+    await expect(page.getByText('MyGPT réfléchit…')).toBeVisible();
+    await page.getByRole('button', { name: 'Arrêter la génération' }).click();
+
+    await expect(page.getByRole('button', { name: 'Envoyer le message' })).toBeVisible();
+    await expect(page.getByText('MyGPT réfléchit…')).toBeHidden();
+    await expect(page.getByText('Longue question')).toBeVisible();
+    await expect(page.getByText('Réponse trop tardive')).toBeHidden();
+  });
+
+  test('régénère la dernière réponse', async ({ page }) => {
+    const api = await fakeApi(page, thread({ aiReply: 'Réponse régénérée' }));
+    await page.goto('/chat/c1');
+
+    await page.getByText('Première réponse').hover();
+    await page.getByRole('button', { name: 'Régénérer la réponse' }).click();
+
+    await expect(page.getByText('Réponse régénérée')).toBeVisible();
+    await expect(page.getByText('Première réponse')).toBeHidden();
+    expect(api.messages.c1).toHaveLength(2);
+  });
+
+  test("affiche l'erreur et permet de réessayer", async ({ page }) => {
+    const api = await fakeApi(page, {
       ...signedIn,
-      conversations: [conversation('c1', 'Écriture')],
-      messages: { c1: [message('c1', 'Question'), message('c1', longReply, true)] },
+      conversations: [conversation('c1', 'Erreur')],
+      streamError: 'Le service est saturé',
     });
     await page.goto('/chat/c1');
 
-    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 1500 });
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Bonjour');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText('Le service est saturé').first()).toBeVisible();
+    await expect(page.getByText("La réponse n'a pas pu être générée.")).toBeVisible();
+
+    api.streamError = null;
+    api.aiReply = 'Enfin une réponse';
+    await page.getByRole('button', { name: 'Réessayer' }).click();
+    await expect(page.getByText('Enfin une réponse')).toBeVisible();
+  });
+
+  test('envoie le modèle choisi et l’affiche sous la réponse', async ({ page }) => {
+    const api = await fakeApi(page, { ...signedIn, conversations: [conversation('c1', 'Modèle')] });
+    await page.goto('/chat/c1');
+
+    await page.getByRole('button', { name: "Modèle d'IA" }).click();
+    await page.getByRole('option', { name: /Pro/ }).click();
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Question');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText('Réponse de')).toBeVisible();
+    expect(api.chatRequests.at(-1)).toMatchObject({ model: 'pro' });
+  });
+
+  test('joint un fichier au message', async ({ page }) => {
+    const api = await fakeApi(page, {
+      ...signedIn,
+      conversations: [conversation('c1', 'Fichier')],
+    });
+    await page.goto('/chat/c1');
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'note.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Bonjour MyGPT'),
+    });
+    await expect(page.getByRole('list', { name: 'Fichiers joints' })).toContainText('note.txt');
+
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Résume ce fichier');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText('Réponse de')).toBeVisible();
+    expect(api.chatRequests.at(-1)?.attachmentIds).toHaveLength(1);
+    await expect(page.getByRole('button', { name: 'Retirer note.txt' })).toBeHidden();
+    await expect(page.getByRole('article').getByText('note.txt')).toBeVisible();
   });
 });
 
