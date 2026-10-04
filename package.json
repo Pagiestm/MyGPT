@@ -1,25 +1,61 @@
 {
-  "dependencies": {
-    "@nestjs/mapped-types": "*"
-  },
   "name": "mygpt",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "MyGPT – assistant IA conversationnel (Vue 3 + NestJS)",
   "type": "module",
+  "license": "CC-BY-NC-SA-4.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "engines": {
+    "node": ">=24.9"
+  },
   "scripts": {
     "prepare": "husky",
-    "lint": "npm run lint:server && npm run lint:client",
-    "lint:server": "cd server && npm run lint",
-    "lint:client": "cd client && npm run lint",
-    "format": "npm run format:server && npm run format:client",
-    "format:server": "cd server && npm run format",
-    "format:client": "cd client && npm run format"
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm run start:dev -w server\" \"npm run dev -w client\"",
+    "dev:server": "npm run start:dev -w server",
+    "dev:client": "npm run dev -w client",
+    "build": "npm run build --workspaces",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test -w server",
+    "test:cov": "npm run test:cov -w server",
+    "test:e2e": "npm run test:e2e -w client"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^19.8.0",
-    "@commitlint/config-conventional": "^19.8.0",
-    "husky": "^9.1.7"
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.5",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css,html}": "prettier --write"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true,
+    "@parcel/watcher@2.6.0": true,
+    "unrs-resolver@1.12.2": true,
+    "vue-demi@0.14.10": true,
+    "@scarf/scarf": false,
+    "esbuild@0.27.2": true
   }
 }

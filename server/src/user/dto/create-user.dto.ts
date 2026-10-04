@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -35,13 +29,9 @@ export class CreateUserDto {
   @Length(10, 50, {
     message: 'Le mot de passe doit contenir au minimum 10 caractères',
   })
-  @Matches(
-    /^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).*$/,
-    {
-      message:
-        'Le mot de passe doit contenir au moins 1 majuscule, 1 chiffre et 1 caractère spécial',
-    },
-  )
+  @Matches(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).*$/, {
+    message: 'Le mot de passe doit contenir au moins 1 majuscule, 1 chiffre et 1 caractère spécial',
+  })
   @IsNotEmpty({ message: 'Le mot de passe est requis' })
   password: string;
 }

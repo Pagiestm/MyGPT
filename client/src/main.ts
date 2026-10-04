@@ -1,18 +1,27 @@
+import './assets/css/main.css';
 import { createApp } from 'vue';
-import './style.css';
 import { createPinia } from 'pinia';
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import { PiniaColada } from '@pinia/colada';
+import ui from '@nuxt/ui/vue-plugin';
 import App from './App.vue';
-import router from './routes/index.ts';
-import Toast from 'vue-toastification';
-import 'vue-toastification/dist/index.css';
+import { router } from './presentation/router';
+import { onUnauthorized } from './infrastructure/http/client';
+import { useAuthStore } from './application/stores/auth.store';
 
 const app = createApp(App);
-const pinia = createPinia();
-pinia.use(piniaPluginPersistedstate);
 
-app.use(pinia);
+app.use(createPinia());
+app.use(PiniaColada, { queryOptions: { staleTime: 30_000, refetchOnWindowFocus: false } });
 app.use(router);
-app.use(Toast);
+app.use(ui);
+
+onUnauthorized(() => {
+  const auth = useAuthStore();
+  if (!auth.isAuthenticated) return;
+  auth.clear();
+  if (router.currentRoute.value.meta.requiresAuth) {
+    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } });
+  }
+});
 
 app.mount('#app');

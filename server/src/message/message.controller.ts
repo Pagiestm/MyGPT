@@ -1,9 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
   Query,
   UseGuards,
@@ -18,24 +15,12 @@ import {
   ApiQuery,
   ApiCookieAuth,
 } from '@nestjs/swagger';
-import { Request as ExpressRequest } from 'express';
-import { Session, SessionData } from 'express-session';
 import { MessageService } from './message.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { SearchMessagesDto } from './dto/search-message.dto';
 import { Message } from './entities/message.entity';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { ConversationService } from '../conversation/conversation.service';
-
-interface RequestWithUser extends ExpressRequest {
-  user: {
-    id: string;
-    email: string;
-    pseudo: string;
-  };
-  session: Session & Partial<SessionData>;
-}
+import type { AuthenticatedRequest } from '../common/authenticated-request';
 
 @ApiTags('messages')
 @Controller('messages')
@@ -44,36 +29,6 @@ export class MessageController {
     private readonly messageService: MessageService,
     private readonly conversationService: ConversationService,
   ) {}
-
-  @Post()
-  @UseGuards(AuthenticatedGuard)
-  @ApiCookieAuth()
-  @ApiOperation({
-    summary: "Créer un nouveau message et obtenir une réponse de l'IA",
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Message créé avec succès',
-    type: Message,
-  })
-  @ApiResponse({ status: 400, description: 'Requête invalide' })
-  @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async create(
-    @Request() req: RequestWithUser,
-    @Body() createMessageDto: CreateMessageDto,
-  ): Promise<Message> {
-    // Vérifier que l'utilisateur a accès à la conversation
-    const conversation = await this.conversationService.findOne(
-      createMessageDto.conversationId,
-    );
-    if (conversation.userId !== req.user.id && !conversation.isPublic) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
-    }
-
-    return this.messageService.create(createMessageDto);
-  }
 
   @Get()
   @UseGuards(AuthenticatedGuard)
@@ -91,22 +46,27 @@ export class MessageController {
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   async findAll(
-    @Request() req: RequestWithUser,
+    @Request() req: AuthenticatedRequest,
     @Query('conversationId') conversationId: string,
   ): Promise<Message[]> {
     // Vérifier que l'utilisateur a accès à la conversation
     const conversation = await this.conversationService.findOne(conversationId);
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
+      throw new BadRequestException('You do not have access to this conversation');
     }
 
     return this.messageService.findAll(conversationId);
+  }
+
+  @Get('search/all')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Rechercher dans tous les messages de l'utilisateur" })
+  @ApiQuery({ name: 'keyword', required: true, description: 'Mot-clé de recherche' })
+  @ApiResponse({ status: 200, description: 'Messages trouvés (20 au plus)', type: [Message] })
+  searchAll(@Request() req: AuthenticatedRequest, @Query('keyword') keyword = '') {
+    const trimmed = keyword.trim();
+    return trimmed.length < 2 ? [] : this.messageService.searchForUser(req.user.id, trimmed);
   }
 
   @Get('search')
@@ -130,20 +90,14 @@ export class MessageController {
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   async search(
-    @Request() req: RequestWithUser,
+    @Request() req: AuthenticatedRequest,
     @Query('keyword') keyword: string,
     @Query('conversationId') conversationId: string,
   ): Promise<Message[]> {
     // Vérifier que l'utilisateur a accès à la conversation
     const conversation = await this.conversationService.findOne(conversationId);
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
-      throw new BadRequestException(
-        'You do not have access to this conversation',
-      );
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
+      throw new BadRequestException('You do not have access to this conversation');
     }
 
     const searchDto: SearchMessagesDto = {
@@ -166,68 +120,15 @@ export class MessageController {
   })
   @ApiResponse({ status: 404, description: 'Message non trouvé' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findOne(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<Message> {
+  async findOne(@Request() req: AuthenticatedRequest, @Param('id') id: string): Promise<Message> {
     const message = await this.messageService.findOne(id);
 
     // Vérifier que l'utilisateur a accès à la conversation de ce message
-    const conversation = await this.conversationService.findOne(
-      message.conversationId,
-    );
-    if (
-      conversation.userId !== req.user.id &&
-      !conversation.isPublic &&
-      !conversation.shareLink
-    ) {
+    const conversation = await this.conversationService.findOne(message.conversationId);
+    if (conversation.userId !== req.user.id && !conversation.isPublic && !conversation.shareLink) {
       throw new BadRequestException('You do not have access to this message');
     }
 
     return message;
-  }
-
-  @Patch(':id')
-  @UseGuards(AuthenticatedGuard)
-  @ApiCookieAuth()
-  @ApiOperation({
-    summary: "Mettre à jour un message et la réponse de l'IA",
-  })
-  @ApiParam({ name: 'id', description: 'ID unique du message' })
-  @ApiQuery({
-    name: 'regenerateAi',
-    required: false,
-    description:
-      "Indique s'il faut regénérer la réponse de l'IA (true par défaut)",
-    type: Boolean,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Message mis à jour',
-    type: Message,
-  })
-  @ApiResponse({ status: 404, description: 'Message non trouvé' })
-  @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async update(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-    @Body() updateMessageDto: UpdateMessageDto,
-    @Query('regenerateAi') regenerateAi?: string,
-  ): Promise<Message> {
-    const message = await this.messageService.findOne(id);
-
-    // Vérifier que l'utilisateur a accès à la conversation de ce message
-    const conversation = await this.conversationService.findOne(
-      message.conversationId,
-    );
-    if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only edit messages in your own conversations',
-      );
-    }
-
-    const shouldRegenerateAi = regenerateAi !== 'false';
-
-    return this.messageService.update(id, updateMessageDto, shouldRegenerateAi);
   }
 }

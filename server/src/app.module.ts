@@ -5,10 +5,14 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
+import { ChatModule } from './chat/chat.module';
+import { FolderModule } from './folder/folder.module';
+import { AttachmentModule } from './attachment/attachment.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    // .env unique à la racine du monorepo (en Docker, les variables sont injectées par compose)
+    ConfigModule.forRoot({ envFilePath: '../.env' }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -23,6 +27,9 @@ import { MessageModule } from './message/message.module';
     UserModule,
     ConversationModule,
     MessageModule,
+    ChatModule,
+    FolderModule,
+    AttachmentModule,
   ],
   controllers: [],
   providers: [],

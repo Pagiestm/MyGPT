@@ -31,10 +31,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   async validate(email: string, password: string): Promise<ValidatedUser> {
     try {
-      const result: unknown = await this.authService.validateUser(
-        email,
-        password,
-      );
+      const result: unknown = await this.authService.validateUser(email, password);
 
       if (!result) {
         throw new UnauthorizedException('Identifiants invalides');
@@ -53,9 +50,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      throw new UnauthorizedException(
-        'Erreur lors de la validation des identifiants',
-      );
+      throw new UnauthorizedException('Erreur lors de la validation des identifiants');
     }
   }
 }

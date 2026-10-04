@@ -54,11 +54,12 @@ export class AuthService {
     return {
       pseudo: user.pseudo,
       email: user.email,
+      customInstructions: user.customInstructions ?? null,
+      preferredModel: user.preferredModel ?? null,
     };
   }
 
   logout(session: Session | undefined, res: Response): { message: string } {
-    // Destruction de la session
     if (session) {
       session.destroy((err) => {
         if (err) {

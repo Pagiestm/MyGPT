@@ -7,14 +7,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
-// Mock de bcrypt
 jest.mock('bcrypt');
 
 describe('UserService', () => {
   let service: UserService;
   let mockRepository: Partial<Repository<User>>;
 
-  // Données de test
   const mockUser: User = {
     id: '1',
     email: 'test@example.com',
@@ -31,14 +29,12 @@ describe('UserService', () => {
   };
 
   beforeEach(async () => {
-    // Création d'un mock repository avec typage explicite
     mockRepository = {
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
     };
 
-    // Mock de bcrypt.hash
     (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
 
     const module: TestingModule = await Test.createTestingModule({
@@ -73,9 +69,9 @@ describe('UserService', () => {
     it('should throw NotFoundException if user not found', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.findByEmail('nonexistent@example.com'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findByEmail('nonexistent@example.com')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -104,7 +100,6 @@ describe('UserService', () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
 
-      // Mock de la création d'utilisateur
       (mockRepository.create as jest.Mock).mockReturnValue({
         ...mockCreateUserDto,
         password: 'hashedPassword',
@@ -132,18 +127,14 @@ describe('UserService', () => {
     it('should throw ConflictException if email already exists', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      await expect(service.register(mockCreateUserDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register(mockCreateUserDto)).rejects.toThrow(ConflictException);
     });
 
     it('should throw ConflictException if pseudo already exists', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      await expect(service.register(mockCreateUserDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register(mockCreateUserDto)).rejects.toThrow(ConflictException);
     });
   });
 
@@ -175,10 +166,8 @@ describe('UserService', () => {
     });
 
     it('should not check uniqueness if new pseudo is same as current', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour la sauvegarde
       (mockRepository.save as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.updatePseudo('1', mockUser.pseudo);
@@ -203,10 +192,8 @@ describe('UserService', () => {
     });
 
     it('should delete user account successfully', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour la suppression réussie
       (mockRepository.remove as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.deleteAccount('1');
@@ -223,23 +210,49 @@ describe('UserService', () => {
     it('should throw NotFoundException if user not found', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
 
-      await expect(service.deleteAccount('999')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteAccount('999')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw InternalServerErrorException if deletion fails', async () => {
-      // Mock pour trouver l'utilisateur
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      // Mock pour simuler une erreur lors de la suppression
-      (mockRepository.remove as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (mockRepository.remove as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(service.deleteAccount('1')).rejects.toThrow(
         'Une erreur est survenue lors de la suppression du compte',
       );
+    });
+  });
+
+  describe('updatePreferences', () => {
+    it('saves custom instructions and preferred model', async () => {
+      const user = { ...mockUser };
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(user);
+      (mockRepository.save as jest.Mock).mockImplementation((value: unknown) =>
+        Promise.resolve(value),
+      );
+
+      const result = await service.updatePreferences(user.id, {
+        customInstructions: '  Sois concis  ',
+        preferredModel: 'gemini-pro-latest',
+      });
+
+      expect(result).toEqual({
+        customInstructions: 'Sois concis',
+        preferredModel: 'gemini-pro-latest',
+      });
+    });
+
+    it('clears the instructions when the text is emptied', async () => {
+      const user = { ...mockUser, customInstructions: 'Ancien' };
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(user);
+      (mockRepository.save as jest.Mock).mockImplementation((value: unknown) =>
+        Promise.resolve(value),
+      );
+
+      const result = await service.updatePreferences(user.id, { customInstructions: '   ' });
+
+      expect(result.customInstructions).toBeNull();
     });
   });
 });

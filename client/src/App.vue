@@ -1,28 +1,22 @@
 <template>
-    <component :is="layoutComponent">
-        <router-view />
+  <UApp :locale="fr" :toaster="{ position: 'bottom-right' }">
+    <component :is="layout">
+      <RouterView />
     </component>
+  </UApp>
 </template>
 
 <script setup lang="ts">
+import { fr } from '@nuxt/ui/locale';
+import UApp from '@nuxt/ui/components/App.vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-
-// Importation des layouts
-import DefaultLayout from './components/layout/DefaultLayout.vue';
-import ChatLayout from './components/chat/ChatLayout.vue';
+import AppLayout from './presentation/layouts/AppLayout.vue';
+import AuthLayout from './presentation/layouts/AuthLayout.vue';
+import MarketingLayout from './presentation/layouts/MarketingLayout.vue';
 
 const route = useRoute();
 
-// Déterminer le layout à utiliser en fonction de la route
-const layoutComponent = computed(() => {
-    const layout = route.meta.layout || 'default';
-
-    // Retourner le composant de layout approprié
-    if (layout === 'chat') {
-        return ChatLayout;
-    }
-
-    return DefaultLayout;
-});
+const layouts = { app: AppLayout, auth: AuthLayout, marketing: MarketingLayout };
+const layout = computed(() => layouts[route.meta.layout ?? 'marketing']);
 </script>

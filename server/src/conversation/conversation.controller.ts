@@ -23,6 +23,7 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
 import { ConversationService } from './conversation.service';
+import { FolderService } from '../folder/folder.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ShareConversationDto } from './dto/share-conversation.dto';
@@ -43,7 +44,10 @@ interface RequestWithUser extends ExpressRequest {
 @ApiTags('conversations')
 @Controller('conversations')
 export class ConversationController {
-  constructor(private readonly conversationService: ConversationService) {}
+  constructor(
+    private readonly conversationService: ConversationService,
+    private readonly folderService: FolderService,
+  ) {}
 
   @Post()
   @UseGuards(AuthenticatedGuard)
@@ -60,8 +64,10 @@ export class ConversationController {
     @Request() req: RequestWithUser,
     @Body() createConversationDto: CreateConversationDto,
   ): Promise<Conversation> {
-    // Utiliser l'ID utilisateur de la session
     createConversationDto.userId = req.user.id;
+    if (createConversationDto.folderId) {
+      await this.folderService.findOwned(createConversationDto.folderId, req.user.id);
+    }
     return this.conversationService.create(createConversationDto);
   }
 
@@ -75,8 +81,16 @@ export class ConversationController {
     type: [Conversation],
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findAll(@Request() req: RequestWithUser): Promise<Conversation[]> {
-    return this.conversationService.findAll(req.user.id);
+  @ApiQuery({
+    name: 'archived',
+    required: false,
+    description: 'true pour lister les conversations archivées',
+  })
+  async findAll(
+    @Request() req: RequestWithUser,
+    @Query('archived') archived?: string,
+  ): Promise<Conversation[]> {
+    return this.conversationService.findAll(req.user.id, { archived: archived === 'true' });
   }
 
   @Get('search')
@@ -117,9 +131,7 @@ export class ConversationController {
     type: [Conversation],
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async getSavedConversations(
-    @Request() req: RequestWithUser,
-  ): Promise<Conversation[]> {
+  async getSavedConversations(@Request() req: RequestWithUser): Promise<Conversation[]> {
     return this.conversationService.findSavedByUser(req.user.id);
   }
 
@@ -140,10 +152,7 @@ export class ConversationController {
     @Request() req: RequestWithUser,
     @Body() saveDto: SaveSharedConversationDto,
   ): Promise<Conversation> {
-    return this.conversationService.saveSharedConversation(
-      req.user.id,
-      saveDto,
-    );
+    return this.conversationService.saveSharedConversation(req.user.id, saveDto);
   }
 
   @Get('shared/:shareLink')
@@ -158,8 +167,10 @@ export class ConversationController {
   @ApiResponse({ status: 400, description: 'Lien de partage expiré' })
   async findByShareLink(
     @Param('shareLink') shareLink: string,
-  ): Promise<Conversation> {
-    return this.conversationService.findByShareLink(shareLink);
+  ): Promise<Omit<Conversation, 'user'> & { user: { pseudo: string } }> {
+    const { user, ...conversation } = await this.conversationService.findByShareLink(shareLink);
+    // Route publique : seul le pseudo de l'auteur est exposé (ni email ni hash du mot de passe)
+    return { ...conversation, user: { pseudo: user?.pseudo } };
   }
 
   @Get(':id')
@@ -174,10 +185,7 @@ export class ConversationController {
   })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findOne(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<Conversation> {
+  async findOne(@Request() req: RequestWithUser, @Param('id') id: string): Promise<Conversation> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur a accès à cette conversation
@@ -209,9 +217,11 @@ export class ConversationController {
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only update your own conversations',
-      );
+      throw new BadRequestException('You can only update your own conversations');
+    }
+
+    if (updateConversationDto.folderId) {
+      await this.folderService.findOwned(updateConversationDto.folderId, req.user.id);
     }
 
     return this.conversationService.update(id, updateConversationDto);
@@ -226,17 +236,12 @@ export class ConversationController {
   @ApiResponse({ status: 204, description: 'Conversation supprimée' })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async remove(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async remove(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only delete your own conversations',
-      );
+      throw new BadRequestException('You can only delete your own conversations');
     }
 
     return this.conversationService.remove(id);
@@ -263,9 +268,7 @@ export class ConversationController {
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only share your own conversations',
-      );
+      throw new BadRequestException('You can only share your own conversations');
     }
 
     return this.conversationService.shareConversation(id, shareDto);
@@ -280,17 +283,12 @@ export class ConversationController {
   @ApiResponse({ status: 204, description: 'Partage révoqué' })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async revokeShare(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async revokeShare(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only manage sharing of your own conversations',
-      );
+      throw new BadRequestException('You can only manage sharing of your own conversations');
     }
 
     return this.conversationService.revokeShare(id);

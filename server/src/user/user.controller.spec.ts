@@ -4,17 +4,13 @@ import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UpdatePseudoDto } from './dto/update-user.dto';
 
 describe('UserController', () => {
   let controller: UserController;
   let service: UserService;
 
-  // Mock repository pour le UserService
   const mockRepository = {
     findOne: jest.fn(),
     create: jest.fn(),
@@ -30,6 +26,7 @@ describe('UserController', () => {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
         },
+        { provide: 'IAiAdapter', useValue: { models: [{ id: 'gemini-3.8-flash' }] } },
       ],
     }).compile();
 
@@ -61,7 +58,6 @@ describe('UserController', () => {
 
   describe('updatePseudo', () => {
     it('should update user pseudo', async () => {
-      // Mock du Request avec l'utilisateur connecté
       const req = {
         user: { id: '1', email: 'test@example.com', pseudo: 'oldpseudo' },
       };
@@ -75,9 +71,7 @@ describe('UserController', () => {
 
       jest.spyOn(service, 'updatePseudo').mockResolvedValue(expectedResult);
 
-      expect(await controller.updatePseudo(req as any, updatePseudoDto)).toBe(
-        expectedResult,
-      );
+      expect(await controller.updatePseudo(req as any, updatePseudoDto)).toBe(expectedResult);
       expect(service.updatePseudo).toHaveBeenCalledWith('1', 'newpseudo');
     });
 
@@ -92,9 +86,9 @@ describe('UserController', () => {
         .spyOn(service, 'updatePseudo')
         .mockRejectedValue(new NotFoundException('Utilisateur non trouvé'));
 
-      await expect(
-        controller.updatePseudo(req as any, updatePseudoDto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.updatePseudo(req as any, updatePseudoDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -135,14 +129,11 @@ describe('UserController', () => {
 
       jest
         .spyOn(service, 'deleteAccount')
-        .mockRejectedValue(
-          new InternalServerErrorException('Erreur lors de la suppression'),
-        );
+        .mockRejectedValue(new InternalServerErrorException('Erreur lors de la suppression'));
 
       await expect(controller.deleteAccount(req as any)).rejects.toThrow(
         InternalServerErrorException,
       );
-      // Vérifier que la session n'est pas détruite en cas d'erreur
       expect(req.session.destroy).not.toHaveBeenCalled();
     });
   });

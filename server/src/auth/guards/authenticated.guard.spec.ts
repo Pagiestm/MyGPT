@@ -19,7 +19,6 @@ describe('AuthenticatedGuard', () => {
 
   describe('canActivate', () => {
     it('should return true if user is authenticated', () => {
-      // Arrange: utilisateur authentifié
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => ({
@@ -29,15 +28,12 @@ describe('AuthenticatedGuard', () => {
         }),
       } as ExecutionContext;
 
-      // Act
       const result = guard.canActivate(mockContext);
 
-      // Assert
       expect(result).toBe(true);
     });
 
     it('should throw UnauthorizedException if user is not authenticated', () => {
-      // Arrange: utilisateur non authentifié
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => ({
@@ -46,17 +42,13 @@ describe('AuthenticatedGuard', () => {
         }),
       } as ExecutionContext;
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
       expect(() => guard.canActivate(mockContext)).toThrow(
         'Vous devez être connecté pour accéder à cette ressource',
       );
     });
 
     it('should throw UnauthorizedException if isAuthenticated is not a function', () => {
-      // Arrange: méthode isAuthenticated manquante
       const mockContext = {
         switchToHttp: () => ({
           getRequest: () => ({
@@ -65,13 +57,8 @@ describe('AuthenticatedGuard', () => {
         }),
       } as ExecutionContext;
 
-      // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        UnauthorizedException,
-      );
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        'Session non valide',
-      );
+      expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
+      expect(() => guard.canActivate(mockContext)).toThrow('Session non valide');
     });
   });
 });

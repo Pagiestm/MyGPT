@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -23,9 +24,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException(
-        `Aucun utilisateur trouvé avec l'email ${email}`,
-      );
+      throw new NotFoundException(`Aucun utilisateur trouvé avec l'email ${email}`);
     }
 
     return user;
@@ -50,10 +49,7 @@ export class UserService {
 
     try {
       const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(
-        createUserDto.password,
-        saltRounds,
-      );
+      const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
 
       const user = this.usersRepository.create({
         email: createUserDto.email,
@@ -68,9 +64,7 @@ export class UserService {
       };
     } catch (error) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
-      throw new InternalServerErrorException(
-        "Une erreur est survenue lors de l'inscription",
-      );
+      throw new InternalServerErrorException("Une erreur est survenue lors de l'inscription");
     }
   }
 
@@ -86,10 +80,7 @@ export class UserService {
     return user;
   }
 
-  async updatePseudo(
-    userId: string,
-    newPseudo: string,
-  ): Promise<{ message: string }> {
+  async updatePseudo(userId: string, newPseudo: string): Promise<{ message: string }> {
     const user = await this.findOne(userId);
 
     if (newPseudo === user.pseudo) {
@@ -119,8 +110,21 @@ export class UserService {
     }
   }
 
+  async updatePreferences(userId: string, dto: UpdatePreferencesDto) {
+    const user = await this.findOne(userId);
+    if (dto.customInstructions !== undefined) {
+      user.customInstructions = dto.customInstructions.trim() || null;
+    }
+    if (dto.preferredModel !== undefined) user.preferredModel = dto.preferredModel;
+
+    const saved = await this.usersRepository.save(user);
+    return {
+      customInstructions: saved.customInstructions ?? null,
+      preferredModel: saved.preferredModel ?? null,
+    };
+  }
+
   async deleteAccount(userId: string): Promise<{ message: string }> {
-    // Vérifier si l'utilisateur existe
     const user = await this.findOne(userId);
 
     try {
