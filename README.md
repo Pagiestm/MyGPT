@@ -16,19 +16,20 @@ https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
 
 ## Fonctionnalités
 
-- Conversations avec Gemini, historique persistant et édition des questions
-- Authentification par session (inscription, connexion, profil, suppression de compte)
-- Recherche globale et par conversation
-- Partage public de conversations par lien
-- Rendu Markdown avec coloration syntaxique
+- Conversations avec Gemini, historique persistant, questions modifiables avec régénération de la réponse
+- Rendu Markdown complet et blocs de code colorés (Shiki), copiables en un clic
+- Recherche de conversations et de messages
+- Partage par lien en lecture seule, accessible sans compte, avec expiration optionnelle
+- Bibliothèque des conversations partagées enregistrées
+- Thème clair, sombre ou système, interface responsive
 
 ## Stack
 
-| Couche    | Technologies                                                             |
-| --------- | ------------------------------------------------------------------------ |
-| Frontend  | Vue 3, Vite, Tailwind CSS 4, Pinia, Vue Router, Playwright               |
-| Backend   | NestJS 12, TypeORM, PostgreSQL, Passport, Swagger, Jest                  |
-| Outillage | npm workspaces, ESLint, Prettier, Husky, lint-staged, Commitlint, Docker |
+| Couche    | Technologies                                                                 |
+| --------- | ---------------------------------------------------------------------------- |
+| Frontend  | Vue 3, Vite, Nuxt UI 4, Tailwind CSS 4, Pinia, Pinia Colada, Zod, Playwright |
+| Backend   | NestJS 12, TypeORM, PostgreSQL, Passport, Swagger, Jest                      |
+| Outillage | npm workspaces, ESLint, Prettier, Husky, lint-staged, Commitlint, Docker     |
 
 ## Démarrage rapide
 
@@ -93,7 +94,7 @@ Pour cibler un workspace : `npm run <script> -w server` ou `-w client`.
 Le projet suit une approche **TDD** (Red → Green → Refactor).
 
 - **Unitaires** — Jest sur les services, contrôleurs, guards et stratégies du serveur.
-- **End-to-end** — Playwright sur Chromium, Firefox et WebKit, avec API mockée.
+- **End-to-end** — Playwright sur Chromium, Firefox et WebKit, contre le build de production (`vite preview`). Un faux back-end en mémoire (`client/tests/support/fakeApi.ts`) répond à toute l'API : les tests n'ont besoin ni de base de données ni de Gemini.
 
 https://github.com/user-attachments/assets/faf5ac6b-41f5-45c2-8487-6794d810c52e
 
@@ -106,13 +107,29 @@ https://github.com/user-attachments/assets/3ad72488-0684-4037-8e9a-581f421c15e6
 - **Commitlint** : messages au format [Conventional Commits](https://www.conventionalcommits.org/) — `type(scope): description`, avec les types `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 - **GitHub Actions** : sur `main` et `develop`, format, lint et typecheck, puis tests unitaires avec couverture, puis tests E2E.
 
+## Architecture du client
+
+Le client suit une **clean architecture** en quatre couches. Chaque couche ne dépend que de celles du dessous.
+
+```
+client/src/
+├── domain/          # entités, schémas Zod, règles métier pures (sans Vue ni HTTP)
+├── infrastructure/  # client HTTP et un repository par ressource de l'API
+├── application/     # store de session, composables de cas d'usage (requêtes, mutations, cache)
+└── presentation/    # router, layouts, vues (une par route), composants
+```
+
+- **Routes déclarées explicitement** dans `presentation/router/routes.ts`, avec garde d'authentification et redirection des anciennes URL.
+- **Imports explicites** partout, y compris pour les composants Nuxt UI : aucun auto-import.
+- **Pinia Colada** gère le cache des requêtes, les états de chargement et les mises à jour optimistes (la question s'affiche avant la réponse de l'IA).
+
 ## Structure
 
 ```
 MyGPT/
 ├── client/                 # Vue 3 + Vite
-│   ├── src/                # components, views, stores, routes, utils
-│   ├── tests/              # tests Playwright
+│   ├── src/                # domain, infrastructure, application, presentation
+│   ├── tests/              # tests Playwright et faux back-end
 │   └── Dockerfile
 ├── server/                 # NestJS
 │   ├── src/                # auth, user, conversation, message, infrastructure (Gemini)
