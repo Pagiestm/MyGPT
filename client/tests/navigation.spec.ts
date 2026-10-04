@@ -6,12 +6,32 @@ test.describe('Navigation', () => {
     await fakeApi(page);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: /Posez la question/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Commencer gratuitement' })).toHaveAttribute(
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Posez votre question.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Inscription gratuite' })).toHaveAttribute(
       'href',
       '/register',
     );
-    await expect(page.getByRole('tab', { name: 'Code' })).toBeVisible();
+    await expect(page.getByRole('img', { name: /Démonstration de MyGPT/ })).toBeVisible();
+  });
+
+  test("garde la question tapée sur l'accueil pendant la connexion", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto('/');
+
+    await page.getByPlaceholder('Demandez à MyGPT…').pressSequentially('Comment marche Docker ?');
+    await page.getByRole('button', { name: 'Envoyer la question' }).click();
+    await expect(page).toHaveURL(/\/login\?redirect=(%2F|\/)chat$/);
+
+    await page.getByLabel('Email').fill('alice@example.com');
+    await page.getByLabel('Mot de passe').fill('Password123!');
+    await page.getByRole('button', { name: 'Se connecter' }).click();
+
+    await expect(page).toHaveURL(/\/chat$/);
+    await expect(page.getByPlaceholder('Écrivez votre message...')).toHaveValue(
+      'Comment marche Docker ?',
+    );
   });
 
   test('un visiteur connecté voit le lien vers le chat', async ({ page }) => {

@@ -12,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
   },
   projects: [
@@ -29,10 +29,11 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
+  // Build de production servi par vite preview : pas de compilation à froid pendant les tests
   webServer: {
-    command: 'npm run dev',
-    port: 5173,
+    command: 'npx vite build && npx vite preview --port 4173 --strictPort',
+    port: 4173,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 180000,
   },
 });

@@ -30,6 +30,19 @@ test.describe('Conversations', () => {
     await expect(page.getByRole('link', { name: 'Titre modifié' })).toBeVisible();
   });
 
+  test('renomme une conversation depuis la barre latérale', async ({ page }) => {
+    await fakeApi(page, { ...signedIn, conversations: [conversation('c1', 'Ancien nom')] });
+    await page.goto('/chat');
+
+    await page.getByRole('button', { name: 'Actions pour Ancien nom' }).click();
+    await page.getByRole('menuitem', { name: 'Renommer' }).click();
+    const input = page.getByRole('textbox', { name: 'Nouveau nom' });
+    await input.fill('Nouveau nom de conversation');
+    await input.press('Enter');
+
+    await expect(page.getByRole('link', { name: 'Nouveau nom de conversation' })).toBeVisible();
+  });
+
   test('supprime une conversation après confirmation', async ({ page }) => {
     await fakeApi(page, {
       ...signedIn,
@@ -97,7 +110,7 @@ test.describe('Messages', () => {
     await page.getByText('Message à modifier').hover();
     await page.getByRole('button', { name: 'Modifier ce message' }).click();
     await page.getByPlaceholder('Modifiez votre message...').fill('Question corrigée');
-    await page.getByRole('button', { name: 'Modifier', exact: true }).click();
+    await page.getByRole('button', { name: 'Envoyer', exact: true }).click();
 
     await expect(page.getByText('Question corrigée')).toBeVisible();
     await expect(page.getByText('Réponse régénérée')).toBeVisible();
@@ -169,5 +182,85 @@ test.describe('Messages', () => {
     });
     expect(order[0]).toBeLessThan(order[1]);
     expect(order[1]).toBeLessThan(order[2]);
+  });
+});
+
+test.describe("Effet d'écriture", () => {
+  const longReply = `Début de la réponse. ${'Une phrase de remplissage pour allonger le texte. '.repeat(14)}Fin de la réponse.`;
+
+  test('la nouvelle réponse apparaît progressivement', async ({ page }) => {
+    await fakeApi(page, {
+      ...signedIn,
+      conversations: [conversation('c1', 'Écriture')],
+      aiReply: longReply,
+    });
+    await page.goto('/chat/c1');
+
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Raconte');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText('Début de la réponse.')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Fin de la réponse.')).toBeHidden();
+    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 15000 });
+  });
+
+  test("s'affiche d'un coup si l'utilisateur réduit les animations", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await fakeApi(page, {
+      ...signedIn,
+      conversations: [conversation('c1', 'Écriture')],
+      aiReply: longReply,
+    });
+    await page.goto('/chat/c1');
+
+    await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Raconte');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 1500 });
+  });
+
+  test("l'historique n'est pas réanimé à l'ouverture", async ({ page }) => {
+    await fakeApi(page, {
+      ...signedIn,
+      conversations: [conversation('c1', 'Écriture')],
+      messages: { c1: [message('c1', 'Question'), message('c1', longReply, true)] },
+    });
+    await page.goto('/chat/c1');
+
+    await expect(page.getByText('Fin de la réponse.')).toBeVisible({ timeout: 1500 });
+  });
+});
+
+test.describe('Retours visuels', () => {
+  test('confirme la copie d’une réponse', async ({ page, browserName, context }) => {
+    test.skip(browserName !== 'chromium', 'Permissions presse-papiers disponibles sous Chromium');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await fakeApi(page, {
+      ...signedIn,
+      conversations: [conversation('c1', 'Copie')],
+      messages: { c1: [message('c1', 'Question'), message('c1', 'Réponse à copier', true)] },
+    });
+    await page.goto('/chat/c1');
+
+    await page.getByText('Réponse à copier').hover();
+    await page.getByRole('button', { name: 'Copier la réponse' }).click();
+
+    await expect(page.getByText('Réponse copiée').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Réponse copiée' })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('Réponse à copier');
+  });
+
+  test('referme le menu mobile même vers la page déjà affichée', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await fakeApi(page, { ...signedIn, conversations: [conversation('c1', 'Conversation test')] });
+    await page.goto('/chat/c1');
+
+    await page.getByRole('button', { name: 'Ouvrir la barre latérale' }).click();
+    const menu = page.getByRole('dialog');
+    await expect(menu).toBeVisible();
+    await menu.getByRole('link', { name: 'Conversation test' }).click();
+
+    await expect(menu).toBeHidden();
+    await expect(page).toHaveURL(/\/chat\/c1$/);
   });
 });

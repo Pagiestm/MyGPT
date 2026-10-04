@@ -129,7 +129,31 @@ test.describe('Inscription', () => {
     await page.getByRole('button', { name: "S'inscrire" }).click();
 
     await expect(page.getByText('Inscription réussie !').first()).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\?email=bob(%40|@)example\.com$/);
+    await expect(page.getByLabel('Email')).toHaveValue('bob@example.com');
+  });
+
+  test('coche les règles du mot de passe pendant la saisie', async ({ page }) => {
+    await fakeApi(page);
+    await page.goto('/register');
+    const rules = page.getByRole('list', { name: 'Critères de sécurité' });
+
+    await page.getByLabel('Mot de passe').fill('Password');
+    await expect(rules.getByText('Une majuscule')).toContainText('(respectée)');
+    await expect(rules.getByText('Un chiffre')).toContainText('(non respectée)');
+
+    await page.getByLabel('Mot de passe').fill('Password123!');
+    await expect(rules.getByText('(non respectée)')).toHaveCount(0);
+  });
+
+  test('affiche ou masque le mot de passe', async ({ page }) => {
+    await fakeApi(page);
+    await page.goto('/login');
+    const password = page.getByLabel('Mot de passe');
+
+    await expect(password).toHaveAttribute('type', 'password');
+    await page.getByRole('button', { name: 'Afficher les caractères' }).click();
+    await expect(password).toHaveAttribute('type', 'text');
   });
 
   for (const message of [
