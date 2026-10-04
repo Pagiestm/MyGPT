@@ -55,6 +55,7 @@
     "@parcel/watcher@2.6.0": true,
     "unrs-resolver@1.12.2": true,
     "vue-demi@0.14.10": true,
-    "@scarf/scarf": false
+    "@scarf/scarf": false,
+    "esbuild@0.27.2": true
   }
 }

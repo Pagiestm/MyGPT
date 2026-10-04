@@ -1,25 +1,21 @@
 <template>
-  <component :is="layoutComponent">
-    <router-view />
-  </component>
+  <UApp :toaster="{ position: 'bottom-right' }">
+    <component :is="layout">
+      <RouterView />
+    </component>
+  </UApp>
 </template>
 
 <script setup lang="ts">
+import UApp from '@nuxt/ui/components/App.vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-
-import DefaultLayout from './components/layout/DefaultLayout.vue';
-import ChatLayout from './components/chat/ChatLayout.vue';
+import AppLayout from './presentation/layouts/AppLayout.vue';
+import AuthLayout from './presentation/layouts/AuthLayout.vue';
+import MarketingLayout from './presentation/layouts/MarketingLayout.vue';
 
 const route = useRoute();
 
-const layoutComponent = computed(() => {
-  const layout = route.meta.layout || 'default';
-
-  if (layout === 'chat') {
-    return ChatLayout;
-  }
-
-  return DefaultLayout;
-});
+const layouts = { app: AppLayout, auth: AuthLayout, marketing: MarketingLayout };
+const layout = computed(() => layouts[route.meta.layout ?? 'marketing']);
 </script>

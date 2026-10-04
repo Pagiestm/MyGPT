@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import 'markstream-vue/index.css' layer(components);
+
+@theme static {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+
+  --color-cobalt-50: #eef3ff;
+  --color-cobalt-100: #dbe4ff;
+  --color-cobalt-200: #bfcfff;
+  --color-cobalt-300: #93aeff;
+  --color-cobalt-400: #6283ff;
+  --color-cobalt-500: #2e5bff;
+  --color-cobalt-600: #1f44f0;
+  --color-cobalt-700: #1834d4;
+  --color-cobalt-800: #1a2ea9;
+  --color-cobalt-900: #1c2d85;
+  --color-cobalt-950: #151c4f;
+}
+
+:root {
+  --ui-radius: 0.5rem;
+}
+
+/* Curseur de saisie du logo, réutilisé sur la page d'accueil */
+.caret {
+  display: inline-block;
+  width: 0.45ch;
+  height: 0.85em;
+  margin-left: 0.08em;
+  vertical-align: -0.06em;
+  border-radius: 1px;
+  background: var(--color-cobalt-500);
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}
+
+.markstream-vue {
+  font-family: var(--font-sans);
+}

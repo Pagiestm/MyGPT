@@ -32,7 +32,8 @@ export default defineConfig(
       parserOptions: { parser: tseslint.parser },
     },
     rules: {
-      'vue/multi-word-component-names': 'off',
+      // TypeScript vérifie déjà les identifiants
+      'no-undef': 'off',
       '@typescript-eslint/no-unused-expressions': [
         'error',
         { allowShortCircuit: true, allowTernary: true },
