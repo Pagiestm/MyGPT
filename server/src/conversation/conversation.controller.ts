@@ -23,6 +23,7 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
 import { ConversationService } from './conversation.service';
+import { FolderService } from '../folder/folder.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ShareConversationDto } from './dto/share-conversation.dto';
@@ -43,7 +44,10 @@ interface RequestWithUser extends ExpressRequest {
 @ApiTags('conversations')
 @Controller('conversations')
 export class ConversationController {
-  constructor(private readonly conversationService: ConversationService) {}
+  constructor(
+    private readonly conversationService: ConversationService,
+    private readonly folderService: FolderService,
+  ) {}
 
   @Post()
   @UseGuards(AuthenticatedGuard)
@@ -61,6 +65,9 @@ export class ConversationController {
     @Body() createConversationDto: CreateConversationDto,
   ): Promise<Conversation> {
     createConversationDto.userId = req.user.id;
+    if (createConversationDto.folderId) {
+      await this.folderService.findOwned(createConversationDto.folderId, req.user.id);
+    }
     return this.conversationService.create(createConversationDto);
   }
 
@@ -74,8 +81,16 @@ export class ConversationController {
     type: [Conversation],
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findAll(@Request() req: RequestWithUser): Promise<Conversation[]> {
-    return this.conversationService.findAll(req.user.id);
+  @ApiQuery({
+    name: 'archived',
+    required: false,
+    description: 'true pour lister les conversations archivées',
+  })
+  async findAll(
+    @Request() req: RequestWithUser,
+    @Query('archived') archived?: string,
+  ): Promise<Conversation[]> {
+    return this.conversationService.findAll(req.user.id, { archived: archived === 'true' });
   }
 
   @Get('search')
@@ -203,6 +218,10 @@ export class ConversationController {
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
       throw new BadRequestException('You can only update your own conversations');
+    }
+
+    if (updateConversationDto.folderId) {
+      await this.folderService.findOwned(updateConversationDto.folderId, req.user.id);
     }
 
     return this.conversationService.update(id, updateConversationDto);

@@ -21,4 +21,14 @@ export class UpdateConversationDto extends PartialType(CreateConversationDto) {
   @IsBoolean()
   @IsOptional()
   isPublic?: boolean;
+
+  @ApiProperty({ description: 'Épingler la conversation', example: true, required: false })
+  @IsBoolean()
+  @IsOptional()
+  pinned?: boolean;
+
+  @ApiProperty({ description: 'Archiver la conversation', example: false, required: false })
+  @IsBoolean()
+  @IsOptional()
+  archived?: boolean;
 }

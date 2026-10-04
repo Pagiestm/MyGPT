@@ -26,6 +26,7 @@ describe('UserController', () => {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
         },
+        { provide: 'IAiAdapter', useValue: { models: [{ id: 'gemini-3.8-flash' }] } },
       ],
     }).compile();
 

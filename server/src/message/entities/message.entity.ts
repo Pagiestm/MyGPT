@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Conversation } from '../../conversation/entities/conversation.entity';
+import { Attachment } from '../../attachment/entities/attachment.entity';
 
 @Entity('messages')
 export class Message {
@@ -45,6 +47,18 @@ export class Message {
   })
   @Column({ default: false })
   isFromAi: boolean;
+
+  @ApiProperty({
+    description: "Modèle d'IA ayant produit la réponse",
+    example: 'gemini-3.8-flash',
+    required: false,
+  })
+  @Column({ type: 'varchar', nullable: true })
+  model: string | null;
+
+  @ApiProperty({ description: 'Fichiers joints au message', type: () => [Attachment] })
+  @OneToMany(() => Attachment, (attachment) => attachment.message)
+  attachments: Attachment[];
 
   @ApiProperty({
     description: 'Date de création du message',

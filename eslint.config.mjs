@@ -66,6 +66,8 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      // Faux générateurs de flux IA dans les tests
+      '@typescript-eslint/require-await': 'off',
     },
   },
 

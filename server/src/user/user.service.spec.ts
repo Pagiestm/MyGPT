@@ -223,4 +223,36 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('updatePreferences', () => {
+    it('saves custom instructions and preferred model', async () => {
+      const user = { ...mockUser };
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(user);
+      (mockRepository.save as jest.Mock).mockImplementation((value: unknown) =>
+        Promise.resolve(value),
+      );
+
+      const result = await service.updatePreferences(user.id, {
+        customInstructions: '  Sois concis  ',
+        preferredModel: 'gemini-pro-latest',
+      });
+
+      expect(result).toEqual({
+        customInstructions: 'Sois concis',
+        preferredModel: 'gemini-pro-latest',
+      });
+    });
+
+    it('clears the instructions when the text is emptied', async () => {
+      const user = { ...mockUser, customInstructions: 'Ancien' };
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(user);
+      (mockRepository.save as jest.Mock).mockImplementation((value: unknown) =>
+        Promise.resolve(value),
+      );
+
+      const result = await service.updatePreferences(user.id, { customInstructions: '   ' });
+
+      expect(result.customInstructions).toBeNull();
+    });
+  });
 });

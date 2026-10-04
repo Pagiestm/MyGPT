@@ -54,6 +54,8 @@ export class AuthService {
     return {
       pseudo: user.pseudo,
       email: user.email,
+      customInstructions: user.customInstructions ?? null,
+      preferredModel: user.preferredModel ?? null,
     };
   }
 

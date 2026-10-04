@@ -5,6 +5,9 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
+import { ChatModule } from './chat/chat.module';
+import { FolderModule } from './folder/folder.module';
+import { AttachmentModule } from './attachment/attachment.module';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { MessageModule } from './message/message.module';
     UserModule,
     ConversationModule,
     MessageModule,
+    ChatModule,
+    FolderModule,
+    AttachmentModule,
   ],
   controllers: [],
   providers: [],

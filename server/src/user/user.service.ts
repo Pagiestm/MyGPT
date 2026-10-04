@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -107,6 +108,20 @@ export class UserService {
         'Une erreur est survenue lors de la modification du pseudo',
       );
     }
+  }
+
+  async updatePreferences(userId: string, dto: UpdatePreferencesDto) {
+    const user = await this.findOne(userId);
+    if (dto.customInstructions !== undefined) {
+      user.customInstructions = dto.customInstructions.trim() || null;
+    }
+    if (dto.preferredModel !== undefined) user.preferredModel = dto.preferredModel;
+
+    const saved = await this.usersRepository.save(user);
+    return {
+      customInstructions: saved.customInstructions ?? null,
+      preferredModel: saved.preferredModel ?? null,
+    };
   }
 
   async deleteAccount(userId: string): Promise<{ message: string }> {

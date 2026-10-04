@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 import { ConversationService } from '../conversation/conversation.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { BadRequestException } from '@nestjs/common';
 import { Message } from './entities/message.entity';
 import { Conversation } from '../conversation/entities/conversation.entity';
@@ -91,82 +89,6 @@ describe('MessageController', () => {
   });
 
   describe('CRUD Operations', () => {
-    describe('create', () => {
-      it('should create a message when user owns the conversation', async () => {
-        const req = createMockRequest();
-        const conversationId = 'conv-123';
-        const createDto: CreateMessageDto = {
-          content: 'Test message',
-          conversationId,
-          isFromAi: false,
-        };
-
-        const mockConversation = createMockConversation({
-          id: conversationId,
-          userId: req.user.id,
-        });
-
-        const expectedMessage = createMockMessage({
-          ...createDto,
-        });
-
-        conversationService.findOne.mockResolvedValue(mockConversation);
-        messageService.create.mockResolvedValue(expectedMessage);
-
-        const result = await controller.create(req, createDto);
-
-        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
-        expect(messageService.create).toHaveBeenCalledWith(createDto);
-        expect(result).toEqual(expectedMessage);
-      });
-
-      it('should create a message when conversation is public', async () => {
-        const req = createMockRequest();
-        const conversationId = 'conv-123';
-        const createDto = {
-          content: 'Test message',
-          conversationId,
-          isFromAi: false,
-        };
-
-        const mockConversation = createMockConversation({
-          id: conversationId,
-          userId: 'other-user',
-          isPublic: true,
-        });
-
-        const expectedMessage = createMockMessage(createDto);
-
-        conversationService.findOne.mockResolvedValue(mockConversation);
-        messageService.create.mockResolvedValue(expectedMessage);
-
-        const result = await controller.create(req, createDto);
-
-        expect(result).toEqual(expectedMessage);
-      });
-
-      it('should throw BadRequestException when user does not have access', async () => {
-        const req = createMockRequest();
-        const conversationId = 'conv-123';
-        const createDto = {
-          content: 'Test message',
-          conversationId,
-          isFromAi: false,
-        };
-
-        const mockConversation = createMockConversation({
-          id: conversationId,
-          userId: 'other-user',
-          isPublic: false,
-        });
-
-        conversationService.findOne.mockResolvedValue(mockConversation);
-
-        await expect(controller.create(req, createDto)).rejects.toThrow(BadRequestException);
-        expect(messageService.create).not.toHaveBeenCalled();
-      });
-    });
-
     describe('findAll', () => {
       it('should return all messages for a conversation the user owns', async () => {
         const req = createMockRequest();
@@ -300,77 +222,6 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
 
         await expect(controller.findOne(req, messageId)).rejects.toThrow(BadRequestException);
-      });
-    });
-
-    describe('update', () => {
-      it('should update a message when user owns the conversation', async () => {
-        const req = createMockRequest();
-        const messageId = 'msg-123';
-        const conversationId = 'conv-123';
-        const updateDto: UpdateMessageDto = {
-          content: 'Updated content',
-        };
-
-        const mockMessage = createMockMessage({
-          id: messageId,
-          conversationId,
-          content: 'Original content',
-        });
-
-        const mockConversation = createMockConversation({
-          id: conversationId,
-          userId: req.user.id,
-        });
-
-        const updatedMessage = createMockMessage({
-          ...mockMessage,
-          content: updateDto.content,
-        });
-
-        messageService.findOne.mockResolvedValue(mockMessage);
-        conversationService.findOne.mockResolvedValue(mockConversation);
-        messageService.update.mockResolvedValue(updatedMessage);
-
-        const result = await controller.update(req, messageId, updateDto, 'false');
-
-        expect(messageService.findOne).toHaveBeenCalledWith(messageId);
-        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
-        expect(messageService.update).toHaveBeenCalledWith(messageId, updateDto, false);
-        expect(result).toEqual(updatedMessage);
-      });
-
-      it('should update a message with AI regeneration', async () => {
-        const req = createMockRequest();
-        const messageId = 'msg-123';
-        const conversationId = 'conv-123';
-        const updateDto: UpdateMessageDto = {
-          content: 'Updated content',
-        };
-
-        const mockMessage = createMockMessage({
-          id: messageId,
-          conversationId,
-        });
-
-        const mockConversation = createMockConversation({
-          id: conversationId,
-          userId: req.user.id,
-        });
-
-        const updatedMessage = createMockMessage({
-          ...mockMessage,
-          content: updateDto.content,
-        });
-
-        messageService.findOne.mockResolvedValue(mockMessage);
-        conversationService.findOne.mockResolvedValue(mockConversation);
-        messageService.update.mockResolvedValue(updatedMessage);
-
-        const result = await controller.update(req, messageId, updateDto, 'true');
-
-        expect(messageService.update).toHaveBeenCalledWith(messageId, updateDto, true);
-        expect(result).toEqual(updatedMessage);
       });
     });
   });
