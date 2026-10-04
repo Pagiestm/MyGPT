@@ -25,7 +25,7 @@ export class GeminiAiAdapter implements IAiAdapter {
     }
 
     this.generativeAI = new GoogleGenerativeAI(apiKey);
-    this.model = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
+    this.model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
   }
 
   async getAiResponse(prompt: string, conversationHistory: string[] = []): Promise<string> {
@@ -64,7 +64,7 @@ export class GeminiAiAdapter implements IAiAdapter {
         history: this.formatHistoryForGemini(conversationHistory),
       });
 
-      const result = await chat.sendMessage(prompt);
+      const result = await this.withRetry(() => chat.sendMessage(prompt));
       const response = result.response.text();
 
       this.logger.log(`Received response from Gemini: "${response.substring(0, 50)}..."`);
@@ -89,6 +89,30 @@ export class GeminiAiAdapter implements IAiAdapter {
 
       return "Désolé, je n'ai pas pu générer une réponse pour le moment. Veuillez réessayer plus tard.";
     }
+  }
+
+  // Erreurs passagères côté Google (quota, surcharge) : on réessaie avant d'abandonner
+  private static readonly RETRYABLE_STATUSES = new Set([429, 500, 503]);
+  private static readonly RETRY_DELAYS_MS = [1000, 3000];
+
+  private async withRetry<T>(call: () => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await call();
+      } catch (error) {
+        const status = (error as { status?: number }).status;
+        const delay = GeminiAiAdapter.RETRY_DELAYS_MS[attempt];
+        if (!status || !GeminiAiAdapter.RETRYABLE_STATUSES.has(status) || delay === undefined) {
+          throw error;
+        }
+        this.logger.warn(`Gemini indisponible (${status}), nouvel essai dans ${delay} ms`);
+        await this.wait(delay);
+      }
+    }
+  }
+
+  protected wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private formatHistoryForGemini(conversationHistory: string[]): Content[] {
