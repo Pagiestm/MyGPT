@@ -1,0 +1,79 @@
+name: mygpt
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+      POSTGRES_DB: ${DB_DATABASE:-my-gpt}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@mygpt.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - '${PGADMIN_PORT:-5050}:80'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      DB_DATABASE: ${DB_DATABASE:-my-gpt}
+      CLIENT_URL: http://localhost:${CLIENT_PORT:-5173}
+      TSC_WATCHFILE: DynamicPriorityPolling # hot-reload sur volume Windows/macOS
+    ports:
+      - '${SERVER_PORT:-3000}:3000'
+    volumes:
+      - ./server/src:/app/server/src
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:${SERVER_PORT:-3000}
+      VITE_USE_POLLING: 'true' # hot-reload sur volume Windows/macOS
+    ports:
+      - '${CLIENT_PORT:-5173}:5173'
+    volumes:
+      - ./client/src:/app/client/src
+      - ./client/public:/app/client/public
+    depends_on:
+      - server
+
+volumes:
+  db-data:
+  pgadmin-data:
