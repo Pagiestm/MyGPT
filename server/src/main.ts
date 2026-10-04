@@ -1,13 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import session from 'express-session';
 import passport from 'passport';
 import * as crypto from 'crypto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Applique les @Exclude des entités (mot de passe, contenu binaire des fichiers) à toutes les réponses
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(
     new ValidationPipe({

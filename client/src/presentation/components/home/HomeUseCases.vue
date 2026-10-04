@@ -36,9 +36,9 @@
               </ul>
             </div>
 
-            <div class="flex flex-col gap-4 rounded-2xl border border-default bg-muted p-5">
+            <div class="flex flex-col gap-4 rounded-card border border-default bg-muted p-5">
               <p
-                class="self-end rounded-3xl bg-default px-4 py-2.5 text-sm text-highlighted shadow-xs"
+                class="self-end rounded-panel bg-default px-4 py-2.5 text-sm text-highlighted shadow-xs"
               >
                 {{ item.question }}
               </p>

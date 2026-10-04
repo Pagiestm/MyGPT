@@ -1,5 +1,5 @@
 import { http } from '../http/client';
-import type { Conversation, SharedConversation } from '@/domain/conversation';
+import type { Conversation, ConversationPatch, SharedConversation } from '@/domain/conversation';
 
 export const conversationRepository = {
   list: (keyword?: string) =>
@@ -8,10 +8,13 @@ export const conversationRepository = {
         params: keyword ? { keyword } : undefined,
       })
       .then((r) => r.data),
+  listArchived: () =>
+    http.get<Conversation[]>('/conversations', { params: { archived: true } }).then((r) => r.data),
   get: (id: string) => http.get<Conversation>(`/conversations/${id}`).then((r) => r.data),
-  create: (name: string) => http.post<Conversation>('/conversations', { name }).then((r) => r.data),
-  rename: (id: string, name: string) =>
-    http.patch<Conversation>(`/conversations/${id}`, { name }).then((r) => r.data),
+  create: (name: string, folderId?: string | null) =>
+    http.post<Conversation>('/conversations', { name, folderId }).then((r) => r.data),
+  update: (id: string, patch: ConversationPatch) =>
+    http.patch<Conversation>(`/conversations/${id}`, patch).then((r) => r.data),
   remove: (id: string) => http.delete(`/conversations/${id}`),
 
   share: (id: string, expiresAt?: string) =>

@@ -11,6 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../user/entities/user.entity';
 import { Message } from '../../message/entities/message.entity';
+import { Folder } from '../../folder/entities/folder.entity';
 
 @Entity('conversations')
 export class Conversation {
@@ -73,6 +74,34 @@ export class Conversation {
   })
   @Column({ nullable: true })
   shareExpiresAt: Date;
+
+  @ApiProperty({ description: 'Conversation épinglée en haut de la liste', example: false })
+  @Column({ default: false })
+  pinned: boolean;
+
+  @ApiProperty({ description: 'Conversation archivée (masquée de la liste)', example: false })
+  @Column({ default: false })
+  archived: boolean;
+
+  @ApiProperty({
+    description:
+      'Titre définitif (choisi par l’utilisateur ou déjà généré) : il ne sera plus remplacé',
+    example: false,
+  })
+  @Column({ default: false })
+  titleLocked: boolean;
+
+  @ApiProperty({
+    description: 'Dossier contenant la conversation',
+    example: 'f1e2d3c4-1234-4abc-bdef-ff123456789a',
+    required: false,
+  })
+  @Column({ type: 'uuid', nullable: true })
+  folderId: string | null;
+
+  @ManyToOne(() => Folder, (folder) => folder.conversations, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'folderId' })
+  folder: Folder | null;
 
   @ApiProperty({
     description: 'Date de création de la conversation',

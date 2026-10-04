@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConversationController } from './conversation.controller';
 import { ConversationService } from './conversation.service';
+import { FolderService } from '../folder/folder.service';
+import { NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
@@ -47,6 +49,7 @@ function createMockConversation(overrides = {}) {
 describe('ConversationController', () => {
   let controller: ConversationController;
   let service: MockService;
+  const folders = { findOwned: jest.fn() };
 
   beforeEach(async () => {
     service = {
@@ -65,7 +68,10 @@ describe('ConversationController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ConversationController],
-      providers: [{ provide: ConversationService, useValue: service }],
+      providers: [
+        { provide: ConversationService, useValue: service },
+        { provide: FolderService, useValue: folders },
+      ],
     }).compile();
 
     controller = module.get<ConversationController>(ConversationController);
@@ -108,7 +114,7 @@ describe('ConversationController', () => {
 
         const result = await controller.findAll(req);
 
-        expect(service.findAll).toHaveBeenCalledWith(userId);
+        expect(service.findAll).toHaveBeenCalledWith(userId, { archived: false });
         expect(result).toEqual(conversations);
       });
     });
@@ -409,6 +415,27 @@ describe('ConversationController', () => {
         expect(service.saveSharedConversation).toHaveBeenCalledWith(userId, saveDto);
         expect(result).toEqual(savedConversation);
       });
+    });
+  });
+
+  describe('Folders', () => {
+    it("refuses to move a conversation into someone else's folder", async () => {
+      service.findOne.mockResolvedValue(createMockConversation({ userId: 'user-123' }));
+      folders.findOwned.mockRejectedValue(new NotFoundException('Dossier introuvable'));
+
+      await expect(
+        controller.update(createMockRequest('user-123'), 'conv-123', { folderId: 'f-autre' }),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.update).not.toHaveBeenCalled();
+    });
+
+    it('accepts removing the conversation from its folder', async () => {
+      service.findOne.mockResolvedValue(createMockConversation({ userId: 'user-123' }));
+
+      await controller.update(createMockRequest('user-123'), 'conv-123', { folderId: null });
+
+      expect(folders.findOwned).not.toHaveBeenCalled();
+      expect(service.update).toHaveBeenCalledWith('conv-123', { folderId: null });
     });
   });
 });

@@ -16,6 +16,19 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('img', { name: /Démonstration de MyGPT/ })).toBeVisible();
   });
 
+  test("le menu de l'accueil défile jusqu'aux sections", async ({ page }) => {
+    await fakeApi(page);
+    await page.goto('/');
+    const sections = page.getByRole('navigation', { name: 'Sections' });
+
+    await sections.getByRole('link', { name: 'FAQ' }).click();
+    await expect(page).toHaveURL(/#faq$/);
+    await expect(page.locator('#faq')).toBeInViewport();
+
+    await sections.getByRole('link', { name: 'Fonctionnalités' }).click();
+    await expect(page.locator('#features')).toBeInViewport();
+  });
+
   test("garde la question tapée sur l'accueil pendant la connexion", async ({ page }) => {
     await fakeApi(page);
     await page.goto('/');

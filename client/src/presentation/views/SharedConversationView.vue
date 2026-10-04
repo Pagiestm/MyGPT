@@ -45,7 +45,7 @@
         </UButton>
       </header>
 
-      <ChatThread :messages="messages" :thinking="false" readonly />
+      <ChatThread :messages="messages" readonly />
     </template>
   </UContainer>
 </template>

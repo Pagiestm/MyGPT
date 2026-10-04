@@ -1,148 +1,226 @@
 <template>
-  <UChatMessages
-    class="chat-thread"
-    :messages="uiMessages"
-    :status="status"
-    :user="user"
-    :assistant="assistant"
-    should-auto-scroll
-  >
-    <template #content="{ message }">
-      <div
-        :id="`message-${message.id}`"
-        class="scroll-mt-24 rounded-xl"
-        :class="{ 'found-flash': highlighted === message.id }"
-      >
-        <MessageContent
-          v-if="message.role === 'assistant'"
-          :content="textOf(message)"
-          :reveal="message.id === revealId"
-          @revealed="emit('revealed')"
-        />
-        <form
-          v-else-if="editingId === message.id"
-          class="edit-card flex flex-col gap-3 rounded-3xl bg-elevated px-5 pt-4 pb-3"
-          @submit.prevent="submitEdit(message.id)"
-          @keydown.esc="editingId = null"
+  <div class="flex flex-col" :class="{ 'pb-8': unanswered }">
+    <UChatMessages
+      class="chat-thread"
+      :messages="uiMessages"
+      :status="status"
+      :user="user"
+      :assistant="assistant"
+      should-auto-scroll
+    >
+      <template #content="{ message }">
+        <div
+          :id="`message-${message.id}`"
+          class="scroll-mt-24 rounded-card"
+          :class="{ 'found-flash': highlighted === message.id }"
         >
-          <UTextarea
+          <MessageContent
+            v-if="message.role === 'assistant'"
+            :content="textOf(message)"
+            :streaming="message.id === STREAMING_ID"
+          />
+          <UChatPrompt
+            v-else-if="editingId === message.id"
             v-model="draft"
+            class="edit-card"
             placeholder="Modifiez votre message..."
             aria-label="Modifier le message"
-            variant="none"
-            size="xl"
-            autoresize
+            variant="soft"
+            color="neutral"
             autofocus
-            :rows="1"
-            :maxrows="12"
-            class="w-full"
-            :ui="{ base: 'p-0 leading-7' }"
-            @keydown.enter.exact.prevent="submitEdit(message.id)"
-          />
-          <div class="flex justify-end gap-2">
-            <UButton
-              label="Annuler"
-              color="neutral"
-              variant="outline"
-              class="rounded-full bg-default"
-              @click="editingId = null"
+            @submit="submitEdit(message.id)"
+            @keydown.esc="editingId = null"
+          >
+            <template #footer>
+              <span />
+              <div class="flex gap-2">
+                <UButton
+                  label="Annuler"
+                  color="neutral"
+                  variant="outline"
+                  class="rounded-full bg-default"
+                  @click="editingId = null"
+                />
+                <UButton
+                  type="submit"
+                  label="Envoyer"
+                  class="rounded-full"
+                  :disabled="!draft.trim() || draft.trim() === textOf(message)"
+                />
+              </div>
+            </template>
+          </UChatPrompt>
+          <div v-else class="flex flex-col gap-2">
+            <MessageAttachments
+              v-if="byId.get(message.id)?.attachments?.length"
+              :attachments="byId.get(message.id)!.attachments!"
             />
-            <UButton
-              type="submit"
-              label="Envoyer"
-              class="rounded-full"
-              :disabled="!draft.trim() || draft.trim() === textOf(message)"
-            />
+            <p class="whitespace-pre-wrap">{{ textOf(message) }}</p>
           </div>
-        </form>
-        <p v-else class="whitespace-pre-wrap">{{ textOf(message) }}</p>
-      </div>
-    </template>
-
-    <template #actions="{ message }">
-      <template v-if="editingId !== message.id">
-        <UTooltip
-          v-if="message.role === 'assistant'"
-          :text="copiedId === message.id ? 'Copié' : 'Copier'"
-        >
-          <UButton
-            :icon="copiedId === message.id ? 'i-lucide-check' : 'i-lucide-copy'"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :aria-label="copiedId === message.id ? 'Réponse copiée' : 'Copier la réponse'"
-            @click="copyMessage(message)"
-          />
-        </UTooltip>
-        <UTooltip v-else-if="!readonly" text="Modifier">
-          <UButton
-            icon="i-lucide-pencil"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            aria-label="Modifier ce message"
-            @click="startEdit(message)"
-          />
-        </UTooltip>
+        </div>
       </template>
-    </template>
 
-    <template #indicator>
-      <div class="flex items-center gap-2 text-sm text-muted">
-        <UChatShimmer text="MyGPT réfléchit…" />
-      </div>
-    </template>
-  </UChatMessages>
+      <template #actions="{ message }">
+        <template v-if="editingId !== message.id && message.id !== STREAMING_ID">
+          <template v-if="message.role === 'assistant'">
+            <UTooltip :text="copiedId === message.id ? 'Copié' : 'Copier'">
+              <UButton
+                :icon="copiedId === message.id ? 'i-lucide-check' : 'i-lucide-copy'"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :aria-label="copiedId === message.id ? 'Réponse copiée' : 'Copier la réponse'"
+                @click="copyMessage(message)"
+              />
+            </UTooltip>
+            <UTooltip
+              v-if="voice.supported"
+              :text="voice.speakingId.value === message.id ? 'Arrêter la lecture' : 'Écouter'"
+            >
+              <UButton
+                :icon="
+                  voice.speakingId.value === message.id ? 'i-lucide-square' : 'i-lucide-volume-2'
+                "
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :aria-label="
+                  voice.speakingId.value === message.id
+                    ? 'Arrêter la lecture'
+                    : 'Écouter la réponse'
+                "
+                @click="voice.toggle(message.id, textOf(message))"
+              />
+            </UTooltip>
+            <UTooltip
+              v-if="!readonly && phase === 'idle' && message.id === lastAnswerId"
+              text="Régénérer"
+            >
+              <UButton
+                icon="i-lucide-refresh-cw"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                aria-label="Régénérer la réponse"
+                @click="emit('regenerate')"
+              />
+            </UTooltip>
+            <span v-if="modelLabel(message.id)" class="ms-1 text-xs text-dimmed">
+              {{ modelLabel(message.id) }}
+            </span>
+          </template>
+          <UTooltip v-else-if="!readonly && phase === 'idle'" text="Modifier">
+            <UButton
+              icon="i-lucide-pencil"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              aria-label="Modifier ce message"
+              @click="startEdit(message)"
+            />
+          </UTooltip>
+        </template>
+      </template>
+
+      <template #indicator>
+        <div class="flex items-center gap-2 text-sm text-muted">
+          <UChatShimmer text="MyGPT réfléchit…" />
+        </div>
+      </template>
+    </UChatMessages>
+
+    <div
+      v-if="unanswered"
+      class="message-in flex flex-wrap items-center gap-3 rounded-card border border-default px-4 py-3 text-sm"
+      role="status"
+    >
+      <UIcon name="i-lucide-circle-alert" class="size-4 text-error" />
+      <span class="flex-1 text-muted">La réponse n'a pas pu être générée.</span>
+      <UButton
+        icon="i-lucide-refresh-cw"
+        label="Réessayer"
+        size="sm"
+        color="neutral"
+        variant="outline"
+        class="rounded-full"
+        @click="emit('regenerate')"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import UButton from '@nuxt/ui/components/Button.vue';
 import UChatMessages from '@nuxt/ui/components/ChatMessages.vue';
+import UChatPrompt from '@nuxt/ui/components/ChatPrompt.vue';
 import UChatShimmer from '@nuxt/ui/components/ChatShimmer.vue';
-import UTextarea from '@nuxt/ui/components/Textarea.vue';
+import UIcon from '@nuxt/ui/components/Icon.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
 import { useToast } from '@nuxt/ui/composables';
 import { computed, ref } from 'vue';
 import { useClipboard } from '@vueuse/core';
 import type { UIMessage } from 'ai';
 import type { Message } from '@/domain/message';
+import { STREAMING_ID } from '@/application/composables/useChatStream';
+import { useModels } from '@/application/composables/useModels';
+import { useReadAloud } from '@/presentation/composables/useReadAloud';
+import MessageAttachments from './MessageAttachments.vue';
 import MessageContent from './MessageContent.vue';
 
-const props = defineProps<{
-  messages: Message[];
-  thinking: boolean;
-  highlighted?: string | null;
-  readonly?: boolean;
-  revealId?: string | null;
-}>();
-const emit = defineEmits<{ edit: [messageId: string, content: string]; revealed: [] }>();
+const props = withDefaults(
+  defineProps<{
+    messages: Message[];
+    phase?: 'idle' | 'submitted' | 'streaming';
+    highlighted?: string | null;
+    readonly?: boolean;
+  }>(),
+  { phase: 'idle', highlighted: null, readonly: false },
+);
+const emit = defineEmits<{ edit: [messageId: string, content: string]; regenerate: [] }>();
 
-// « streaming » pendant l'effet d'écriture : UChatMessages garde alors le bas du fil visible
-const status = computed(() => {
-  if (props.thinking) return 'submitted';
-  return props.revealId ? 'streaming' : 'ready';
-});
+const status = computed(() => (props.phase === 'idle' ? 'ready' : props.phase));
 
 const editingId = ref<string | null>(null);
 const draft = ref('');
 
+const byId = computed(() => new Map(props.messages.map((message) => [message.id, message])));
+
+// La réponse en attente reste masquée tant qu'elle est vide : l'indicateur « réfléchit » la remplace
 const uiMessages = computed<UIMessage[]>(() =>
-  props.messages.map((message) => ({
-    id: message.id,
-    role: message.isFromAi ? 'assistant' : 'user',
-    parts: [{ type: 'text', text: message.content }],
-  })),
+  props.messages
+    .filter((message) => message.id !== STREAMING_ID || message.content)
+    .map((message) => ({
+      id: message.id,
+      role: message.isFromAi ? 'assistant' : 'user',
+      parts: [{ type: 'text', text: message.content }],
+    })),
 );
+
+const lastAnswerId = computed(
+  () => [...props.messages].reverse().find((message) => message.isFromAi)?.id,
+);
+
+const unanswered = computed(
+  () => !props.readonly && props.phase === 'idle' && props.messages.at(-1)?.isFromAi === false,
+);
+
+const { data: models } = useModels();
+function modelLabel(id: string) {
+  const model = byId.value.get(id)?.model;
+  return model ? (models.value?.models.find((item) => item.id === model)?.label ?? null) : null;
+}
 
 const toast = useToast();
 const { copy } = useClipboard();
 const copiedId = ref<string | null>(null);
 let copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
+const voice = useReadAloud();
+
 const user = {
   side: 'right' as const,
   variant: 'soft' as const,
-  ui: { root: 'message-in', content: 'rounded-3xl px-4 py-2.5' },
+  ui: { root: 'message-in', content: 'rounded-(--radius-panel) px-4 py-2.5' },
 };
 
 const assistant = {
@@ -195,7 +273,7 @@ function submitEdit(messageId: string) {
   position: absolute;
   inset: -1.25rem -1.75rem;
   z-index: -1;
-  border-radius: 1.75rem;
+  border-radius: var(--radius-field);
   background: color-mix(in oklab, var(--ui-text-highlighted) 5%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--ui-text-highlighted) 10%, transparent),

@@ -24,11 +24,10 @@ export class ConversationService {
     return this.conversationsRepository.save(conversation);
   }
 
-  async findAll(userId?: string): Promise<Conversation[]> {
-    const whereCondition = userId ? { userId } : {};
+  async findAll(userId: string, { archived = false } = {}): Promise<Conversation[]> {
     return this.conversationsRepository.find({
-      where: whereCondition,
-      order: { updatedAt: 'DESC' },
+      where: { userId, archived },
+      order: { pinned: 'DESC', updatedAt: 'DESC' },
     });
   }
 
@@ -66,6 +65,8 @@ export class ConversationService {
     const conversation = await this.findOne(id);
 
     Object.assign(conversation, updateConversationDto);
+    // Un titre choisi par l'utilisateur n'est plus remplacé par le titre automatique
+    if (updateConversationDto.name !== undefined) conversation.titleLocked = true;
 
     return this.conversationsRepository.save(conversation);
   }

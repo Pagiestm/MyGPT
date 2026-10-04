@@ -20,7 +20,7 @@
           <USkeleton class="h-24 w-full" />
         </div>
         <UEmpty
-          v-else-if="!messages?.length && !thinking"
+          v-else-if="!messages?.length && !chat.busy.value"
           icon="i-lucide-message-circle"
           title="La conversation est vide"
           description="Écrivez votre premier message ci-dessous."
@@ -29,54 +29,42 @@
         <ChatThread
           v-else
           :messages="messages ?? []"
-          :thinking="thinking"
+          :phase="chat.phase.value"
           :highlighted="highlighted"
-          :reveal-id="revealId"
-          @edit="onEdit"
-          @revealed="revealId = null"
+          @edit="(messageId, content) => chat.edit(messageId, content, model)"
+          @regenerate="chat.regenerate(model)"
         />
       </UContainer>
     </template>
 
     <template #footer>
       <UContainer class="pb-4 sm:max-w-3xl sm:pb-6">
-        <UChatPrompt
+        <ChatComposer
           v-model="input"
-          placeholder="Écrivez votre message..."
-          variant="outline"
-          color="neutral"
-          :disabled="thinking"
-          @submit="submit"
-        >
-          <UChatPromptSubmit
-            class="rounded-full"
-            :status="thinking ? 'submitted' : 'ready'"
-            aria-label="Envoyer le message"
-          />
-        </UChatPrompt>
+          v-model:model="model"
+          :phase="chat.phase.value"
+          @submit="({ content, attachments }) => chat.send(content, attachments, model)"
+          @stop="chat.stop()"
+        />
       </UContainer>
     </template>
   </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
-import UChatPrompt from '@nuxt/ui/components/ChatPrompt.vue';
-import UChatPromptSubmit from '@nuxt/ui/components/ChatPromptSubmit.vue';
 import UContainer from '@nuxt/ui/components/Container.vue';
 import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue';
 import UDashboardPanel from '@nuxt/ui/components/DashboardPanel.vue';
 import UEmpty from '@nuxt/ui/components/Empty.vue';
 import USkeleton from '@nuxt/ui/components/Skeleton.vue';
 import { useToast } from '@nuxt/ui/composables';
-import { computed, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { useConversation, useRenameConversation } from '@/application/composables/useConversations';
-import {
-  useEditMessage,
-  useMessageList,
-  useSendMessage,
-} from '@/application/composables/useMessages';
+import { nextTick, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useConversation, useUpdateConversation } from '@/application/composables/useConversations';
+import { useMessageList } from '@/application/composables/useMessages';
+import { useChatStream } from '@/application/composables/useChatStream';
 import { takePendingPrompt } from '@/application/composables/usePendingPrompt';
+import ChatComposer from '@/presentation/components/chat/ChatComposer.vue';
 import ChatThread from '@/presentation/components/chat/ChatThread.vue';
 import ConversationTitle from '@/presentation/components/chat/ConversationTitle.vue';
 import MessageSearch from '@/presentation/components/chat/MessageSearch.vue';
@@ -84,37 +72,21 @@ import ShareModal from '@/presentation/components/sharing/ShareModal.vue';
 
 const props = defineProps<{ id: string }>();
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
 const input = ref('');
+const model = ref<string>();
 const highlighted = ref<string | null>(null);
 
 const { data: conversation, error } = useConversation(() => props.id);
 const { data: messages, isPending } = useMessageList(() => props.id);
-const { mutateAsync: send, isLoading: sending } = useSendMessage(() => props.id);
-const { mutateAsync: edit, isLoading: editing } = useEditMessage(() => props.id);
-const { mutateAsync: renameConversation } = useRenameConversation();
+const { mutateAsync: updateConversation } = useUpdateConversation();
 
-const thinking = computed(() => sending.value || editing.value);
-
-// Seule la réponse arrivée après un envoi ou une modification est animée, pas l'historique
-const revealId = ref<string | null>(null);
-let awaitingReply = false;
-let knownIds = new Set<string>();
-
-watch(
-  messages,
-  (list = []) => {
-    const reply = list.at(-1);
-    if (awaitingReply && reply?.isFromAi && !knownIds.has(reply.id)) {
-      revealId.value = reply.id;
-      awaitingReply = false;
-    }
-    knownIds = new Set(list.map((message) => message.id));
-  },
-  { flush: 'pre' },
-);
+const chat = useChatStream(() => props.id, {
+  onError: (message) => toast.add({ title: message, color: 'error' }),
+});
 
 watch(error, (value) => {
   if (!value) return;
@@ -130,45 +102,33 @@ watch(
   () => props.id,
   (id) => {
     const pending = takePendingPrompt(id);
-    if (pending) sendMessage(pending);
+    if (!pending) return;
+    model.value = pending.model;
+    chat.send(pending.content, pending.attachments, pending.model);
   },
   { immediate: true },
 );
 
-async function sendMessage(content: string) {
-  awaitingReply = true;
-  try {
-    await send(content);
-  } catch {
-    awaitingReply = false;
-    toast.add({ title: "Le message n'a pas pu être envoyé", color: 'error' });
-  }
-}
-
-function submit() {
-  const content = input.value.trim();
-  if (!content || thinking.value) return;
-  input.value = '';
-  sendMessage(content);
-}
-
-async function onEdit(messageId: string, content: string) {
-  awaitingReply = true;
-  try {
-    await edit({ messageId, content });
-  } catch {
-    awaitingReply = false;
-    toast.add({ title: "La modification n'a pas pu être enregistrée", color: 'error' });
-  }
-}
-
 async function rename(name: string) {
   try {
-    await renameConversation({ id: props.id, name });
+    await updateConversation({ id: props.id, patch: { name } });
   } catch {
     toast.add({ title: 'Impossible de renommer la conversation', color: 'error' });
   }
 }
+
+// Arrivée depuis la palette de recherche : /chat/:id#message-<id>
+watch(
+  [() => route.hash, messages],
+  ([hash, list]) => {
+    const messageId = hash.startsWith('#message-') ? hash.slice('#message-'.length) : null;
+    if (messageId && list?.some((message) => message.id === messageId)) {
+      nextTick(() => focusMessage(messageId));
+      router.replace({ hash: '' });
+    }
+  },
+  { immediate: true },
+);
 
 function focusMessage(messageId: string) {
   highlighted.value = messageId;

@@ -106,14 +106,13 @@ describe('AuthService', () => {
     it('should return user profile data', async () => {
       mockUserService.findOne = jest.fn().mockResolvedValue(mockUser);
 
-      const result = (await service.getProfile('1')) as {
-        pseudo: string;
-        email: string;
-      };
+      const result = await service.getProfile('1');
 
       expect(result).toEqual({
         pseudo: mockUser.pseudo,
         email: mockUser.email,
+        customInstructions: null,
+        preferredModel: null,
       });
       expect(mockUserService.findOne).toHaveBeenCalledWith('1');
     });

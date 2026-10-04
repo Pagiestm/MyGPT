@@ -16,7 +16,7 @@
     "rootDir": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "multer"],
     "strict": false,
     "strictNullChecks": false,
     "noImplicitAny": false,

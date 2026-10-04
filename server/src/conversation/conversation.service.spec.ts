@@ -121,10 +121,20 @@ describe('ConversationService', () => {
         const result = await service.findAll(userId);
 
         expect(conversationsRepository.find).toHaveBeenCalledWith({
-          where: { userId },
-          order: { updatedAt: 'DESC' },
+          where: { userId, archived: false },
+          order: { pinned: 'DESC', updatedAt: 'DESC' },
         });
         expect(result).toEqual(expectedConversations);
+      });
+
+      it('should list archived conversations separately', async () => {
+        conversationsRepository.find.mockResolvedValue([]);
+
+        await service.findAll('user-123', { archived: true });
+
+        expect(conversationsRepository.find).toHaveBeenCalledWith(
+          expect.objectContaining({ where: { userId: 'user-123', archived: true } }),
+        );
       });
 
       it('should search conversations by keyword and userId', async () => {
@@ -207,6 +217,30 @@ describe('ConversationService', () => {
           expect.objectContaining(updateDto),
         );
         expect(result).toEqual(expectedUpdatedConversation);
+      });
+
+      it('should lock the title once the user renames the conversation', async () => {
+        conversationsRepository.findOne.mockResolvedValue(createMockConversation());
+        conversationsRepository.save.mockImplementation((value: Conversation) =>
+          Promise.resolve(value),
+        );
+
+        const result = await service.update('conv-123', { name: 'Mon titre' });
+
+        expect(result.titleLocked).toBe(true);
+      });
+
+      it('should not lock the title when only pinning or archiving', async () => {
+        conversationsRepository.findOne.mockResolvedValue(
+          createMockConversation({ titleLocked: false }),
+        );
+        conversationsRepository.save.mockImplementation((value: Conversation) =>
+          Promise.resolve(value),
+        );
+
+        const result = await service.update('conv-123', { pinned: true, archived: true });
+
+        expect(result).toMatchObject({ pinned: true, archived: true, titleLocked: false });
       });
 
       it('should throw NotFoundException if conversation to update does not exist', async () => {

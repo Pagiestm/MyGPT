@@ -2,7 +2,7 @@
   <section class="px-4 pb-20">
     <div
       v-reveal
-      class="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl bg-muted px-6 py-16 text-center"
+      class="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-panel bg-muted px-6 py-16 text-center"
     >
       <AppLogo icon-only :size="40" />
       <h2 class="max-w-xl text-3xl font-semibold tracking-tight text-balance text-highlighted">

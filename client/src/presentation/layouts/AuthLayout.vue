@@ -42,7 +42,7 @@
             :style="{ '--enter-delay': `${200 + index * 90}ms` }"
           >
             <span
-              class="grid size-8 shrink-0 place-items-center rounded-lg border border-default bg-default"
+              class="grid size-8 shrink-0 place-items-center rounded-tile border border-default bg-default"
             >
               <UIcon :name="point.icon" class="size-4 text-highlighted" />
             </span>

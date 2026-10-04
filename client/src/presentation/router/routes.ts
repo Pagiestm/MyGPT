@@ -47,6 +47,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'app', requiresAuth: true, title: 'Bibliothèque' },
   },
   {
+    path: '/archives',
+    name: 'archives',
+    component: () => import('../views/ArchivesView.vue'),
+    meta: { layout: 'app', requiresAuth: true, title: 'Archives' },
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('../views/SettingsView.vue'),

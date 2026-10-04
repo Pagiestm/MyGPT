@@ -21,22 +21,14 @@
           description="Ouvrez un lien de partage et choisissez « Enregistrer dans ma bibliothèque »."
         />
 
-        <ul v-else class="divide-y divide-default rounded-lg border border-default">
-          <li
-            v-for="conversation in saved"
-            :key="conversation.id"
-            class="flex items-center gap-3 p-4"
-          >
-            <UIcon name="i-lucide-bookmark" class="size-5 shrink-0 text-primary" />
-            <RouterLink
-              :to="{ name: 'conversation', params: { id: conversation.id } }"
-              class="min-w-0 flex-1"
-            >
-              <p class="truncate font-medium text-highlighted">{{ conversation.name }}</p>
-              <p class="text-sm text-muted">
-                Enregistrée le {{ formatDate(conversation.createdAt) }}
-              </p>
-            </RouterLink>
+        <ConversationRows
+          v-else
+          :conversations="saved"
+          icon="i-lucide-bookmark"
+          icon-class="text-primary"
+          :detail="(conversation) => `Enregistrée le ${formatDate(conversation.createdAt)}`"
+        >
+          <template #actions="{ conversation }">
             <UButton
               icon="i-lucide-trash-2"
               color="neutral"
@@ -44,8 +36,8 @@
               :aria-label="`Retirer ${conversation.name} de la bibliothèque`"
               @click="toDelete = conversation"
             />
-          </li>
-        </ul>
+          </template>
+        </ConversationRows>
       </UContainer>
 
       <ConfirmModal
@@ -67,7 +59,6 @@ import UContainer from '@nuxt/ui/components/Container.vue';
 import UDashboardNavbar from '@nuxt/ui/components/DashboardNavbar.vue';
 import UDashboardPanel from '@nuxt/ui/components/DashboardPanel.vue';
 import UEmpty from '@nuxt/ui/components/Empty.vue';
-import UIcon from '@nuxt/ui/components/Icon.vue';
 import USkeleton from '@nuxt/ui/components/Skeleton.vue';
 import { useToast } from '@nuxt/ui/composables';
 import { ref } from 'vue';
@@ -77,6 +68,7 @@ import {
   useSavedConversations,
 } from '@/application/composables/useConversations';
 import ConfirmModal from '@/presentation/components/common/ConfirmModal.vue';
+import ConversationRows from '@/presentation/components/common/ConversationRows.vue';
 
 const toast = useToast();
 

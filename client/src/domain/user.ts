@@ -3,6 +3,8 @@ import { z } from 'zod';
 export interface User {
   pseudo: string;
   email: string;
+  customInstructions?: string | null;
+  preferredModel?: string | null;
 }
 
 // Mêmes règles que les DTO du serveur (class-validator)
@@ -44,3 +46,10 @@ export const profileSchema = z.object({ pseudo: pseudoSchema });
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
+
+export const preferencesSchema = z.object({
+  customInstructions: z.string().max(2000, 'Les consignes ne peuvent pas dépasser 2000 caractères'),
+  preferredModel: z.string().nullable(),
+});
+
+export type PreferencesInput = z.infer<typeof preferencesSchema>;

@@ -7,6 +7,12 @@
 @theme static {
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Échelle d'arrondis commune (classes rounded-field, rounded-panel, rounded-card, rounded-tile) */
+  --radius-field: 2rem; /* zones de saisie : message, modification */
+  --radius-panel: 1.5rem; /* bulles et grands panneaux */
+  --radius-card: 1rem; /* cartes, listes, blocs de code, fichiers */
+  --radius-tile: 0.625rem; /* vignettes et pastilles d'icône */
 }
 
 /* Couleur d'action « encre » : noir en clair, blanc cassé en sombre.
