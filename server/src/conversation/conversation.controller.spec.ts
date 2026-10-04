@@ -131,9 +131,7 @@ describe('ConversationController', () => {
         const userId = 'user-123';
         const req = createMockRequest(userId);
         const keyword = 'test';
-        const conversations = [
-          createMockConversation({ name: 'Test Conversation' }),
-        ];
+        const conversations = [createMockConversation({ name: 'Test Conversation' })];
 
         service.search.mockResolvedValue(conversations);
 
@@ -199,9 +197,7 @@ describe('ConversationController', () => {
         service.findOne.mockResolvedValue(conversation);
 
         // Act & Assert
-        await expect(controller.findOne(req, id)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.findOne(req, id)).rejects.toThrow(BadRequestException);
         expect(service.findOne).toHaveBeenCalledWith(id);
       });
     });
@@ -247,9 +243,7 @@ describe('ConversationController', () => {
         service.findOne.mockResolvedValue(conversation);
 
         // Act & Assert
-        await expect(controller.update(req, id, updateDto)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.update(req, id, updateDto)).rejects.toThrow(BadRequestException);
         expect(service.findOne).toHaveBeenCalledWith(id);
         expect(service.update).not.toHaveBeenCalled();
       });
@@ -286,9 +280,7 @@ describe('ConversationController', () => {
         service.findOne.mockResolvedValue(conversation);
 
         // Act & Assert
-        await expect(controller.remove(req, id)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.remove(req, id)).rejects.toThrow(BadRequestException);
         expect(service.findOne).toHaveBeenCalledWith(id);
         expect(service.remove).not.toHaveBeenCalled();
       });
@@ -335,9 +327,9 @@ describe('ConversationController', () => {
         service.findOne.mockResolvedValue(conversation);
 
         // Act & Assert
-        await expect(
-          controller.shareConversation(req, id, shareDto),
-        ).rejects.toThrow(BadRequestException);
+        await expect(controller.shareConversation(req, id, shareDto)).rejects.toThrow(
+          BadRequestException,
+        );
         expect(service.findOne).toHaveBeenCalledWith(id);
         expect(service.shareConversation).not.toHaveBeenCalled();
       });
@@ -379,9 +371,7 @@ describe('ConversationController', () => {
         service.findOne.mockResolvedValue(conversation);
 
         // Act & Assert
-        await expect(controller.revokeShare(req, id)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(controller.revokeShare(req, id)).rejects.toThrow(BadRequestException);
         expect(service.findOne).toHaveBeenCalledWith(id);
         expect(service.revokeShare).not.toHaveBeenCalled();
       });
@@ -451,10 +441,7 @@ describe('ConversationController', () => {
         const result = await controller.saveSharedConversation(req, saveDto);
 
         // Assert
-        expect(service.saveSharedConversation).toHaveBeenCalledWith(
-          userId,
-          saveDto,
-        );
+        expect(service.saveSharedConversation).toHaveBeenCalledWith(userId, saveDto);
         expect(result).toEqual(savedConversation);
       });
     });

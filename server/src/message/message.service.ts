@@ -1,16 +1,11 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { SearchMessagesDto } from './dto/search-message.dto';
-import { IAiAdapter } from '../infrastructure/adapters/GeminiAiAdapter';
+import type { IAiAdapter } from '../infrastructure/adapters/GeminiAiAdapter';
 import { ConversationService } from '../conversation/conversation.service';
 
 @Injectable()
@@ -68,7 +63,7 @@ export class MessageService {
   async findOne(id: string): Promise<Message> {
     const message = await this.messagesRepository.findOne({
       where: { id },
-      relations: ['conversation'],
+      relations: { conversation: true },
     });
 
     if (!message) {
@@ -115,9 +110,7 @@ export class MessageService {
         await this.messagesRepository.remove(subsequentMessages);
       }
 
-      const conversationHistory = await this.getConversationHistory(
-        message.conversationId,
-      );
+      const conversationHistory = await this.getConversationHistory(message.conversationId);
 
       const newAiResponse = await this.aiAdapter.getAiResponse(
         message.content,

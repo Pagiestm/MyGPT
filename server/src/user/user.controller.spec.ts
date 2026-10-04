@@ -4,10 +4,7 @@ import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UpdatePseudoDto } from './dto/update-user.dto';
 
 describe('UserController', () => {
@@ -75,9 +72,7 @@ describe('UserController', () => {
 
       jest.spyOn(service, 'updatePseudo').mockResolvedValue(expectedResult);
 
-      expect(await controller.updatePseudo(req as any, updatePseudoDto)).toBe(
-        expectedResult,
-      );
+      expect(await controller.updatePseudo(req as any, updatePseudoDto)).toBe(expectedResult);
       expect(service.updatePseudo).toHaveBeenCalledWith('1', 'newpseudo');
     });
 
@@ -92,9 +87,9 @@ describe('UserController', () => {
         .spyOn(service, 'updatePseudo')
         .mockRejectedValue(new NotFoundException('Utilisateur non trouvé'));
 
-      await expect(
-        controller.updatePseudo(req as any, updatePseudoDto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.updatePseudo(req as any, updatePseudoDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -135,9 +130,7 @@ describe('UserController', () => {
 
       jest
         .spyOn(service, 'deleteAccount')
-        .mockRejectedValue(
-          new InternalServerErrorException('Erreur lors de la suppression'),
-        );
+        .mockRejectedValue(new InternalServerErrorException('Erreur lors de la suppression'));
 
       await expect(controller.deleteAccount(req as any)).rejects.toThrow(
         InternalServerErrorException,

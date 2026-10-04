@@ -45,10 +45,7 @@ describe('LocalStrategy', () => {
 
       // Assert
       expect(result).toEqual(validUser);
-      expect(mockAuthService.validateUser).toHaveBeenCalledWith(
-        'test@example.com',
-        'password123',
-      );
+      expect(mockAuthService.validateUser).toHaveBeenCalledWith('test@example.com', 'password123');
     });
 
     it('should throw UnauthorizedException if user validation fails', async () => {
@@ -56,9 +53,9 @@ describe('LocalStrategy', () => {
       mockAuthService.validateUser = jest.fn().mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        strategy.validate('test@example.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate('test@example.com', 'password123')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if user format is invalid', async () => {
@@ -70,9 +67,9 @@ describe('LocalStrategy', () => {
       });
 
       // Act & Assert
-      await expect(
-        strategy.validate('test@example.com', 'password123'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate('test@example.com', 'password123')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

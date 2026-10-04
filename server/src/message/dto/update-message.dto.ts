@@ -6,8 +6,7 @@ import { CreateMessageDto } from './create-message.dto';
 export class UpdateMessageDto extends PartialType(CreateMessageDto) {
   @ApiProperty({
     description: 'Nouveau contenu du message',
-    example:
-      'Comment implémenter une architecture hexagonale en NestJS avec des adaptateurs?',
+    example: 'Comment implémenter une architecture hexagonale en NestJS avec des adaptateurs?',
     required: true,
   })
   @IsString()

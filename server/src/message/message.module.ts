@@ -7,11 +7,7 @@ import { InfrastructureModule } from '../infrastructure/infrastructure.module';
 import { ConversationModule } from '../conversation/conversation.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Message]),
-    InfrastructureModule,
-    ConversationModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Message]), InfrastructureModule, ConversationModule],
   controllers: [MessageController],
   providers: [MessageService],
   exports: [MessageService],

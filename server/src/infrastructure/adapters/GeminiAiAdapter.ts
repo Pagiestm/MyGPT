@@ -4,14 +4,10 @@ import {
   HarmCategory,
   HarmBlockThreshold,
   Content,
-  Part,
 } from '@google/generative-ai';
 
 export interface IAiAdapter {
-  getAiResponse(
-    prompt: string,
-    conversationHistory?: string[],
-  ): Promise<string>;
+  getAiResponse(prompt: string, conversationHistory?: string[]): Promise<string>;
 }
 
 @Injectable()
@@ -32,14 +28,9 @@ export class GeminiAiAdapter implements IAiAdapter {
     this.model = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
   }
 
-  async getAiResponse(
-    prompt: string,
-    conversationHistory: string[] = [],
-  ): Promise<string> {
+  async getAiResponse(prompt: string, conversationHistory: string[] = []): Promise<string> {
     try {
-      this.logger.log(
-        `Getting AI response for prompt: "${prompt.substring(0, 50)}..."`,
-      );
+      this.logger.log(`Getting AI response for prompt: "${prompt.substring(0, 50)}..."`);
 
       // Obtenir le modèle
       const model = this.generativeAI.getGenerativeModel({
@@ -79,9 +70,7 @@ export class GeminiAiAdapter implements IAiAdapter {
       const result = await chat.sendMessage(prompt);
       const response = result.response.text();
 
-      this.logger.log(
-        `Received response from Gemini: "${response.substring(0, 50)}..."`,
-      );
+      this.logger.log(`Received response from Gemini: "${response.substring(0, 50)}..."`);
       return response;
     } catch (error: unknown) {
       let errorMessage: string;
@@ -120,12 +109,12 @@ export class GeminiAiAdapter implements IAiAdapter {
       if (message.startsWith('User: ')) {
         formattedHistory.push({
           role: 'user',
-          parts: [{ text: message.substring(6) } as Part],
+          parts: [{ text: message.substring(6) }],
         });
       } else if (message.startsWith('AI: ')) {
         formattedHistory.push({
           role: 'model',
-          parts: [{ text: message.substring(4) } as Part],
+          parts: [{ text: message.substring(4) }],
         });
       }
     }

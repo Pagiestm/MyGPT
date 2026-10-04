@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull, Not } from 'typeorm';
 import { randomBytes } from 'crypto';
@@ -23,12 +19,8 @@ export class ConversationService {
     private messagesRepository: Repository<Message>,
   ) {}
 
-  async create(
-    createConversationDto: CreateConversationDto,
-  ): Promise<Conversation> {
-    const conversation = this.conversationsRepository.create(
-      createConversationDto,
-    );
+  async create(createConversationDto: CreateConversationDto): Promise<Conversation> {
+    const conversation = this.conversationsRepository.create(createConversationDto);
     return this.conversationsRepository.save(conversation);
   }
 
@@ -43,7 +35,7 @@ export class ConversationService {
   async findOne(id: string): Promise<Conversation> {
     const conversation = await this.conversationsRepository.findOne({
       where: { id },
-      relations: ['messages', 'user'],
+      relations: { messages: true, user: true },
     });
 
     if (!conversation) {
@@ -56,7 +48,7 @@ export class ConversationService {
   async findByShareLink(shareLink: string): Promise<Conversation> {
     const conversation = await this.conversationsRepository.findOne({
       where: { shareLink },
-      relations: ['messages', 'user'],
+      relations: { messages: true, user: true },
     });
 
     if (!conversation) {
@@ -64,20 +56,14 @@ export class ConversationService {
     }
 
     // Vérifier si le lien n'est pas expiré
-    if (
-      conversation.shareExpiresAt &&
-      new Date() > new Date(conversation.shareExpiresAt)
-    ) {
+    if (conversation.shareExpiresAt && new Date() > new Date(conversation.shareExpiresAt)) {
       throw new BadRequestException('This share link has expired');
     }
 
     return conversation;
   }
 
-  async update(
-    id: string,
-    updateConversationDto: UpdateConversationDto,
-  ): Promise<Conversation> {
+  async update(id: string, updateConversationDto: UpdateConversationDto): Promise<Conversation> {
     const conversation = await this.findOne(id);
 
     // Mettre à jour les propriétés de la conversation
@@ -111,7 +97,7 @@ export class ConversationService {
 
     return this.conversationsRepository.find({
       where: whereConditions,
-      relations: ['messages'],
+      relations: { messages: true },
       order: { updatedAt: 'DESC' },
     });
   }
@@ -157,13 +143,8 @@ export class ConversationService {
     // 1. Vérifier si la conversation partagée existe
     const sharedConversation = await this.findByShareLink(saveDto.shareLink);
 
-    if (
-      !sharedConversation ||
-      sharedConversation.id !== saveDto.conversationId
-    ) {
-      throw new BadRequestException(
-        'Invalid shared conversation or share link',
-      );
+    if (!sharedConversation || sharedConversation.id !== saveDto.conversationId) {
+      throw new BadRequestException('Invalid shared conversation or share link');
     }
 
     // 2. Créer une nouvelle conversation pour l'utilisateur
@@ -174,8 +155,7 @@ export class ConversationService {
     });
 
     // 3. Sauvegarder la nouvelle conversation
-    const savedConversation =
-      await this.conversationsRepository.save(newConversation);
+    const savedConversation = await this.conversationsRepository.save(newConversation);
 
     // 4. Copie les messages de la conversation partagée
     if (sharedConversation.messages && sharedConversation.messages.length > 0) {
@@ -203,7 +183,7 @@ export class ConversationService {
         sharedFrom: Not(IsNull()),
       },
       order: { createdAt: 'DESC' },
-      relations: ['messages'],
+      relations: { messages: true },
     });
   }
 }

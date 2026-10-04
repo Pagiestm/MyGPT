@@ -55,10 +55,11 @@ describe('AuthService', () => {
       mockUserService.findByEmail = jest.fn().mockResolvedValue(mockUser);
 
       // Act
-      const result = (await service.validateUser(
-        'test@example.com',
-        'validPassword',
-      )) as { id: string; email: string; pseudo: string };
+      const result = (await service.validateUser('test@example.com', 'validPassword')) as {
+        id: string;
+        email: string;
+        pseudo: string;
+      };
 
       // Assert
       expect(result).toEqual({
@@ -66,25 +67,18 @@ describe('AuthService', () => {
         email: mockUser.email,
         pseudo: mockUser.pseudo,
       });
-      expect(mockUserService.findByEmail).toHaveBeenCalledWith(
-        'test@example.com',
-      );
-      expect(bcrypt.compare).toHaveBeenCalledWith(
-        'validPassword',
-        mockUser.password,
-      );
+      expect(mockUserService.findByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(bcrypt.compare).toHaveBeenCalledWith('validPassword', mockUser.password);
     });
 
     it('should throw UnauthorizedException if email is not found', async () => {
       // Arrange
-      mockUserService.findByEmail = jest
-        .fn()
-        .mockRejectedValue(new UnauthorizedException());
+      mockUserService.findByEmail = jest.fn().mockRejectedValue(new UnauthorizedException());
 
       // Act & Assert
-      await expect(
-        service.validateUser('wrong@example.com', 'anyPassword'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser('wrong@example.com', 'anyPassword')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
@@ -92,9 +86,9 @@ describe('AuthService', () => {
       mockUserService.findByEmail = jest.fn().mockResolvedValue(mockUser);
 
       // Act & Assert
-      await expect(
-        service.validateUser('test@example.com', 'wrongPassword'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser('test@example.com', 'wrongPassword')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

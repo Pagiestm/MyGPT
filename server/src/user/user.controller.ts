@@ -10,13 +10,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-  ApiCookieAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiCookieAuth } from '@nestjs/swagger';
 import { UpdatePseudoDto } from './dto/update-user.dto';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { Request as ExpressRequest } from 'express';
@@ -55,10 +49,7 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiResponse({ status: 409, description: 'Pseudo déjà utilisé.' })
-  updatePseudo(
-    @Request() req: AuthenticatedRequest,
-    @Body() updatePseudoDto: UpdatePseudoDto,
-  ) {
+  updatePseudo(@Request() req: AuthenticatedRequest, @Body() updatePseudoDto: UpdatePseudoDto) {
     const userId = req.user.id;
     return this.userService.updatePseudo(userId, updatePseudoDto.pseudo);
   }
@@ -73,9 +64,7 @@ export class UserController {
     description: 'Compte supprimé avec succès',
     schema: { properties: { message: { type: 'string' } } },
   })
-  async deleteAccount(
-    @Request() req: AuthenticatedRequest,
-  ): Promise<{ message: string }> {
+  async deleteAccount(@Request() req: AuthenticatedRequest): Promise<{ message: string }> {
     const result = await this.userService.deleteAccount(req.user.id);
 
     // Déconnecter l'utilisateur

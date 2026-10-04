@@ -73,9 +73,9 @@ describe('UserService', () => {
     it('should throw NotFoundException if user not found', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        service.findByEmail('nonexistent@example.com'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findByEmail('nonexistent@example.com')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -132,18 +132,14 @@ describe('UserService', () => {
     it('should throw ConflictException if email already exists', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      await expect(service.register(mockCreateUserDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register(mockCreateUserDto)).rejects.toThrow(ConflictException);
     });
 
     it('should throw ConflictException if pseudo already exists', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
-      await expect(service.register(mockCreateUserDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register(mockCreateUserDto)).rejects.toThrow(ConflictException);
     });
   });
 
@@ -223,9 +219,7 @@ describe('UserService', () => {
     it('should throw NotFoundException if user not found', async () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
 
-      await expect(service.deleteAccount('999')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteAccount('999')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw InternalServerErrorException if deletion fails', async () => {
@@ -233,9 +227,7 @@ describe('UserService', () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(mockUser);
 
       // Mock pour simuler une erreur lors de la suppression
-      (mockRepository.remove as jest.Mock).mockRejectedValue(
-        new Error('Database error'),
-      );
+      (mockRepository.remove as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(service.deleteAccount('1')).rejects.toThrow(
         'Une erreur est survenue lors de la suppression du compte',

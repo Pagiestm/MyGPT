@@ -117,9 +117,7 @@ export class ConversationController {
     type: [Conversation],
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async getSavedConversations(
-    @Request() req: RequestWithUser,
-  ): Promise<Conversation[]> {
+  async getSavedConversations(@Request() req: RequestWithUser): Promise<Conversation[]> {
     return this.conversationService.findSavedByUser(req.user.id);
   }
 
@@ -140,10 +138,7 @@ export class ConversationController {
     @Request() req: RequestWithUser,
     @Body() saveDto: SaveSharedConversationDto,
   ): Promise<Conversation> {
-    return this.conversationService.saveSharedConversation(
-      req.user.id,
-      saveDto,
-    );
+    return this.conversationService.saveSharedConversation(req.user.id, saveDto);
   }
 
   @Get('shared/:shareLink')
@@ -156,9 +151,7 @@ export class ConversationController {
   })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 400, description: 'Lien de partage expiré' })
-  async findByShareLink(
-    @Param('shareLink') shareLink: string,
-  ): Promise<Conversation> {
+  async findByShareLink(@Param('shareLink') shareLink: string): Promise<Conversation> {
     return this.conversationService.findByShareLink(shareLink);
   }
 
@@ -174,10 +167,7 @@ export class ConversationController {
   })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async findOne(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<Conversation> {
+  async findOne(@Request() req: RequestWithUser, @Param('id') id: string): Promise<Conversation> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur a accès à cette conversation
@@ -209,9 +199,7 @@ export class ConversationController {
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only update your own conversations',
-      );
+      throw new BadRequestException('You can only update your own conversations');
     }
 
     return this.conversationService.update(id, updateConversationDto);
@@ -226,17 +214,12 @@ export class ConversationController {
   @ApiResponse({ status: 204, description: 'Conversation supprimée' })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async remove(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async remove(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only delete your own conversations',
-      );
+      throw new BadRequestException('You can only delete your own conversations');
     }
 
     return this.conversationService.remove(id);
@@ -263,9 +246,7 @@ export class ConversationController {
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only share your own conversations',
-      );
+      throw new BadRequestException('You can only share your own conversations');
     }
 
     return this.conversationService.shareConversation(id, shareDto);
@@ -280,17 +261,12 @@ export class ConversationController {
   @ApiResponse({ status: 204, description: 'Partage révoqué' })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async revokeShare(
-    @Request() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<void> {
+  async revokeShare(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
     // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
-      throw new BadRequestException(
-        'You can only manage sharing of your own conversations',
-      );
+      throw new BadRequestException('You can only manage sharing of your own conversations');
     }
 
     return this.conversationService.revokeShare(id);

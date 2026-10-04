@@ -9,32 +9,32 @@ import CTASection from '../components/home/CTASection.vue';
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50">
-        <HeroSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <TestimonialsSection />
-        <FaqSection />
-        <CTASection />
-    </div>
+  <div class="min-h-screen bg-gray-50">
+    <HeroSection />
+    <FeaturesSection />
+    <HowItWorksSection />
+    <TestimonialsSection />
+    <FaqSection />
+    <CTASection />
+  </div>
 </template>
 
 <style>
 @keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
+  0% {
+    transform: translateY(0px);
+  }
 
-    50% {
-        transform: translateY(-20px);
-    }
+  50% {
+    transform: translateY(-20px);
+  }
 
-    100% {
-        transform: translateY(0px);
-    }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float {
-    animation: float 6s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 </style>

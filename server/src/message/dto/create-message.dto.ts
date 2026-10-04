@@ -1,17 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsUUID,
-  IsBoolean,
-  IsOptional,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateMessageDto {
   @ApiProperty({
     description: 'Contenu du message',
-    example:
-      'Comment puis-je implémenter une architecture hexagonale en NestJS?',
+    example: 'Comment puis-je implémenter une architecture hexagonale en NestJS?',
   })
   @IsString()
   @IsNotEmpty()

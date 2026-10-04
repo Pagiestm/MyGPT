@@ -47,9 +47,7 @@ describe('AuthenticatedGuard', () => {
       } as ExecutionContext;
 
       // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
       expect(() => guard.canActivate(mockContext)).toThrow(
         'Vous devez être connecté pour accéder à cette ressource',
       );
@@ -66,12 +64,8 @@ describe('AuthenticatedGuard', () => {
       } as ExecutionContext;
 
       // Act & Assert
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        UnauthorizedException,
-      );
-      expect(() => guard.canActivate(mockContext)).toThrow(
-        'Session non valide',
-      );
+      expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
+      expect(() => guard.canActivate(mockContext)).toThrow('Session non valide');
     });
   });
 });

@@ -39,9 +39,7 @@ function createMockMessage(overrides: Partial<Message> = {}): Partial<Message> {
 }
 
 // Helper pour créer une conversation mockée
-function createMockConversation(
-  overrides: Partial<Conversation> = {},
-): Partial<Conversation> {
+function createMockConversation(overrides: Partial<Conversation> = {}): Partial<Conversation> {
   return {
     id: 'mock-conv-id',
     name: 'Mock Conversation',
@@ -159,9 +157,7 @@ describe('MessageService', () => {
         const result = await service.create(createDto);
 
         // Assert
-        expect(conversationService.findOne).toHaveBeenCalledWith(
-          conversationId,
-        );
+        expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(messagesRepository.create).toHaveBeenCalledWith(createDto);
         expect(messagesRepository.save).toHaveBeenCalledWith(userMessage);
         expect(aiAdapter.getAiResponse).toHaveBeenCalled();
@@ -271,7 +267,7 @@ describe('MessageService', () => {
         // Assert
         expect(messagesRepository.findOne).toHaveBeenCalledWith({
           where: { id },
-          relations: ['conversation'],
+          relations: { conversation: true },
         });
         expect(result).toEqual(message);
       });
@@ -281,9 +277,7 @@ describe('MessageService', () => {
         messagesRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(service.findOne('non-existent-id')).rejects.toThrow(
-          NotFoundException,
-        );
+        await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
       });
     });
 
@@ -302,9 +296,7 @@ describe('MessageService', () => {
           content: updateDto.content,
         });
 
-        messagesRepository.findOne.mockResolvedValue(
-          originalMessage as Message,
-        );
+        messagesRepository.findOne.mockResolvedValue(originalMessage as Message);
         messagesRepository.save.mockResolvedValue(updatedMessage as Message);
         mockQueryBuilder.getMany.mockResolvedValue([]);
 
@@ -327,9 +319,7 @@ describe('MessageService', () => {
         messagesRepository.findOne.mockResolvedValue(aiMessage as Message);
 
         // Act & Assert
-        await expect(service.update(id, updateDto)).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(service.update(id, updateDto)).rejects.toThrow(BadRequestException);
         expect(messagesRepository.save).not.toHaveBeenCalled();
       });
     });
@@ -363,9 +353,7 @@ describe('MessageService', () => {
 
       // Mock setup
       messagesRepository.findOne.mockResolvedValue(userMessage as Message);
-      messagesRepository.save.mockResolvedValueOnce(
-        updatedUserMessage as Message,
-      );
+      messagesRepository.save.mockResolvedValueOnce(updatedUserMessage as Message);
       mockQueryBuilder.getMany
         .mockResolvedValueOnce(subsequentMessages as Message[]) // Pour les messages à supprimer
         .mockResolvedValueOnce([userMessage] as Message[]); // Pour l'historique
@@ -375,13 +363,8 @@ describe('MessageService', () => {
       const result = await service.update(id, updateDto, true);
 
       // Assert
-      expect(messagesRepository.remove).toHaveBeenCalledWith(
-        subsequentMessages,
-      );
-      expect(aiAdapter.getAiResponse).toHaveBeenCalledWith(
-        updateDto.content,
-        expect.any(Array),
-      );
+      expect(messagesRepository.remove).toHaveBeenCalledWith(subsequentMessages);
+      expect(aiAdapter.getAiResponse).toHaveBeenCalledWith(updateDto.content, expect.any(Array));
       expect(messagesRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           content: 'Updated answer',

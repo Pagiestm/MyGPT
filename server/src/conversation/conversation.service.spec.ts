@@ -23,9 +23,7 @@ const createMockRepository = <T>(): MockRepository<T> => ({
 });
 
 // Fonction helper pour créer des objets Conversation mockés
-function createMockConversation(
-  overrides: Partial<Conversation> = {},
-): Conversation {
+function createMockConversation(overrides: Partial<Conversation> = {}): Conversation {
   return {
     id: 'mock-conv-id',
     name: 'Mock Conversation',
@@ -108,9 +106,7 @@ describe('ConversationService', () => {
 
         // Assert
         expect(conversationsRepository.create).toHaveBeenCalledWith(createDto);
-        expect(conversationsRepository.save).toHaveBeenCalledWith(
-          expectedConversation,
-        );
+        expect(conversationsRepository.save).toHaveBeenCalledWith(expectedConversation);
         expect(result).toEqual(expectedConversation);
       });
     });
@@ -198,7 +194,7 @@ describe('ConversationService', () => {
         // Assert
         expect(conversationsRepository.findOne).toHaveBeenCalledWith({
           where: { id },
-          relations: ['messages', 'user'],
+          relations: { messages: true, user: true },
         });
         expect(result).toEqual(expectedConversation);
       });
@@ -208,9 +204,7 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(service.findOne('non-existent-id')).rejects.toThrow(
-          NotFoundException,
-        );
+        await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
       });
     });
 
@@ -231,9 +225,7 @@ describe('ConversationService', () => {
         };
 
         conversationsRepository.findOne.mockResolvedValue(existingConversation);
-        conversationsRepository.save.mockResolvedValue(
-          expectedUpdatedConversation,
-        );
+        conversationsRepository.save.mockResolvedValue(expectedUpdatedConversation);
 
         // Act
         const result = await service.update(id, updateDto);
@@ -250,9 +242,9 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(
-          service.update('non-existent-id', { name: 'New Name' }),
-        ).rejects.toThrow(NotFoundException);
+        await expect(service.update('non-existent-id', { name: 'New Name' })).rejects.toThrow(
+          NotFoundException,
+        );
       });
     });
 
@@ -270,9 +262,7 @@ describe('ConversationService', () => {
         await service.remove('conv-123');
 
         // Assert
-        expect(conversationsRepository.remove).toHaveBeenCalledWith(
-          conversationToRemove,
-        );
+        expect(conversationsRepository.remove).toHaveBeenCalledWith(conversationToRemove);
       });
 
       it('should throw NotFoundException if conversation to remove does not exist', async () => {
@@ -280,9 +270,7 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(service.remove('non-existent-id')).rejects.toThrow(
-          NotFoundException,
-        );
+        await expect(service.remove('non-existent-id')).rejects.toThrow(NotFoundException);
       });
     });
   });
@@ -317,9 +305,7 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(service.findByShareLink('invalid-link')).rejects.toThrow(
-          NotFoundException,
-        );
+        await expect(service.findByShareLink('invalid-link')).rejects.toThrow(NotFoundException);
       });
 
       it('should throw BadRequestException if shared link is expired', async () => {
@@ -335,9 +321,7 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(expiredConversation);
 
         // Act & Assert
-        await expect(service.findByShareLink('expired-link')).rejects.toThrow(
-          BadRequestException,
-        );
+        await expect(service.findByShareLink('expired-link')).rejects.toThrow(BadRequestException);
       });
     });
 
@@ -389,9 +373,7 @@ describe('ConversationService', () => {
         });
 
         conversationsRepository.findOne.mockResolvedValue(conversation);
-        conversationsRepository.save.mockImplementation((conv) =>
-          Promise.resolve(conv),
-        );
+        conversationsRepository.save.mockImplementation((conv) => Promise.resolve(conv));
 
         // Act
         const result = await service.shareConversation('conv-123', {});
@@ -405,9 +387,9 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(
-          service.shareConversation('non-existent-id', {}),
-        ).rejects.toThrow(NotFoundException);
+        await expect(service.shareConversation('non-existent-id', {})).rejects.toThrow(
+          NotFoundException,
+        );
       });
     });
 
@@ -422,9 +404,7 @@ describe('ConversationService', () => {
         });
 
         conversationsRepository.findOne.mockResolvedValue(conversation);
-        conversationsRepository.save.mockImplementation((conv) =>
-          Promise.resolve(conv),
-        );
+        conversationsRepository.save.mockImplementation((conv) => Promise.resolve(conv));
 
         // Act
         await service.revokeShare('conv-123');
@@ -439,9 +419,7 @@ describe('ConversationService', () => {
         conversationsRepository.findOne.mockResolvedValue(null);
 
         // Act & Assert
-        await expect(service.revokeShare('non-existent-id')).rejects.toThrow(
-          NotFoundException,
-        );
+        await expect(service.revokeShare('non-existent-id')).rejects.toThrow(NotFoundException);
       });
     });
   });
@@ -508,20 +486,14 @@ describe('ConversationService', () => {
         });
 
         // Mocks
-        jest
-          .spyOn(service, 'findByShareLink')
-          .mockResolvedValue(sharedConversation);
+        jest.spyOn(service, 'findByShareLink').mockResolvedValue(sharedConversation);
         conversationsRepository.create.mockReturnValue(newConversation);
         conversationsRepository.save.mockResolvedValue(newConversation);
         messagesRepository.create.mockImplementation(
           (msgData: Partial<Message>) => msgData as Message,
         );
-        messagesRepository.save.mockImplementation((msgData) =>
-          Promise.resolve(msgData),
-        );
-        jest
-          .spyOn(service, 'findOne')
-          .mockResolvedValue(expectedSavedConversation);
+        messagesRepository.save.mockImplementation((msgData) => Promise.resolve(msgData));
+        jest.spyOn(service, 'findOne').mockResolvedValue(expectedSavedConversation);
 
         // Act
         const result = await service.saveSharedConversation(userId, saveDto);
@@ -558,9 +530,7 @@ describe('ConversationService', () => {
         });
 
         // Mocks
-        jest
-          .spyOn(service, 'findByShareLink')
-          .mockResolvedValue(sharedConversation);
+        jest.spyOn(service, 'findByShareLink').mockResolvedValue(sharedConversation);
         conversationsRepository.create.mockReturnValue(newConversation);
         conversationsRepository.save.mockResolvedValue(newConversation);
         jest.spyOn(service, 'findOne').mockResolvedValue(newConversation);
@@ -590,23 +560,19 @@ describe('ConversationService', () => {
           shareLink: 'share-link-123',
         });
 
-        jest
-          .spyOn(service, 'findByShareLink')
-          .mockResolvedValue(sharedConversation);
+        jest.spyOn(service, 'findByShareLink').mockResolvedValue(sharedConversation);
 
         // Act & Assert
-        await expect(
-          service.saveSharedConversation(userId, saveDto),
-        ).rejects.toThrow(BadRequestException);
+        await expect(service.saveSharedConversation(userId, saveDto)).rejects.toThrow(
+          BadRequestException,
+        );
       });
 
       it('should throw NotFoundException if shared conversation not found', async () => {
         // Arrange
         jest
           .spyOn(service, 'findByShareLink')
-          .mockRejectedValue(
-            new NotFoundException('Shared conversation not found'),
-          );
+          .mockRejectedValue(new NotFoundException('Shared conversation not found'));
 
         // Act & Assert
         await expect(
@@ -648,7 +614,7 @@ describe('ConversationService', () => {
             sharedFrom: Not(IsNull()),
           },
           order: { createdAt: 'DESC' },
-          relations: ['messages'],
+          relations: { messages: true },
         });
         expect(result).toEqual(savedConversations);
       });
