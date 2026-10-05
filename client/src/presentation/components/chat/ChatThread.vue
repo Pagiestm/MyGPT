@@ -185,7 +185,6 @@ const draft = ref('');
 
 const byId = computed(() => new Map(props.messages.map((message) => [message.id, message])));
 
-// La réponse en attente reste masquée tant qu'elle est vide : l'indicateur « réfléchit » la remplace
 const uiMessages = computed<UIMessage[]>(() =>
   props.messages
     .filter((message) => message.id !== STREAMING_ID || message.content)
@@ -262,7 +261,6 @@ function submitEdit(messageId: string) {
   animation: message-in 0.2s ease-out;
 }
 
-/* Message trouvé par la recherche : zone arrondie qui déborde du message, avec un halo qui s'estompe */
 .found-flash {
   position: relative;
   isolation: isolate;
@@ -305,7 +303,6 @@ function submitEdit(messageId: string) {
 </style>
 
 <style>
-/* Non scoped : UChatMessages n'a pas de racine unique, l'attribut de portée ne s'y applique pas */
 .chat-thread .message-in {
   animation: message-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -317,7 +314,6 @@ function submitEdit(messageId: string) {
   }
 }
 
-/* En modification, la bulle s'efface au profit d'une carte pleine largeur */
 .chat-thread [data-slot='container']:has(.edit-card) {
   width: 100%;
   max-width: 100%;

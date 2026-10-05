@@ -1,6 +1,5 @@
 import { ref } from 'vue';
 
-// État partagé : la palette s'ouvre depuis la barre latérale ou avec Ctrl/⌘ + K
 const isOpen = ref(false);
 
 export function useCommandPalette() {

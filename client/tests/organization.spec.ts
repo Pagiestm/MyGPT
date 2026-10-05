@@ -85,7 +85,6 @@ test.describe('Organisation', () => {
     await page.goto('/chat/c2');
     await expect(page.getByRole('heading', { name: 'Autre' })).toBeVisible();
 
-    // L'interface attend ⌘ dès que le navigateur se présente comme un Mac (WebKit de Playwright)
     const mac = await page.evaluate(() => /Macintosh|Mac OS X/.test(navigator.userAgent));
     await page.keyboard.press(mac ? 'Meta+k' : 'Control+k');
     const palette = page.getByRole('dialog');
@@ -109,7 +108,7 @@ test.describe('Personnalisation', () => {
       .getByRole('textbox', { name: 'Consignes personnalisées' })
       .fill('Réponds toujours en tutoyant.');
     await page.getByRole('combobox', { name: 'Modèle par défaut' }).click();
-    await page.getByRole('option', { name: 'Pro' }).click();
+    await page.getByRole('option', { name: 'Llama 3.2 3B' }).click();
     await page.getByRole('button', { name: 'Enregistrer' }).nth(1).click();
 
     await expect(
@@ -117,14 +116,16 @@ test.describe('Personnalisation', () => {
     ).toBeVisible();
     expect(api.user).toMatchObject({
       customInstructions: 'Réponds toujours en tutoyant.',
-      preferredModel: 'pro',
+      preferredModel: 'webgpu:Llama-3.2-3B-Instruct-q4f16_1-MLC',
     });
   });
 
   test('le modèle préféré est sélectionné par défaut dans le chat', async ({ page }) => {
-    await fakeApi(page, { user: { ...signedIn.user, preferredModel: 'lite' } });
+    await fakeApi(page, {
+      user: { ...signedIn.user, preferredModel: 'webgpu:Phi-4-mini-instruct-q4f16_1-MLC' },
+    });
     await page.goto('/chat');
 
-    await expect(page.getByRole('button', { name: "Modèle d'IA" })).toContainText('Flash Lite');
+    await expect(page.getByRole('button', { name: "Modèle d'IA" })).toContainText('Phi-4 mini');
   });
 });

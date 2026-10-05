@@ -26,7 +26,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(input: LoginInput) {
     await authRepository.login(input);
-    // Aucune requête n'est active sur la page de connexion : on repart d'un cache vide
     queryCache.getEntries().forEach((entry) => queryCache.remove(entry));
     await fetchUser();
   }

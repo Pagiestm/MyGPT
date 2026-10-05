@@ -54,6 +54,7 @@ export class AuthService {
     return {
       pseudo: user.pseudo,
       email: user.email,
+      role: user.role,
       customInstructions: user.customInstructions ?? null,
       preferredModel: user.preferredModel ?? null,
     };
@@ -68,7 +69,6 @@ export class AuthService {
       });
     }
 
-    // Suppression du cookie
     const cookieName = `ca_sid_${crypto
       .createHash('sha256')
       .update('mygpt-salt')

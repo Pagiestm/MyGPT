@@ -7,7 +7,6 @@ export interface PendingPrompt {
   model?: string;
 }
 
-// Premier message saisi sur /chat, envoyé une fois la conversation créée et ouverte
 const pending = ref<{ conversationId: string; prompt: PendingPrompt } | null>(null);
 
 export function setPendingPrompt(conversationId: string, prompt: PendingPrompt) {

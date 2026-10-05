@@ -1,48 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import { PassportSerializer } from '@nestjs/passport';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
+import type { UserRole } from '../user/user-role.enum';
 
-interface UserEntity {
+interface SessionPayload {
   id: string;
-  email: string;
-  pseudo: string;
 }
 
-interface SerializedUser {
+export interface SessionUser {
   id: string;
   email: string;
   pseudo: string;
+  role: UserRole;
 }
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
-  serializeUser(
-    user: UserEntity,
-    done: (err: Error | null, user: SerializedUser | null) => void,
-  ): void {
-    try {
-      if (!user || !user.id || !user.email || !user.pseudo) {
-        done(new Error('Structure utilisateur invalide'), null);
-        return;
-      }
+  constructor(@InjectRepository(User) private readonly users: Repository<User>) {
+    super();
+  }
 
-      done(null, {
-        id: user.id,
-        email: user.email,
-        pseudo: user.pseudo,
-      });
-    } catch (error) {
-      done(error as Error, null);
+  serializeUser(
+    user: { id?: string },
+    done: (err: Error | null, payload: SessionPayload | null) => void,
+  ): void {
+    if (!user?.id) {
+      done(new Error('Structure utilisateur invalide'), null);
+      return;
     }
+    done(null, { id: user.id });
   }
 
   deserializeUser(
-    payload: SerializedUser,
-    done: (err: Error | null, user: SerializedUser | null) => void,
+    payload: SessionPayload,
+    done: (err: Error | null, user: SessionUser | null) => void,
   ): void {
-    try {
-      done(null, payload);
-    } catch (error) {
-      done(error as Error, null);
-    }
+    this.users
+      .findOne({
+        where: { id: payload?.id },
+        select: { id: true, email: true, pseudo: true, role: true },
+      })
+      .then((user) => done(null, user ?? null))
+      .catch((error: Error) => done(error, null));
   }
 }

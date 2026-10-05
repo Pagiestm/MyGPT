@@ -70,6 +70,8 @@
         @edit-folder="openFolder"
         @delete-folder="folderToDelete = $event"
       />
+
+      <LoadMore :has-more="hasMore" :loading="loadingMore" @more="loadMore()" />
     </div>
 
     <FolderModal v-model:open="folderModalOpen" :folder="editedFolder" />
@@ -116,6 +118,7 @@ import { useDeleteFolder, useFolders } from '@/application/composables/useFolder
 import ConfirmModal from '@/presentation/components/common/ConfirmModal.vue';
 import { useCommandPalette } from '@/presentation/composables/useCommandPalette';
 import ConversationList from './ConversationList.vue';
+import LoadMore from '@/presentation/components/common/LoadMore.vue';
 import FolderModal from './FolderModal.vue';
 
 const route = useRoute();
@@ -125,7 +128,13 @@ const palette = useCommandPalette();
 
 const keyword = ref('');
 const debouncedKeyword = refDebounced(keyword, 250);
-const { data: conversations, isPending } = useConversationList(debouncedKeyword);
+const {
+  items: conversations,
+  isPending,
+  hasMore,
+  loadMore,
+  loadingMore,
+} = useConversationList(debouncedKeyword);
 const { data: folders } = useFolders();
 
 const { mutateAsync: updateConversation } = useUpdateConversation();

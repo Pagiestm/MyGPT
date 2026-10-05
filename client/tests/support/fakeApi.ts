@@ -1,4 +1,4 @@
-import type { Page, Route } from '@playwright/test';
+import type { Page, Request, Route } from '@playwright/test';
 
 export interface FakeUser {
   pseudo: string;
@@ -56,22 +56,42 @@ export interface FakeState {
   messages: Record<string, FakeMessage[]>;
   aiReply: string;
   aiTitle: string | null;
-  /** Délai avant la réponse en flux, pour tester le bouton Stop */
   streamDelay: number;
   streamError: string | null;
-  /** Corps des requêtes envoyées à /chat, pour vérifier modèle et pièces jointes */
   chatRequests: Record<string, unknown>[];
+  documents: unknown[];
   failures: Partial<Record<'login' | 'register', { status: number; message: string }>>;
 }
 
-export const MODELS = {
-  models: [
-    { id: 'flash', label: 'Flash', description: 'Rapide et polyvalent' },
-    { id: 'pro', label: 'Pro', description: 'Raisonnement approfondi' },
-    { id: 'lite', label: 'Flash Lite', description: 'Le plus rapide' },
-  ],
-  defaultModel: 'flash',
-};
+export const MODELS = [
+  {
+    id: 'webgpu:Llama-3.2-3B-Instruct-q4f16_1-MLC',
+    label: 'Llama 3.2 3B',
+    description: 'Bon compromis',
+    vramMb: 2264,
+    position: 0,
+    enabled: true,
+    revision: 1,
+  },
+  {
+    id: 'webgpu:Phi-4-mini-instruct-q4f16_1-MLC',
+    label: 'Phi-4 mini',
+    description: 'Concis',
+    vramMb: 3438,
+    position: 1,
+    enabled: true,
+    revision: 1,
+  },
+  {
+    id: 'webgpu:Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC',
+    label: 'Qwen 2.5 Coder 7B',
+    description: 'Spécialisé code',
+    vramMb: 5107,
+    position: 2,
+    enabled: true,
+    revision: 1,
+  },
+];
 
 let sequence = 0;
 const nextId = (prefix: string) => `${prefix}-${++sequence}`;
@@ -89,6 +109,27 @@ export function folder(id: string, name: string, instructions: string | null = n
   return { id, name, instructions, createdAt: now(), updatedAt: now() };
 }
 
+function page<T>(items: T[], url: URL) {
+  const limit = Number(url.searchParams.get('limit') ?? 25);
+  const offset = Number(url.searchParams.get('offset') ?? 0);
+  const slice = items.slice(offset, offset + limit);
+  return {
+    items: slice,
+    total: items.length,
+    limit,
+    offset,
+    hasMore: offset + slice.length < items.length,
+  };
+}
+
+function readJsonBody(request: Request): Record<string, unknown> {
+  try {
+    return (request.postDataJSON() as Record<string, unknown>) ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export function message(conversationId: string, content: string, isFromAi = false): FakeMessage {
   return {
     id: nextId('msg'),
@@ -100,10 +141,6 @@ export function message(conversationId: string, content: string, isFromAi = fals
   };
 }
 
-/**
- * Faux back-end en mémoire : intercepte toutes les routes de l'API NestJS
- * pour tester le client sans base de données ni appel à Gemini.
- */
 export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
   const state: FakeState = {
     user: null,
@@ -116,12 +153,15 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     streamDelay: 0,
     streamError: null,
     chatRequests: [],
+    documents: [],
     failures: {},
     ...initial,
   };
 
   const isApi = (url: URL) =>
-    /^\/(auth|users|conversations|messages|chat|folders|attachments)(\/|$)/.test(url.pathname);
+    /^\/(auth|users|conversations|messages|chat|folders|attachments|knowledge|models)(\/|$)/.test(
+      url.pathname,
+    );
 
   await page.route(isApi, async (route) => {
     const request = route.request();
@@ -129,12 +169,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     const url = new URL(request.url());
     const method = request.method();
     const path = url.pathname;
-    let body: Record<string, unknown> = {};
-    try {
-      body = request.postDataJSON() ?? {};
-    } catch {
-      // Corps multipart (pièces jointes)
-    }
+    const body: Record<string, unknown> = readJsonBody(request);
     const json = (status: number, data?: unknown) =>
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data ?? {}) });
 
@@ -192,6 +227,31 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
 
   if (segments[0] === 'chat') return handleChat(route, state, ctx);
 
+  if (path === '/models' && method === 'GET')
+    return json(200, { models: MODELS, canManage: false });
+  if (path === '/models/all') return json(200, MODELS);
+
+  if (path === '/users' && method === 'GET') {
+    return json(
+      200,
+      page(
+        [
+          {
+            id: 'u1',
+            email: 'alice@example.com',
+            pseudo: 'alice',
+            role: 'admin',
+            created_at: now(),
+          },
+          { id: 'u2', email: 'bob@example.com', pseudo: 'bob', role: 'user', created_at: now() },
+        ],
+        url,
+      ),
+    );
+  }
+
+  if (path === '/knowledge' && method === 'GET') return json(200, page(state.documents, url));
+
   if (path === '/folders' && method === 'GET') return json(200, state.folders);
   if (path === '/folders' && method === 'POST') {
     const created = folder(
@@ -221,9 +281,12 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
     const archived = url.searchParams.get('archived') === 'true';
     return json(
       200,
-      state.conversations
-        .filter((c) => !c.sharedFrom && Boolean(c.archived) === archived)
-        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned))),
+      page(
+        state.conversations
+          .filter((c) => !c.sharedFrom && Boolean(c.archived) === archived)
+          .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned))),
+        url,
+      ),
     );
   }
   if (path === '/conversations' && method === 'POST') {
@@ -238,13 +301,19 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
     const keyword = (url.searchParams.get('keyword') ?? '').toLowerCase();
     return json(
       200,
-      state.conversations.filter((c) => !c.archived && c.name.toLowerCase().includes(keyword)),
+      page(
+        state.conversations.filter((c) => !c.archived && c.name.toLowerCase().includes(keyword)),
+        url,
+      ),
     );
   }
   if (path === '/conversations/saved') {
     return json(
       200,
-      state.conversations.filter((c) => c.sharedFrom),
+      page(
+        state.conversations.filter((c) => c.sharedFrom),
+        url,
+      ),
     );
   }
   if (segments[0] === 'conversations' && segments[1]) {
@@ -266,19 +335,22 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
   }
 
   if (path === '/messages' && method === 'GET') {
-    return json(200, state.messages[url.searchParams.get('conversationId') ?? ''] ?? []);
+    return json(200, page(state.messages[url.searchParams.get('conversationId') ?? ''] ?? [], url));
   }
   if (path === '/messages/search/all') {
     const keyword = (url.searchParams.get('keyword') ?? '').toLowerCase();
     return json(
       200,
-      Object.values(state.messages)
-        .flat()
-        .filter((m) => m.content.toLowerCase().includes(keyword))
-        .map((m) => {
-          const owner = state.conversations.find((c) => c.id === m.conversationId);
-          return { ...m, conversation: { id: m.conversationId, name: owner?.name ?? '' } };
-        }),
+      page(
+        Object.values(state.messages)
+          .flat()
+          .filter((m) => m.content.toLowerCase().includes(keyword))
+          .map((m) => {
+            const owner = state.conversations.find((c) => c.id === m.conversationId);
+            return { ...m, conversation: { id: m.conversationId, name: owner?.name ?? '' } };
+          }),
+        url,
+      ),
     );
   }
   if (path === '/messages/search') {
@@ -286,7 +358,10 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
     const list = state.messages[url.searchParams.get('conversationId') ?? ''] ?? [];
     return json(
       200,
-      list.filter((m) => m.content.toLowerCase().includes(keyword)),
+      page(
+        list.filter((m) => m.content.toLowerCase().includes(keyword)),
+        url,
+      ),
     );
   }
 
@@ -296,72 +371,74 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
 async function handleChat(route: Route, state: FakeState, ctx: Context) {
   const { method, path, body, json } = ctx;
   const segments = path.split('/').filter(Boolean);
-  if (path === '/chat/models') return json(200, MODELS);
+
+  if (path === '/chat/engine') {
+    return json(200, {
+      reply: state.aiReply,
+      title: state.aiTitle,
+      delay: state.streamDelay,
+      error: state.streamError,
+    });
+  }
+
   if (method !== 'POST') return route.fallback();
 
+  if (path === '/chat/replies') {
+    const conversationId = String(body.conversationId);
+    const answer = {
+      ...message(conversationId, String(body.content), true),
+      model: String(body.model),
+    };
+    (state.messages[conversationId] ??= []).push(answer);
+    const owner = state.conversations.find((c) => c.id === conversationId);
+    if (owner) owner.updatedAt = now();
+    return json(200, {
+      message: answer,
+      needsTitle: !!state.aiTitle && !owner?.titleLocked,
+    });
+  }
+
+  if (path === '/chat/titles') {
+    const owner = state.conversations.find((c) => c.id === String(body.conversationId));
+    if (owner) Object.assign(owner, { name: String(body.name), titleLocked: true });
+    return json(200, { name: String(body.name) });
+  }
+
   state.chatRequests.push(body);
-  const events: unknown[] = [];
-  let conversationId: string;
+  let question: FakeMessage;
 
   if (path === '/chat/messages') {
-    conversationId = String(body.conversationId);
-    const sent = message(conversationId, String(body.content));
-    sent.attachments = ((body.attachmentIds as string[]) ?? []).map((id) => ({
+    const conversationId = String(body.conversationId);
+    question = message(conversationId, String(body.content));
+    question.attachments = ((body.attachmentIds as string[]) ?? []).map((id) => ({
       id,
       name: 'note.txt',
       mimeType: 'text/plain',
       size: 12,
     }));
-    (state.messages[conversationId] ??= []).push(sent);
-    events.push({ type: 'user', message: sent });
+    (state.messages[conversationId] ??= []).push(question);
   } else if (segments[3] === 'regenerate') {
-    conversationId = segments[2];
-    const list = state.messages[conversationId] ?? [];
+    const list = state.messages[segments[2]] ?? [];
     if (list.at(-1)?.isFromAi) list.pop();
+    const asked = [...list].reverse().find((m) => !m.isFromAi);
+    if (!asked) return json(400, { message: 'Rien à régénérer' });
+    question = asked;
   } else if (segments[1] === 'messages' && segments[3] === 'edit') {
     const entry = Object.entries(state.messages).find(([, list]) =>
       list.some((m) => m.id === segments[2]),
     );
     if (!entry) return json(404, { message: 'Message not found' });
-    const [id, list] = entry;
-    conversationId = id;
+    const [, list] = entry;
     const index = list.findIndex((m) => m.id === segments[2]);
     list[index].content = String(body.content);
-    state.messages[id] = list.slice(0, index + 1);
+    state.messages[entry[0]] = list.slice(0, index + 1);
+    question = list[index];
   } else {
     return route.fallback();
   }
 
-  if (state.streamDelay) await new Promise((resolve) => setTimeout(resolve, state.streamDelay));
-
-  if (state.streamError) {
-    events.push({ type: 'error', message: state.streamError });
-  } else {
-    const model = (body.model as string) ?? state.user?.preferredModel ?? MODELS.defaultModel;
-    for (const chunk of state.aiReply.match(/.{1,12}/gs) ?? []) {
-      events.push({ type: 'delta', text: chunk });
-    }
-    const answer = { ...message(conversationId, state.aiReply, true), model };
-    state.messages[conversationId].push(answer);
-    events.push({ type: 'done', message: answer });
-
-    const owner = state.conversations.find((c) => c.id === conversationId);
-    if (owner) {
-      owner.updatedAt = now();
-      if (state.aiTitle && !owner.titleLocked) {
-        Object.assign(owner, { name: state.aiTitle, titleLocked: true });
-        events.push({ type: 'title', conversationId, name: state.aiTitle });
-      }
-    }
-  }
-
-  try {
-    await route.fulfill({
-      status: 200,
-      contentType: 'text/event-stream',
-      body: events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''),
-    });
-  } catch {
-    // Requête annulée par le bouton Stop
-  }
+  return json(200, {
+    question,
+    messages: [{ role: 'user', content: question.content }],
+  });
 }

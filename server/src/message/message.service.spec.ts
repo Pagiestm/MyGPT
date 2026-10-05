@@ -39,6 +39,7 @@ describe('MessageService', () => {
 
     const mockMessagesRepository: MockRepository<Message> = {
       find: jest.fn(),
+      findAndCount: jest.fn(),
       findOne: jest.fn(),
     };
 
@@ -69,16 +70,18 @@ describe('MessageService', () => {
           createMockMessage({ id: 'msg-2', conversationId, isFromAi: true }),
         ];
 
-        messagesRepository.find.mockResolvedValue(messages as Message[]);
+        messagesRepository.findAndCount.mockResolvedValue([messages as Message[], messages.length]);
 
         const result = await service.findAll(conversationId);
 
-        expect(messagesRepository.find).toHaveBeenCalledWith({
-          where: { conversationId },
-          relations: { attachments: true },
-          order: { createdAt: 'ASC' },
-        });
-        expect(result).toEqual(messages);
+        expect(messagesRepository.findAndCount).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { conversationId },
+            relations: { attachments: true },
+            order: { createdAt: 'DESC' },
+          }),
+        );
+        expect(result.items).toEqual(messages);
       });
 
       it('should return all messages when no conversationId is provided', async () => {
@@ -91,16 +94,18 @@ describe('MessageService', () => {
           }),
         ];
 
-        messagesRepository.find.mockResolvedValue(messages as Message[]);
+        messagesRepository.findAndCount.mockResolvedValue([messages as Message[], messages.length]);
 
         const result = await service.findAll();
 
-        expect(messagesRepository.find).toHaveBeenCalledWith({
-          where: {},
-          relations: { attachments: true },
-          order: { createdAt: 'ASC' },
-        });
-        expect(result).toEqual(messages);
+        expect(messagesRepository.findAndCount).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: {},
+            relations: { attachments: true },
+            order: { createdAt: 'DESC' },
+          }),
+        );
+        expect(result.items).toEqual(messages);
       });
     });
 
@@ -151,30 +156,32 @@ describe('MessageService', () => {
         }),
       ];
 
-      messagesRepository.find.mockResolvedValue(messages as Message[]);
+      messagesRepository.findAndCount.mockResolvedValue([messages as Message[], messages.length]);
 
       const result = await service.searchInConversation(searchDto);
 
-      expect(messagesRepository.find).toHaveBeenCalledWith({
-        where: {
-          conversationId: searchDto.conversationId,
-          content: expect.any(Object),
-        },
-        order: { createdAt: 'ASC' },
-      });
-      expect(result).toEqual(messages);
+      expect(messagesRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            conversationId: searchDto.conversationId,
+            content: expect.any(Object),
+          },
+          order: { createdAt: 'ASC' },
+        }),
+      );
+      expect(result.items).toEqual(messages);
     });
 
-    it('searches every conversation of the user, newest first, 20 results at most', async () => {
-      messagesRepository.find.mockResolvedValue([]);
+    it('searches every conversation of the user, newest first, one page at a time', async () => {
+      messagesRepository.findAndCount.mockResolvedValue([[], 0]);
 
       await service.searchForUser('user-1', 'docker');
 
-      expect(messagesRepository.find).toHaveBeenCalledWith(
+      expect(messagesRepository.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { content: expect.any(Object), conversation: { userId: 'user-1' } },
           order: { createdAt: 'DESC' },
-          take: 20,
+          take: 25,
         }),
       );
     });

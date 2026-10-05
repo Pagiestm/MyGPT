@@ -4,6 +4,7 @@ declare module 'vue-router' {
   interface RouteMeta {
     layout?: 'marketing' | 'auth' | 'app';
     requiresAuth?: boolean;
+    requiresAdmin?: boolean;
     guestOnly?: boolean;
     title?: string;
   }
@@ -59,6 +60,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'app', requiresAuth: true, title: 'Réglages' },
   },
   {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { layout: 'app', requiresAuth: true, requiresAdmin: true, title: 'Administration' },
+  },
+  {
     path: '/s/:link',
     name: 'shared-conversation',
     component: () => import('../views/SharedConversationView.vue'),
@@ -66,7 +73,6 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'Conversation partagée' },
   },
 
-  // Anciennes URL, conservées pour les liens déjà partagés
   { path: '/profile', redirect: { name: 'settings' } },
   { path: '/chat/saved', redirect: { name: 'library' } },
   {

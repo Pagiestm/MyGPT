@@ -7,12 +7,14 @@ import { Message } from './entities/message.entity';
 import { Conversation } from '../conversation/entities/conversation.entity';
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
+import { UserRole } from '../user/user-role.enum';
 
 interface RequestWithUser extends ExpressRequest {
   user: {
     id: string;
     email: string;
     pseudo: string;
+    role: UserRole;
   };
   session: Session & Partial<SessionData>;
 }
@@ -25,6 +27,7 @@ function createMockRequest(userId: string = 'user-123'): RequestWithUser {
       id: userId,
       email: 'test@example.com',
       pseudo: 'testuser',
+      role: UserRole.User,
     },
     session: {} as Session & Partial<SessionData>,
   } as RequestWithUser;
@@ -111,10 +114,10 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        const result = await controller.findAll(req, conversationId);
+        const result = await controller.findAll(req, conversationId, {});
 
         expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
-        expect(messageService.findAll).toHaveBeenCalledWith(conversationId);
+        expect(messageService.findAll).toHaveBeenCalledWith(conversationId, {});
         expect(result).toEqual(mockMessages);
       });
 
@@ -133,7 +136,7 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        const result = await controller.findAll(req, conversationId);
+        const result = await controller.findAll(req, conversationId, {});
 
         expect(result).toEqual(mockMessages);
       });
@@ -154,7 +157,7 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.findAll.mockResolvedValue(mockMessages);
 
-        const result = await controller.findAll(req, conversationId);
+        const result = await controller.findAll(req, conversationId, {});
 
         expect(result).toEqual(mockMessages);
       });
@@ -171,7 +174,9 @@ describe('MessageController', () => {
 
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        await expect(controller.findAll(req, conversationId)).rejects.toThrow(BadRequestException);
+        await expect(controller.findAll(req, conversationId, {})).rejects.toThrow(
+          BadRequestException,
+        );
         expect(messageService.findAll).not.toHaveBeenCalled();
       });
     });
@@ -243,7 +248,7 @@ describe('MessageController', () => {
         conversationService.findOne.mockResolvedValue(mockConversation);
         messageService.searchInConversation.mockResolvedValue(mockMessages);
 
-        const result = await controller.search(req, keyword, conversationId);
+        const result = await controller.search(req, keyword, conversationId, {});
 
         expect(conversationService.findOne).toHaveBeenCalledWith(conversationId);
         expect(messageService.searchInConversation).toHaveBeenCalledWith({
@@ -266,7 +271,7 @@ describe('MessageController', () => {
 
         conversationService.findOne.mockResolvedValue(mockConversation);
 
-        await expect(controller.search(req, keyword, conversationId)).rejects.toThrow(
+        await expect(controller.search(req, keyword, conversationId, {})).rejects.toThrow(
           BadRequestException,
         );
         expect(messageService.searchInConversation).not.toHaveBeenCalled();

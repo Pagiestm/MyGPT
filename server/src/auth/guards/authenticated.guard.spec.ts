@@ -51,9 +51,7 @@ describe('AuthenticatedGuard', () => {
     it('should throw UnauthorizedException if isAuthenticated is not a function', () => {
       const mockContext = {
         switchToHttp: () => ({
-          getRequest: () => ({
-            // isAuthenticated n'existe pas
-          }),
+          getRequest: () => ({}),
         }),
       } as ExecutionContext;
 

@@ -2,7 +2,7 @@ name: mygpt
 
 services:
   db:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USERNAME:-postgres}

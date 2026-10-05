@@ -6,12 +6,14 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiCookieAuth } from '@nes
 import { LoginDto } from './dto/login.dto';
 import type { Request as ExpressRequest, Response } from 'express';
 import { Session, SessionData } from 'express-session';
+import { UserRole } from '../user/user-role.enum';
 
 interface RequestWithUser extends ExpressRequest {
   user: {
     id: string;
     email: string;
     pseudo: string;
+    role: UserRole;
   };
   session: Session & Partial<SessionData>;
 }
@@ -36,7 +38,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   login(@Request() req: RequestWithUser, @Body() loginDto: LoginDto) {
-    // Utilisation du DTO pour afficher l'email utilisé pour la connexion
     console.log(`Tentative de connexion avec l'email: ${loginDto.email}`);
 
     return this.authService.login(req.user);

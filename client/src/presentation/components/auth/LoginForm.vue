@@ -45,7 +45,6 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-// Après une inscription, l'email est prérempli
 const state = reactive({
   email: typeof route.query.email === 'string' ? route.query.email : '',
   password: '',

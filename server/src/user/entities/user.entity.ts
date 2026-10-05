@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } f
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { Conversation } from '../../conversation/entities/conversation.entity';
+import { UserRole } from '../user-role.enum';
 
 @Entity('users')
 export class User {
@@ -26,11 +27,19 @@ export class User {
   @Column({ unique: true })
   pseudo: string;
 
-  // Jamais renvoyé par l'API (ClassSerializerInterceptor global)
   @ApiHideProperty()
   @Exclude()
   @Column()
   password: string;
+
+  @ApiProperty({
+    description:
+      "Rôle de l'utilisateur ; seuls les administrateurs gèrent le catalogue et les rôles",
+    enum: UserRole,
+    example: UserRole.User,
+  })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.User })
+  role: UserRole;
 
   @ApiProperty({
     description: "Consignes personnalisées envoyées à l'IA avant chaque échange",

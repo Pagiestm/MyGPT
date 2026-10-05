@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   ConflictException,
   NotFoundException,
@@ -10,6 +11,8 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from './user-role.enum';
+import { pageBounds, toPage, type PaginationDto } from '../common/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -128,7 +131,6 @@ export class UserService {
     const user = await this.findOne(userId);
 
     try {
-      // Supprimer l'utilisateur (les conversations et messages seront supprimés en cascade)
       await this.usersRepository.remove(user);
 
       return {
@@ -140,5 +142,31 @@ export class UserService {
         'Une erreur est survenue lors de la suppression du compte',
       );
     }
+  }
+  async listAll(pagination: PaginationDto = {}) {
+    const [items, total] = await this.usersRepository.findAndCount({
+      select: { id: true, email: true, pseudo: true, role: true, created_at: true },
+      order: { created_at: 'ASC' },
+      ...pageBounds(pagination),
+    });
+    return toPage(items, total, pagination);
+  }
+
+  async updateRole(id: string, role: UserRole) {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    if (user.role === UserRole.Admin && role !== UserRole.Admin) {
+      const admins = await this.usersRepository.countBy({ role: UserRole.Admin });
+      if (admins <= 1) {
+        throw new BadRequestException(
+          "Impossible de retirer le dernier administrateur de l'instance",
+        );
+      }
+    }
+
+    user.role = role;
+    await this.usersRepository.save(user);
+    return { id: user.id, email: user.email, pseudo: user.pseudo, role: user.role };
   }
 }

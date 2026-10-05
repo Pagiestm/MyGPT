@@ -1,22 +1,11 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiCookieAuth, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import { Body, Controller, Param, ParseUUIDPipe, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import type { AuthenticatedRequest } from '../common/authenticated-request';
-import { AI_ADAPTER, type IAiAdapter } from '../infrastructure/adapters/ai-adapter';
-import { ChatService, type ChatEvent } from './chat.service';
+import { ChatService } from './chat.service';
+import { PromptService } from './prompt.service';
 import { EditMessageDto, RegenerateDto, SendMessageDto } from './dto/chat.dto';
+import { SaveReplyDto, SaveTitleDto } from './dto/local-chat.dto';
 
 @ApiTags('chat')
 @ApiCookieAuth()
@@ -25,74 +14,50 @@ import { EditMessageDto, RegenerateDto, SendMessageDto } from './dto/chat.dto';
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,
-    @Inject(AI_ADAPTER) private readonly ai: IAiAdapter,
+    private readonly prompts: PromptService,
   ) {}
 
-  @Get('models')
-  @ApiOperation({ summary: "Modèles d'IA disponibles" })
-  models() {
-    return { models: this.ai.models, defaultModel: this.ai.defaultModel };
-  }
-
   @Post('messages')
-  @ApiOperation({ summary: 'Envoyer une question et recevoir la réponse en flux (SSE)' })
-  @ApiProduces('text/event-stream')
-  send(@Request() req: AuthenticatedRequest, @Res() res: Response, @Body() dto: SendMessageDto) {
-    return this.stream(res, (signal) => this.chatService.send(req.user.id, dto, signal));
+  @ApiOperation({ summary: 'Enregistrer une question et recevoir le prompt à exécuter' })
+  async prepare(@Request() req: AuthenticatedRequest, @Body() dto: SendMessageDto) {
+    this.prompts.assertBrowserModel(dto.model ?? '');
+    const { conversation, question } = await this.chatService.prepareSend(req.user.id, dto);
+    return this.prompts.toExchange(req.user.id, conversation, question, dto.questionEmbedding);
   }
 
   @Post('conversations/:id/regenerate')
-  @ApiOperation({ summary: 'Régénérer la dernière réponse (SSE)' })
-  @ApiProduces('text/event-stream')
-  regenerate(
+  @ApiOperation({ summary: 'Effacer la dernière réponse et rejouer la question' })
+  async regenerate(
     @Request() req: AuthenticatedRequest,
-    @Res() res: Response,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: RegenerateDto,
   ) {
-    return this.stream(res, (signal) =>
-      this.chatService.regenerate(req.user.id, id, dto.model, signal),
-    );
+    this.prompts.assertBrowserModel(dto.model ?? '');
+    const { conversation, question } = await this.chatService.prepareRegenerate(req.user.id, id);
+    return this.prompts.toExchange(req.user.id, conversation, question, dto.questionEmbedding);
   }
 
   @Post('messages/:id/edit')
-  @ApiOperation({ summary: 'Modifier une question et régénérer la suite (SSE)' })
-  @ApiProduces('text/event-stream')
-  edit(
+  @ApiOperation({ summary: 'Modifier une question et préparer la suite' })
+  async edit(
     @Request() req: AuthenticatedRequest,
-    @Res() res: Response,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: EditMessageDto,
   ) {
-    return this.stream(res, (signal) => this.chatService.edit(req.user.id, id, dto, signal));
+    this.prompts.assertBrowserModel(dto.model ?? '');
+    const { conversation, question } = await this.chatService.prepareEdit(req.user.id, id, dto);
+    return this.prompts.toExchange(req.user.id, conversation, question, dto.questionEmbedding);
   }
 
-  private async stream(
-    res: Response,
-    start: (signal: AbortSignal) => Promise<AsyncGenerator<ChatEvent>>,
-  ) {
-    // Le client qui ferme la connexion (bouton « Arrêter ») interrompt la génération
-    const controller = new AbortController();
-    res.on('close', () => {
-      if (!res.writableEnded) controller.abort();
-    });
+  @Post('replies')
+  @ApiOperation({ summary: 'Enregistrer la réponse produite par le navigateur' })
+  reply(@Request() req: AuthenticatedRequest, @Body() dto: SaveReplyDto) {
+    return this.prompts.saveReply(req.user.id, dto.conversationId, dto.content, dto.model);
+  }
 
-    // Les erreurs de validation remontent avant l'ouverture du flux, en réponse HTTP classique
-    const events = await start(controller.signal);
-
-    res.status(200).set({
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    });
-    res.flushHeaders();
-
-    for await (const event of events) {
-      if (!res.writableEnded && !controller.signal.aborted) {
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
-    }
-    res.end();
+  @Post('titles')
+  @ApiOperation({ summary: 'Enregistrer le titre produit par le navigateur' })
+  title(@Request() req: AuthenticatedRequest, @Body() dto: SaveTitleDto) {
+    return this.prompts.saveTitle(req.user.id, dto.conversationId, dto.name);
   }
 }

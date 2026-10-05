@@ -1,15 +1,18 @@
 import { http } from '../http/client';
 import type { Conversation, ConversationPatch, SharedConversation } from '@/domain/conversation';
+import { PAGE_SIZE, type Page } from '@/domain/pagination';
 
 export const conversationRepository = {
-  list: (keyword?: string) =>
+  list: (keyword?: string, offset = 0, limit = PAGE_SIZE) =>
     http
-      .get<Conversation[]>(keyword ? '/conversations/search' : '/conversations', {
-        params: keyword ? { keyword } : undefined,
+      .get<Page<Conversation>>(keyword ? '/conversations/search' : '/conversations', {
+        params: { ...(keyword ? { keyword } : {}), offset, limit },
       })
       .then((r) => r.data),
-  listArchived: () =>
-    http.get<Conversation[]>('/conversations', { params: { archived: true } }).then((r) => r.data),
+  listArchived: (offset = 0, limit = PAGE_SIZE) =>
+    http
+      .get<Page<Conversation>>('/conversations', { params: { archived: true, offset, limit } })
+      .then((r) => r.data),
   get: (id: string) => http.get<Conversation>(`/conversations/${id}`).then((r) => r.data),
   create: (name: string, folderId?: string | null) =>
     http.post<Conversation>('/conversations', { name, folderId }).then((r) => r.data),
@@ -26,5 +29,8 @@ export const conversationRepository = {
     http
       .post<Conversation>('/conversations/save-shared', { conversationId, shareLink })
       .then((r) => r.data),
-  listSaved: () => http.get<Conversation[]>('/conversations/saved').then((r) => r.data),
+  listSaved: (offset = 0, limit = PAGE_SIZE) =>
+    http
+      .get<Page<Conversation>>('/conversations/saved', { params: { offset, limit } })
+      .then((r) => r.data),
 };

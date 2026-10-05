@@ -1,6 +1,5 @@
 import { onBeforeUnmount, ref } from 'vue';
 
-// Le Markdown se lit mal à voix haute : on garde le texte, sans les blocs de code ni la syntaxe
 function toSpeech(markdown: string) {
   return markdown
     .replace(/```[\s\S]*?```/g, ' (bloc de code) ')
@@ -12,7 +11,6 @@ function toSpeech(markdown: string) {
     .trim();
 }
 
-/** Lecture des réponses à voix haute (Web Speech API, voix française du système) */
 export function useReadAloud() {
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
   const speakingId = ref<string | null>(null);

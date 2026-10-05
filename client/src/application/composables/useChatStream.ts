@@ -3,28 +3,54 @@ import { useQueryCache } from '@pinia/colada';
 import type { Attachment } from '@/domain/attachment';
 import type { Conversation } from '@/domain/conversation';
 import type { Message } from '@/domain/message';
+import { emptyPage, type Page } from '@/domain/pagination';
 import { getErrorMessage } from '@/infrastructure/http/client';
 import { chatRepository, type ChatEvent } from '@/infrastructure/repositories/chat.repository';
+import { webllmRepository } from '@/infrastructure/repositories/webllm.repository';
+import { useAuthStore } from '../stores/auth.store';
+import { useDocuments } from './useKnowledge';
+import { useModels } from './useModels';
 import { queryKeys } from '../queryKeys';
 
-/** Identifiant de la réponse en cours d'écriture, tant que le serveur ne l'a pas enregistrée */
 export const STREAMING_ID = 'streaming';
 
 type Phase = 'idle' | 'submitted' | 'streaming';
 type Start = (onEvent: (event: ChatEvent) => void, signal: AbortSignal) => Promise<void>;
 
-/**
- * Échanges en flux avec l'IA : envoi, régénération et modification.
- * La question et la réponse en cours sont ajoutées au cache tout de suite, puis complétées
- * morceau par morceau et remplacées par les messages enregistrés par le serveur.
- */
 export function useChatStream(
   conversationId: MaybeRefOrGetter<string>,
   { onError }: { onError: (message: string) => void },
 ) {
   const cache = useQueryCache();
+  const auth = useAuthStore();
+  const { data: catalog, models } = useModels();
+  const { items: documents } = useDocuments();
   const phase = ref<Phase>('idle');
   let controller: AbortController | null = null;
+
+  const effective = (requested?: string) =>
+    requested ?? auth.user?.preferredModel ?? catalog.value?.defaultModel;
+
+  function requireModel(requested?: string) {
+    const chosen = effective(requested);
+    if (!chosen) {
+      throw new Error(
+        'Aucun modèle disponible : ce navigateur ne gère pas WebGPU. Essayez Chrome, Edge, ' +
+          'Safari 26+ ou Firefox récent.',
+      );
+    }
+    return { model: chosen, revision: models.value.find((item) => item.id === chosen)?.revision };
+  }
+
+  async function embedQuestion(text: string) {
+    if (!documents.value.length || !text.trim()) return undefined;
+    try {
+      const [vector] = await webllmRepository.embed([text.slice(0, 2000)]);
+      return vector;
+    } catch {
+      return undefined;
+    }
+  }
 
   const busy = computed(() => phase.value !== 'idle');
 
@@ -34,11 +60,13 @@ export function useChatStream(
     questionId?: string,
   ) {
     if (busy.value) return;
-    // Clé figée : la réponse continue d'arriver dans la bonne conversation si l'on navigue ailleurs
     const id = toValue(conversationId);
     const key = queryKeys.messages(id);
     const update = (change: (list: Message[]) => Message[]) =>
-      cache.setQueryData<Message[]>(key, (old = []) => change(old));
+      cache.setQueryData<Page<Message>>(key, (old = emptyPage<Message>()) => ({
+        ...old,
+        items: change(old.items),
+      }));
 
     const now = new Date().toISOString();
     update((list) => [
@@ -92,7 +120,6 @@ export function useChatStream(
       if (signal.aborted) {
         update((list) => list.filter((m) => m.id !== STREAMING_ID || m.content));
       } else {
-        // Une question jamais enregistrée (id temporaire) disparaît ; une question modifiée reste
         update((list) =>
           list.filter(
             (m) => m.id !== STREAMING_ID && !(m.id === questionId && m.id.startsWith('pending-')),
@@ -103,7 +130,6 @@ export function useChatStream(
     } finally {
       controller = null;
       phase.value = 'idle';
-      // Après un arrêt, le serveur enregistre la réponse partielle : on lui laisse un instant
       if (signal.aborted) await new Promise((resolve) => setTimeout(resolve, 800));
       await Promise.all([
         cache.invalidateQueries({ key }),
@@ -117,7 +143,8 @@ export function useChatStream(
     return run(
       (now) => {
         const list =
-          cache.getQueryData<Message[]>(queryKeys.messages(toValue(conversationId))) ?? [];
+          cache.getQueryData<Page<Message>>(queryKeys.messages(toValue(conversationId)))?.items ??
+          [];
         return [
           ...list,
           {
@@ -131,17 +158,20 @@ export function useChatStream(
           },
         ];
       },
-      (onEvent, signal) =>
-        chatRepository.send(
+      async (onEvent, signal) => {
+        const chosen = requireModel(model);
+        return chatRepository.send(
           {
             conversationId: toValue(conversationId),
             content,
             attachmentIds: attachments.map((attachment) => attachment.id),
-            model,
+            ...chosen,
+            questionEmbedding: await embedQuestion(content),
           },
           onEvent,
           signal,
-        ),
+        );
+      },
       questionId,
     );
   }
@@ -150,11 +180,21 @@ export function useChatStream(
     return run(
       () => {
         const list =
-          cache.getQueryData<Message[]>(queryKeys.messages(toValue(conversationId))) ?? [];
+          cache.getQueryData<Page<Message>>(queryKeys.messages(toValue(conversationId)))?.items ??
+          [];
         return list.at(-1)?.isFromAi ? list.slice(0, -1) : list;
       },
-      (onEvent, signal) =>
-        chatRepository.regenerate(toValue(conversationId), model, onEvent, signal),
+      async (onEvent, signal) => {
+        const chosen = requireModel(model);
+        const page = cache.getQueryData<Page<Message>>(queryKeys.messages(toValue(conversationId)));
+        const asked = [...(page?.items ?? [])].reverse().find((item) => !item.isFromAi);
+        return chatRepository.regenerate(
+          toValue(conversationId),
+          { ...chosen, questionEmbedding: await embedQuestion(asked?.content ?? '') },
+          onEvent,
+          signal,
+        );
+      },
     );
   }
 
@@ -162,11 +202,20 @@ export function useChatStream(
     return run(
       () => {
         const list =
-          cache.getQueryData<Message[]>(queryKeys.messages(toValue(conversationId))) ?? [];
+          cache.getQueryData<Page<Message>>(queryKeys.messages(toValue(conversationId)))?.items ??
+          [];
         const index = list.findIndex((message) => message.id === messageId);
         return index === -1 ? list : [...list.slice(0, index), { ...list[index]!, content }];
       },
-      (onEvent, signal) => chatRepository.edit(messageId, { content, model }, onEvent, signal),
+      async (onEvent, signal) => {
+        const chosen = requireModel(model);
+        return chatRepository.edit(
+          messageId,
+          { content, ...chosen, questionEmbedding: await embedQuestion(content) },
+          onEvent,
+          signal,
+        );
+      },
       messageId,
     );
   }

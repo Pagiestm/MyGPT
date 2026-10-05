@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { SearchMessagesDto } from './dto/search-message.dto';
+import { pageBounds, toPage, type Page, type PaginationDto } from '../common/pagination.dto';
 
 @Injectable()
 export class MessageService {
@@ -11,13 +12,14 @@ export class MessageService {
     private messagesRepository: Repository<Message>,
   ) {}
 
-  async findAll(conversationId?: string): Promise<Message[]> {
-    const whereCondition = conversationId ? { conversationId } : {};
-    return this.messagesRepository.find({
-      where: whereCondition,
+  async findAll(conversationId?: string, pagination: PaginationDto = {}): Promise<Page<Message>> {
+    const [newestFirst, total] = await this.messagesRepository.findAndCount({
+      where: conversationId ? { conversationId } : {},
       relations: { attachments: true },
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
+      ...pageBounds(pagination),
     });
+    return toPage(newestFirst.reverse(), total, pagination);
   }
 
   async findOne(id: string): Promise<Message> {
@@ -31,20 +33,22 @@ export class MessageService {
     return message;
   }
 
-  async searchInConversation(searchDto: SearchMessagesDto): Promise<Message[]> {
+  async searchInConversation(searchDto: SearchMessagesDto): Promise<Page<Message>> {
     const { keyword, conversationId } = searchDto;
-    return this.messagesRepository.find({
-      where: {
-        conversationId,
-        content: ILike(`%${keyword}%`),
-      },
+    const [items, total] = await this.messagesRepository.findAndCount({
+      where: { conversationId, content: ILike(`%${keyword}%`) },
       order: { createdAt: 'ASC' },
+      ...pageBounds(searchDto),
     });
+    return toPage(items, total, searchDto);
   }
 
-  // Recherche dans toutes les conversations de l'utilisateur (palette Ctrl+K)
-  async searchForUser(userId: string, keyword: string, limit = 20): Promise<Message[]> {
-    return this.messagesRepository.find({
+  async searchForUser(
+    userId: string,
+    keyword: string,
+    pagination: PaginationDto = {},
+  ): Promise<Page<Message>> {
+    const [items, total] = await this.messagesRepository.findAndCount({
       where: { content: ILike(`%${keyword}%`), conversation: { userId } },
       relations: { conversation: true },
       select: {
@@ -56,7 +60,8 @@ export class MessageService {
         conversation: { id: true, name: true },
       },
       order: { createdAt: 'DESC' },
-      take: limit,
+      ...pageBounds(pagination),
     });
+    return toPage(items, total, pagination);
   }
 }

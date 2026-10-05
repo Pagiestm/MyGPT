@@ -8,10 +8,11 @@ import { MessageModule } from './message/message.module';
 import { ChatModule } from './chat/chat.module';
 import { FolderModule } from './folder/folder.module';
 import { AttachmentModule } from './attachment/attachment.module';
+import { KnowledgeModule } from './knowledge/knowledge.module';
+import { ModelsModule } from './models/models.module';
 
 @Module({
   imports: [
-    // .env unique à la racine du monorepo (en Docker, les variables sont injectées par compose)
     ConfigModule.forRoot({ envFilePath: '../.env' }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -30,6 +31,8 @@ import { AttachmentModule } from './attachment/attachment.module';
     ChatModule,
     FolderModule,
     AttachmentModule,
+    KnowledgeModule,
+    ModelsModule,
   ],
   controllers: [],
   providers: [],

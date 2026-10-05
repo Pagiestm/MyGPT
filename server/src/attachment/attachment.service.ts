@@ -14,7 +14,6 @@ const NATIVE_TYPES = new Set([
   'application/pdf',
 ]);
 
-// Fichiers texte et code : souvent envoyés par le navigateur avec un type générique
 const TEXT_EXTENSIONS =
   /\.(txt|md|csv|json|xml|ya?ml|html?|css|scss|js|jsx|ts|tsx|vue|py|java|kt|c|h|cpp|cs|go|rs|rb|php|swift|sql|sh|ps1|env|ini|toml|log)$/i;
 
@@ -67,7 +66,6 @@ export class AttachmentService {
     });
   }
 
-  // Lisible par son propriétaire, ou par tous si sa conversation est partagée (lien valide)
   async findReadable(id: string, userId: string | undefined) {
     const attachment = await this.attachments
       .createQueryBuilder('attachment')

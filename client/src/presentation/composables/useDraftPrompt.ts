@@ -1,6 +1,5 @@
 import { useSessionStorage } from '@vueuse/core';
 
-// Question saisie sur la page d'accueil, conservée le temps de se connecter
 const draft = useSessionStorage('mygpt:draft', '');
 
 export function useDraftPrompt() {

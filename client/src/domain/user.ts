@@ -1,13 +1,28 @@
 import { z } from 'zod';
 
+export const USER_ROLES = ['user', 'admin'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+export interface AccountSummary {
+  id: string;
+  email: string;
+  pseudo: string;
+  role: UserRole;
+  created_at: string;
+}
+
 export interface User {
   pseudo: string;
   email: string;
+  role: UserRole;
   customInstructions?: string | null;
   preferredModel?: string | null;
 }
 
-// Mêmes règles que les DTO du serveur (class-validator)
+export function isAdmin(user: User | null): boolean {
+  return user?.role === 'admin';
+}
+
 export const PASSWORD_PATTERN =
   /^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).*$/;
 

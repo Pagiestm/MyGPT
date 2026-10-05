@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
+import { PaginationDto } from '../../common/pagination.dto';
 
-export class SearchConversationDto {
+export class SearchConversationDto extends PaginationDto {
   @ApiProperty({
     description: 'Mot-clé de recherche',
     example: 'NestJS',

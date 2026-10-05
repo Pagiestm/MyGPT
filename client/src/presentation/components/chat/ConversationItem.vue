@@ -56,8 +56,6 @@ const active = computed(() => route.params.id === props.conversation.id);
 const renaming = ref(false);
 const draft = ref('');
 
-// Le menu ne reprend pas le focus en se fermant : sinon le champ de renommage
-// perdrait le focus aussitôt ouvert et se refermerait (validation au blur)
 const menuContent = {
   align: 'start' as const,
   onCloseAutoFocus: (event: Event) => event.preventDefault(),

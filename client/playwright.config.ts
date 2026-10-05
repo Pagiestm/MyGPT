@@ -31,7 +31,7 @@ export default defineConfig({
   ],
   // Build de production servi par vite preview : pas de compilation à froid pendant les tests
   webServer: {
-    command: 'npx vite build && npx vite preview --port 4173 --strictPort',
+    command: 'VITE_FAKE_LLM=1 npx vite build && npx vite preview --port 4173 --strictPort',
     port: 4173,
     reuseExistingServer: !process.env.CI,
     timeout: 180000,

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID, IsNotEmpty } from 'class-validator';
+import { PaginationDto } from '../../common/pagination.dto';
 
-export class SearchMessagesDto {
+export class SearchMessagesDto extends PaginationDto {
   @ApiProperty({
     description: 'Mot-clé pour rechercher dans les messages',
     example: 'NestJS',

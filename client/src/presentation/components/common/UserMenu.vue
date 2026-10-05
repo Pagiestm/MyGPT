@@ -22,6 +22,7 @@ import { useRouter } from 'vue-router';
 import { useColorMode } from '@vueuse/core';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { useAuthStore } from '@/application/stores/auth.store';
+import { isAdmin } from '@/domain/user';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -35,6 +36,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     { label: 'Réglages', icon: 'i-lucide-settings', to: '/settings' },
     { label: 'Bibliothèque', icon: 'i-lucide-library', to: '/library' },
+    ...(isAdmin(auth.user)
+      ? [{ label: 'Administration', icon: 'i-lucide-shield', to: '/admin' }]
+      : []),
   ],
   [
     {

@@ -70,7 +70,6 @@ const emit = defineEmits<{
 const route = useRoute();
 const router = useRouter();
 
-// Ouvert d'office quand la conversation affichée est dans ce dossier
 const open = ref(props.conversations.some((c) => c.id === route.params.id));
 watch(
   () => route.params.id,

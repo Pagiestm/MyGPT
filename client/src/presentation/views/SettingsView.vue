@@ -23,6 +23,22 @@
         </UPageCard>
 
         <UPageCard
+          title="Modèles"
+          description="Tout tourne dans votre navigateur : aucune installation, aucun abonnement, aucune donnée envoyée."
+          variant="subtle"
+        >
+          <BrowserModels />
+        </UPageCard>
+
+        <UPageCard
+          title="Base de connaissances"
+          description="Vos documents sont découpés et consultés par l'assistant avant de répondre, qu'il tourne en ligne ou sur votre machine."
+          variant="subtle"
+        >
+          <KnowledgeManager />
+        </UPageCard>
+
+        <UPageCard
           title="Apparence"
           description="Choisissez le thème de l'interface."
           variant="subtle"
@@ -47,4 +63,6 @@ import UPageCard from '@nuxt/ui/components/PageCard.vue';
 import ProfileForm from '@/presentation/components/account/ProfileForm.vue';
 import PreferencesForm from '@/presentation/components/account/PreferencesForm.vue';
 import DeleteAccount from '@/presentation/components/account/DeleteAccount.vue';
+import KnowledgeManager from '@/presentation/components/knowledge/KnowledgeManager.vue';
+import BrowserModels from '@/presentation/components/models/BrowserModels.vue';
 </script>

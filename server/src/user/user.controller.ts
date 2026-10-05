@@ -1,23 +1,31 @@
 import {
-  Controller,
-  Post,
-  Body,
-  Patch,
-  UseGuards,
-  Request,
-  HttpCode,
-  Delete,
-  Inject,
   BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiCookieAuth } from '@nestjs/swagger';
 import { UpdatePseudoDto } from './dto/update-user.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
-import { AI_ADAPTER, type IAiAdapter } from '../infrastructure/adapters/ai-adapter';
+import { isBrowserModel } from '../chat/prompt';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRole } from './user-role.enum';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { Request as ExpressRequest } from 'express';
+import { PaginationDto } from '../common/pagination.dto';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -29,10 +37,7 @@ interface AuthenticatedRequest extends ExpressRequest {
 @ApiTags('Users')
 @Controller('users')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    @Inject(AI_ADAPTER) private readonly ai: IAiAdapter,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
@@ -67,10 +72,28 @@ export class UserController {
   @ApiOperation({ summary: "Consignes personnalisées et modèle d'IA par défaut" })
   @ApiResponse({ status: 200, description: 'Préférences enregistrées' })
   updatePreferences(@Request() req: AuthenticatedRequest, @Body() dto: UpdatePreferencesDto) {
-    if (dto.preferredModel && !this.ai.models.some((model) => model.id === dto.preferredModel)) {
+    if (dto.preferredModel && !isBrowserModel(dto.preferredModel)) {
       throw new BadRequestException("Ce modèle n'est pas disponible");
     }
     return this.userService.updatePreferences(req.user.id, dto);
+  }
+
+  @Get()
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.Admin)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Annuaire des comptes et de leurs rôles' })
+  listAll(@Query() pagination: PaginationDto) {
+    return this.userService.listAll(pagination);
+  }
+
+  @Patch(':id/role')
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.Admin)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: "Changer le rôle d'un compte" })
+  updateRole(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateRoleDto) {
+    return this.userService.updateRole(id, dto.role);
   }
 
   @Delete('profile')

@@ -6,6 +6,7 @@ import { NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { Session, SessionData } from 'express-session';
+import { UserRole } from '../user/user-role.enum';
 
 type MockService = Record<keyof ConversationService, jest.Mock>;
 
@@ -14,6 +15,7 @@ interface RequestWithUser extends ExpressRequest {
     id: string;
     email: string;
     pseudo: string;
+    role: UserRole;
   };
   session: Session & Partial<SessionData>;
 }
@@ -24,6 +26,7 @@ function createMockRequest(userId: string = 'user-123'): RequestWithUser {
       id: userId,
       email: 'test@example.com',
       pseudo: 'testuser',
+      role: UserRole.User,
     },
     session: {} as Session & Partial<SessionData>,
   } as RequestWithUser;
@@ -95,7 +98,7 @@ describe('ConversationController', () => {
 
         const result = await controller.create(req, dto);
 
-        expect(dto.userId).toBe(userId); // userId est remplacé par celui de la requête
+        expect(dto.userId).toBe(userId);
         expect(service.create).toHaveBeenCalledWith(dto);
         expect(result).toBe(expected);
       });
@@ -112,7 +115,7 @@ describe('ConversationController', () => {
 
         service.findAll.mockResolvedValue(conversations);
 
-        const result = await controller.findAll(req);
+        const result = await controller.findAll(req, {});
 
         expect(service.findAll).toHaveBeenCalledWith(userId, { archived: false });
         expect(result).toEqual(conversations);
@@ -128,7 +131,7 @@ describe('ConversationController', () => {
 
         service.search.mockResolvedValue(conversations);
 
-        const result = await controller.search(req, keyword);
+        const result = await controller.search(req, keyword, {});
 
         expect(service.search).toHaveBeenCalledWith({ keyword, userId });
         expect(result).toEqual(conversations);
@@ -385,9 +388,9 @@ describe('ConversationController', () => {
 
         service.findSavedByUser.mockResolvedValue(savedConversations);
 
-        const result = await controller.getSavedConversations(req);
+        const result = await controller.getSavedConversations(req, {});
 
-        expect(service.findSavedByUser).toHaveBeenCalledWith(userId);
+        expect(service.findSavedByUser).toHaveBeenCalledWith(userId, {});
         expect(result).toEqual(savedConversations);
       });
     });

@@ -49,10 +49,10 @@ const term = ref('');
 const debounced = refDebounced(term, 200);
 const searching = computed(() => debounced.value.trim().length >= 2);
 
-const { data: conversations, isLoading: loadingConversations } = useConversationList(() =>
+const { items: conversations, isLoading: loadingConversations } = useConversationList(() =>
   searching.value ? debounced.value : '',
 );
-const { data: messages, isLoading: loadingMessages } = useGlobalMessageSearch(debounced);
+const { items: messages, isLoading: loadingMessages } = useGlobalMessageSearch(debounced);
 const isLoading = computed(() => loadingConversations.value || loadingMessages.value);
 
 defineShortcuts({

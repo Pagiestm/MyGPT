@@ -5,6 +5,8 @@
     @dragleave.self="dragging = false"
     @drop.prevent="onDrop"
   >
+    <ModelDownloadBanner />
+
     <UChatPrompt
       v-model="text"
       :placeholder="listening ? 'Je vous écoute…' : placeholder"
@@ -117,6 +119,7 @@ import { getErrorMessage } from '@/infrastructure/http/client';
 import { attachmentRepository } from '@/infrastructure/repositories/attachment.repository';
 import FileChip from '@/presentation/components/common/FileChip.vue';
 import ModelPicker from './ModelPicker.vue';
+import ModelDownloadBanner from './ModelDownloadBanner.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -229,7 +232,6 @@ function submit() {
   if (listening.value) speech.stop();
 }
 
-// Dictée vocale (Web Speech API) : le texte reconnu s'ajoute à la saisie
 const speech = useSpeechRecognition({ lang: 'fr-FR', continuous: true, interimResults: false });
 const listening = speech.isListening;
 let base = '';

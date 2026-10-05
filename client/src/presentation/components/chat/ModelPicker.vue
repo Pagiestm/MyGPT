@@ -1,6 +1,6 @@
 <template>
   <USelectMenu
-    v-if="data"
+    v-if="supported && items.length"
     v-model="selected"
     :items="items"
     value-key="value"
@@ -9,21 +9,18 @@
     variant="ghost"
     size="sm"
     :content="{ align: 'start', side: 'top' }"
-    :ui="{ content: 'min-w-64' }"
+    :ui="{ content: 'min-w-80' }"
     aria-label="Modèle d'IA"
     class="w-auto"
-  >
-    <template #item-label="{ item }">
-      <span class="flex flex-col">
-        <span class="font-medium text-highlighted">{{ item.label }}</span>
-        <span class="text-xs text-muted">{{ item.description }}</span>
-      </span>
-    </template>
-  </USelectMenu>
+  />
+  <UTooltip v-else text="Essayez Chrome, Edge, Safari 26+ ou Firefox récent">
+    <span class="px-2 text-xs text-muted">Navigateur sans WebGPU</span>
+  </UTooltip>
 </template>
 
 <script setup lang="ts">
 import USelectMenu from '@nuxt/ui/components/SelectMenu.vue';
+import UTooltip from '@nuxt/ui/components/Tooltip.vue';
 import { computed } from 'vue';
 import { useAuthStore } from '@/application/stores/auth.store';
 import { useModels } from '@/application/composables/useModels';
@@ -31,7 +28,7 @@ import { useModels } from '@/application/composables/useModels';
 const model = defineModel<string | undefined>();
 
 const auth = useAuthStore();
-const { data } = useModels();
+const { data, supported } = useModels();
 
 const items = computed(() =>
   (data.value?.models ?? []).map((item) => ({
@@ -41,7 +38,6 @@ const items = computed(() =>
   })),
 );
 
-// Sans choix explicite : le modèle préféré de l'utilisateur, sinon celui du serveur
 const selected = computed({
   get: () => model.value ?? auth.user?.preferredModel ?? data.value?.defaultModel,
   set: (value) => (model.value = value),

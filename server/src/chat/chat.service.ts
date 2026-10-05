@@ -1,36 +1,32 @@
-import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { Message } from '../message/entities/message.entity';
 import { Conversation } from '../conversation/entities/conversation.entity';
 import { User } from '../user/entities/user.entity';
 import { AttachmentService } from '../attachment/attachment.service';
-import { AI_ADAPTER, type AiTurn, type IAiAdapter } from '../infrastructure/adapters/ai-adapter';
+import { KnowledgeService } from '../knowledge/knowledge.service';
+import type { AiAttachment, AiTurn } from './prompt';
 import type { EditMessageDto, SendMessageDto } from './dto/chat.dto';
 
-export type ChatEvent =
-  | { type: 'user'; message: Message }
-  | { type: 'delta'; text: string }
-  | { type: 'done'; message: Message }
-  | { type: 'title'; conversationId: string; name: string }
-  | { type: 'error'; message: string };
-
-const AI_ERROR = "Désolé, je n'ai pas pu générer de réponse. Vous pouvez réessayer.";
+export interface ExchangeContext {
+  question: Message;
+  history: AiTurn[];
+  attachments: AiAttachment[];
+  systemInstruction?: string;
+}
 
 @Injectable()
 export class ChatService {
-  private readonly logger = new Logger(ChatService.name);
-
   constructor(
     @InjectRepository(Message) private readonly messages: Repository<Message>,
     @InjectRepository(Conversation) private readonly conversations: Repository<Conversation>,
     @InjectRepository(User) private readonly users: Repository<User>,
     private readonly attachments: AttachmentService,
-    @Inject(AI_ADAPTER) private readonly ai: IAiAdapter,
+    private readonly knowledge: KnowledgeService,
   ) {}
 
-  // Les vérifications ont lieu avant le premier événement : une erreur devient une réponse HTTP classique
-  async send(userId: string, dto: SendMessageDto, signal?: AbortSignal) {
+  async prepareSend(userId: string, dto: SendMessageDto) {
     const conversation = await this.ownedConversation(dto.conversationId, userId);
     const question = await this.messages.save(
       this.messages.create({
@@ -48,11 +44,10 @@ export class ChatService {
         throw error;
       }
     }
-
-    return this.exchange(userId, conversation, question, dto.model, signal, true);
+    return { conversation, question };
   }
 
-  async regenerate(userId: string, conversationId: string, model?: string, signal?: AbortSignal) {
+  async prepareRegenerate(userId: string, conversationId: string) {
     const conversation = await this.ownedConversation(conversationId, userId);
     const thread = await this.messages.find({
       where: { conversationId },
@@ -64,10 +59,10 @@ export class ChatService {
     if (!question || question.isFromAi) throw new BadRequestException('Rien à régénérer');
     if (last?.isFromAi) await this.messages.remove([last]);
 
-    return this.exchange(userId, conversation, question, model, signal, false);
+    return { conversation, question };
   }
 
-  async edit(userId: string, messageId: string, dto: EditMessageDto, signal?: AbortSignal) {
+  async prepareEdit(userId: string, messageId: string, dto: EditMessageDto) {
     const question = await this.messages.findOne({
       where: { id: messageId },
       relations: { conversation: true },
@@ -80,7 +75,6 @@ export class ChatService {
 
     const { conversation, ...rest } = question;
     const edited = await this.messages.save({ ...rest, content: dto.content } as Message);
-    // Dates à la microseconde en base, à la milliseconde en JS : la question doit être exclue explicitement
     const following = await this.messages.find({
       where: {
         conversationId: question.conversationId,
@@ -91,87 +85,57 @@ export class ChatService {
     if (following.length) await this.messages.remove(following);
 
     const owned = await this.ownedConversation(conversation.id, userId);
-    return this.exchange(userId, owned, edited, dto.model, signal, true);
+    return { conversation: owned, question: edited };
   }
 
-  private async *exchange(
+  async contextFor(
     userId: string,
     conversation: Conversation,
     asked: Message,
-    requestedModel: string | undefined,
-    signal: AbortSignal | undefined,
-    announceQuestion: boolean,
-  ): AsyncGenerator<ChatEvent> {
+    questionEmbedding?: number[],
+  ): Promise<ExchangeContext> {
     const question =
       (await this.messages.findOne({
         where: { id: asked.id },
         relations: { attachments: true },
       })) ?? asked;
-    if (announceQuestion) yield { type: 'user', message: question };
 
-    const user = await this.users.findOne({ where: { id: userId } });
-    const model = this.ai.resolveModel(requestedModel ?? user?.preferredModel);
-    const [history, files] = await Promise.all([
+    const [user, history, attachments] = await Promise.all([
+      this.users.findOne({ where: { id: userId } }),
       this.historyBefore(question),
       this.attachments.findForAi(question.id),
     ]);
 
-    let text = '';
-    let failed = false;
-    try {
-      const stream = this.ai.streamResponse({
-        prompt: question.content,
-        history,
-        attachments: files,
-        model,
-        systemInstruction: this.instructionsFor(user, conversation),
-        signal,
-      });
-      for await (const chunk of stream) {
-        text += chunk;
-        yield { type: 'delta', text: chunk };
-      }
-    } catch (error) {
-      if (!signal?.aborted) {
-        this.logger.error(`Réponse de l'IA impossible : ${(error as Error).message}`);
-        failed = true;
-      }
-    }
-
-    // Arrêtée par l'utilisateur ou interrompue : on garde ce qui a déjà été écrit
-    if (text) {
-      const reply = await this.messages.save(
-        this.messages.create({
-          conversationId: conversation.id,
-          content: text,
-          isFromAi: true,
-          model,
-        }),
-      );
-      await this.conversations.update(conversation.id, { updatedAt: new Date() });
-      yield { type: 'done', message: reply };
-    }
-    if (failed) {
-      yield { type: 'error', message: AI_ERROR };
-      return;
-    }
-
-    if (text && !signal?.aborted && !conversation.titleLocked) {
-      const answers = await this.messages.count({
-        where: { conversationId: conversation.id, isFromAi: true },
-      });
-      if (answers === 1) {
-        const name = await this.ai.generateTitle(question.content, text);
-        if (name) {
-          // Titre définitif : une régénération ne le remplace pas
-          await this.conversations.update(conversation.id, { name, titleLocked: true });
-          yield { type: 'title', conversationId: conversation.id, name };
-        }
-      }
-    }
+    return {
+      question,
+      history,
+      attachments,
+      systemInstruction: await this.instructionsFor(user, conversation, questionEmbedding),
+    };
   }
 
-  private async ownedConversation(id: string, userId: string) {
+  async saveReply(conversationId: string, text: string, model: string) {
+    const reply = await this.messages.save(
+      this.messages.create({ conversationId, content: text, isFromAi: true, model }),
+    );
+    await this.conversations.update(conversationId, { updatedAt: new Date() });
+    return reply;
+  }
+
+  async needsTitle(conversation: Conversation) {
+    if (conversation.titleLocked) return false;
+    const answers = await this.messages.count({
+      where: { conversationId: conversation.id, isFromAi: true },
+    });
+    return answers === 1;
+  }
+
+  async applyTitle(conversationId: string, name: string) {
+    await this.conversations.update(conversationId, { name, titleLocked: true });
+    return name;
+  }
+
+  async ownedConversation(id: string, userId: string) {
     const conversation = await this.conversations.findOne({
       where: { id, userId },
       relations: { folder: true },
@@ -190,11 +154,20 @@ export class ChatService {
       .map((message) => ({ role: message.isFromAi ? 'model' : 'user', text: message.content }));
   }
 
-  private instructionsFor(user: User | null, conversation: Conversation) {
+  private async instructionsFor(
+    user: User | null,
+    conversation: Conversation,
+    questionEmbedding?: number[],
+  ) {
+    const excerpts =
+      user && questionEmbedding
+        ? await this.knowledge.contextFor(user.id, conversation, questionEmbedding)
+        : null;
     const parts = [
       user?.customInstructions && `Consignes de l'utilisateur :\n${user.customInstructions}`,
       conversation.folder?.instructions &&
         `Consignes du dossier « ${conversation.folder.name} » :\n${conversation.folder.instructions}`,
+      excerpts,
     ].filter(Boolean);
     return parts.length ? parts.join('\n\n') : undefined;
   }

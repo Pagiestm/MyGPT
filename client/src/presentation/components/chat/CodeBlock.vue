@@ -14,7 +14,6 @@
         @click="copyCode"
       />
     </figcaption>
-    <!-- eslint-disable-next-line vue/no-v-html -- HTML généré par Shiki à partir du code échappé -->
     <div v-if="html" class="code-block overflow-x-auto text-sm" v-html="html" />
     <pre
       v-else

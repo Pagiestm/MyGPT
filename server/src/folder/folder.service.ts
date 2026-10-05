@@ -17,7 +17,6 @@ export class FolderService {
     return this.folders.find({ where: { userId }, order: { name: 'ASC' } });
   }
 
-  // Un dossier d'un autre utilisateur répond 404 : on ne révèle pas son existence
   async findOwned(id: string, userId: string) {
     const folder = await this.folders.findOne({ where: { id, userId } });
     if (!folder) throw new NotFoundException('Dossier introuvable');

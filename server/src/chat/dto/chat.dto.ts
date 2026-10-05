@@ -1,23 +1,40 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
 } from 'class-validator';
+import { EMBEDDING_DIMENSIONS } from '../prompt';
 
 export class RegenerateDto {
   @ApiProperty({
     description: "Modèle d'IA à utiliser",
-    example: 'gemini-3.8-flash',
+    example: 'webgpu:Llama-3.2-3B-Instruct-q4f16_1-MLC',
     required: false,
   })
   @IsString()
   @IsOptional()
   model?: string;
+
+  @ApiProperty({
+    description:
+      'Vecteur de la question, calculé par le navigateur, pour la recherche documentaire. ' +
+      'Absent si la base de connaissances est vide.',
+    type: [Number],
+    required: false,
+  })
+  @IsArray()
+  @ArrayMinSize(EMBEDDING_DIMENSIONS)
+  @ArrayMaxSize(EMBEDDING_DIMENSIONS)
+  @IsNumber({}, { each: true })
+  @IsOptional()
+  questionEmbedding?: number[];
 }
 
 export class EditMessageDto extends RegenerateDto {

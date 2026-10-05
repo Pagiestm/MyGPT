@@ -41,8 +41,6 @@ import CommandPalette from '@/presentation/components/chat/CommandPalette.vue';
 import { ref } from 'vue';
 import { useEventListener } from '@vueuse/core';
 
-// Sur mobile, le menu se referme à chaque lien suivi, même vers la page déjà affichée
-// (Nuxt UI ne le ferme que sur un changement de route)
 const menuOpen = ref(false);
 
 useEventListener(

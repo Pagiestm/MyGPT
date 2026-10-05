@@ -48,6 +48,8 @@
             />
           </template>
         </ConversationRows>
+
+        <LoadMore :has-more="hasMore" :loading="loadingMore" @more="loadMore()" />
       </UContainer>
 
       <ConfirmModal
@@ -80,10 +82,11 @@ import {
 } from '@/application/composables/useConversations';
 import ConfirmModal from '@/presentation/components/common/ConfirmModal.vue';
 import ConversationRows from '@/presentation/components/common/ConversationRows.vue';
+import LoadMore from '@/presentation/components/common/LoadMore.vue';
 
 const toast = useToast();
 
-const { data: archived, isPending } = useArchivedConversations();
+const { items: archived, isPending, hasMore, loadMore, loadingMore } = useArchivedConversations();
 const { mutateAsync: updateConversation } = useUpdateConversation();
 const { mutateAsync: deleteConversation, isLoading: isDeleting } = useDeleteConversation();
 const toDelete = ref<Conversation | null>(null);

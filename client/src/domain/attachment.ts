@@ -8,7 +8,6 @@ export interface Attachment {
 export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 export const MAX_ATTACHMENTS = 5;
 
-// Doit rester aligné avec les types acceptés par le serveur (AttachmentService)
 export const ACCEPTED_FILES =
   'image/png,image/jpeg,image/webp,image/gif,application/pdf,text/*,.md,.csv,.json,.xml,.yml,.yaml,.js,.jsx,.ts,.tsx,.vue,.py,.java,.kt,.c,.h,.cpp,.cs,.go,.rs,.rb,.php,.swift,.sql,.sh,.html,.css,.scss';
 

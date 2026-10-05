@@ -27,16 +27,18 @@ import { FolderService } from '../folder/folder.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ShareConversationDto } from './dto/share-conversation.dto';
-import { SearchConversationDto } from './dto/search-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { SaveSharedConversationDto } from './dto/saveShared-conversation.dto';
+import { UserRole } from '../user/user-role.enum';
+import { PaginationDto, type Page } from '../common/pagination.dto';
 
 interface RequestWithUser extends ExpressRequest {
   user: {
     id: string;
     email: string;
     pseudo: string;
+    role: UserRole;
   };
   session: Session & Partial<SessionData>;
 }
@@ -88,9 +90,13 @@ export class ConversationController {
   })
   async findAll(
     @Request() req: RequestWithUser,
+    @Query() pagination: PaginationDto,
     @Query('archived') archived?: string,
-  ): Promise<Conversation[]> {
-    return this.conversationService.findAll(req.user.id, { archived: archived === 'true' });
+  ): Promise<Page<Conversation>> {
+    return this.conversationService.findAll(req.user.id, {
+      archived: archived === 'true',
+      ...pagination,
+    });
   }
 
   @Get('search')
@@ -111,12 +117,9 @@ export class ConversationController {
   async search(
     @Request() req: RequestWithUser,
     @Query('keyword') keyword: string,
-  ): Promise<Conversation[]> {
-    const searchDto: SearchConversationDto = {
-      keyword,
-      userId: req.user.id,
-    };
-    return this.conversationService.search(searchDto);
+    @Query() pagination: PaginationDto,
+  ): Promise<Page<Conversation>> {
+    return this.conversationService.search({ keyword, userId: req.user.id, ...pagination });
   }
 
   @Get('saved')
@@ -131,8 +134,11 @@ export class ConversationController {
     type: [Conversation],
   })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  async getSavedConversations(@Request() req: RequestWithUser): Promise<Conversation[]> {
-    return this.conversationService.findSavedByUser(req.user.id);
+  async getSavedConversations(
+    @Request() req: RequestWithUser,
+    @Query() pagination: PaginationDto,
+  ): Promise<Page<Conversation>> {
+    return this.conversationService.findSavedByUser(req.user.id, pagination);
   }
 
   @Post('save-shared')
@@ -169,7 +175,6 @@ export class ConversationController {
     @Param('shareLink') shareLink: string,
   ): Promise<Omit<Conversation, 'user'> & { user: { pseudo: string } }> {
     const { user, ...conversation } = await this.conversationService.findByShareLink(shareLink);
-    // Route publique : seul le pseudo de l'auteur est exposé (ni email ni hash du mot de passe)
     return { ...conversation, user: { pseudo: user?.pseudo } };
   }
 
@@ -188,7 +193,6 @@ export class ConversationController {
   async findOne(@Request() req: RequestWithUser, @Param('id') id: string): Promise<Conversation> {
     const conversation = await this.conversationService.findOne(id);
 
-    // Vérifier que l'utilisateur a accès à cette conversation
     if (conversation.userId !== req.user.id && !conversation.isPublic) {
       throw new BadRequestException('Access denied to this conversation');
     }
@@ -215,7 +219,6 @@ export class ConversationController {
   ): Promise<Conversation> {
     const conversation = await this.conversationService.findOne(id);
 
-    // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
       throw new BadRequestException('You can only update your own conversations');
     }
@@ -239,7 +242,6 @@ export class ConversationController {
   async remove(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
-    // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
       throw new BadRequestException('You can only delete your own conversations');
     }
@@ -266,7 +268,6 @@ export class ConversationController {
   ): Promise<{ shareLink: string }> {
     const conversation = await this.conversationService.findOne(id);
 
-    // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
       throw new BadRequestException('You can only share your own conversations');
     }
@@ -286,7 +287,6 @@ export class ConversationController {
   async revokeShare(@Request() req: RequestWithUser, @Param('id') id: string): Promise<void> {
     const conversation = await this.conversationService.findOne(id);
 
-    // Vérifier que l'utilisateur est le propriétaire de la conversation
     if (conversation.userId !== req.user.id) {
       throw new BadRequestException('You can only manage sharing of your own conversations');
     }

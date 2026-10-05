@@ -56,7 +56,6 @@ describe('LocalStrategy', () => {
       mockAuthService.validateUser = jest.fn().mockResolvedValue({
         id: '1',
         email: 'test@example.com',
-        // pseudo manquant
       });
 
       await expect(strategy.validate('test@example.com', 'password123')).rejects.toThrow(

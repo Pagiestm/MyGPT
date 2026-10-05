@@ -26,14 +26,21 @@
           description="Écrivez votre premier message ci-dessous."
           class="py-24"
         />
-        <ChatThread
-          v-else
-          :messages="messages ?? []"
-          :phase="chat.phase.value"
-          :highlighted="highlighted"
-          @edit="(messageId, content) => chat.edit(messageId, content, model)"
-          @regenerate="chat.regenerate(model)"
-        />
+        <template v-else>
+          <LoadMore
+            :has-more="hasOlder"
+            :loading="loadingOlder"
+            label="Charger les messages précédents"
+            @more="loadOlder()"
+          />
+          <ChatThread
+            :messages="messages ?? []"
+            :phase="chat.phase.value"
+            :highlighted="highlighted"
+            @edit="(messageId, content) => chat.edit(messageId, content, model)"
+            @regenerate="chat.regenerate(model)"
+          />
+        </template>
       </UContainer>
     </template>
 
@@ -66,6 +73,7 @@ import { useChatStream } from '@/application/composables/useChatStream';
 import { takePendingPrompt } from '@/application/composables/usePendingPrompt';
 import ChatComposer from '@/presentation/components/chat/ChatComposer.vue';
 import ChatThread from '@/presentation/components/chat/ChatThread.vue';
+import LoadMore from '@/presentation/components/common/LoadMore.vue';
 import ConversationTitle from '@/presentation/components/chat/ConversationTitle.vue';
 import MessageSearch from '@/presentation/components/chat/MessageSearch.vue';
 import ShareModal from '@/presentation/components/sharing/ShareModal.vue';
@@ -81,7 +89,13 @@ const model = ref<string>();
 const highlighted = ref<string | null>(null);
 
 const { data: conversation, error } = useConversation(() => props.id);
-const { data: messages, isPending } = useMessageList(() => props.id);
+const {
+  items: messages,
+  isPending,
+  hasMore: hasOlder,
+  loadMore: loadOlder,
+  loadingMore: loadingOlder,
+} = useMessageList(() => props.id);
 const { mutateAsync: updateConversation } = useUpdateConversation();
 
 const chat = useChatStream(() => props.id, {
@@ -117,7 +131,6 @@ async function rename(name: string) {
   }
 }
 
-// Arrivée depuis la palette de recherche : /chat/:id#message-<id>
 watch(
   [() => route.hash, messages],
   ([hash, list]) => {

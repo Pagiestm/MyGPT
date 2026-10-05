@@ -7,7 +7,12 @@ export const queryKeys = {
     ['messages', conversationId, 'search', keyword] as const,
   globalSearch: (keyword: string) => ['search', keyword] as const,
   folders: ['folders'] as const,
+  accounts: ['accounts'] as const,
   models: ['models'] as const,
+  allModels: ['models', 'all'] as const,
+  downloadedModels: ['models', 'downloaded'] as const,
+  knowledgeRoot: ['knowledge'] as const,
+  knowledge: (folderId?: string) => ['knowledge', folderId ?? 'all'] as const,
   saved: ['saved'] as const,
   shared: (link: string) => ['shared', link] as const,
 };

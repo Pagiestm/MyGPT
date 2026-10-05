@@ -33,6 +33,11 @@
               <span class="line-clamp-2 text-toned">{{ message.content }}</span>
             </button>
           </li>
+          <li v-if="moreResults" class="p-1">
+            <UButton color="neutral" variant="ghost" size="xs" block @click="loadMoreResults()">
+              Charger plus ({{ results.length }} / {{ resultsTotal }})
+            </UButton>
+          </li>
         </ul>
       </div>
     </template>
@@ -54,7 +59,13 @@ const open = ref(false);
 const keyword = ref('');
 const debounced = refDebounced(keyword, 300);
 
-const { data: results, isLoading } = useMessageSearch(() => props.conversationId, debounced);
+const {
+  items: results,
+  isLoading,
+  total: resultsTotal,
+  hasMore: moreResults,
+  loadMore: loadMoreResults,
+} = useMessageSearch(() => props.conversationId, debounced);
 
 function select(messageId: string) {
   open.value = false;

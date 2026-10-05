@@ -9,6 +9,7 @@ import { SearchConversationDto } from './dto/search-conversation.dto';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from '../message/entities/message.entity';
 import { SaveSharedConversationDto } from './dto/saveShared-conversation.dto';
+import { pageBounds, toPage, type Page, type PaginationDto } from '../common/pagination.dto';
 
 @Injectable()
 export class ConversationService {
@@ -24,11 +25,16 @@ export class ConversationService {
     return this.conversationsRepository.save(conversation);
   }
 
-  async findAll(userId: string, { archived = false } = {}): Promise<Conversation[]> {
-    return this.conversationsRepository.find({
+  async findAll(
+    userId: string,
+    { archived = false, ...pagination }: { archived?: boolean } & PaginationDto = {},
+  ): Promise<Page<Conversation>> {
+    const [items, total] = await this.conversationsRepository.findAndCount({
       where: { userId, archived },
       order: { pinned: 'DESC', updatedAt: 'DESC' },
+      ...pageBounds(pagination),
     });
+    return toPage(items, total, pagination);
   }
 
   async findOne(id: string): Promise<Conversation> {
@@ -65,7 +71,6 @@ export class ConversationService {
     const conversation = await this.findOne(id);
 
     Object.assign(conversation, updateConversationDto);
-    // Un titre choisi par l'utilisateur n'est plus remplacé par le titre automatique
     if (updateConversationDto.name !== undefined) conversation.titleLocked = true;
 
     return this.conversationsRepository.save(conversation);
@@ -76,7 +81,7 @@ export class ConversationService {
     await this.conversationsRepository.remove(conversation);
   }
 
-  async search(searchDto: SearchConversationDto): Promise<Conversation[]> {
+  async search(searchDto: SearchConversationDto): Promise<Page<Conversation>> {
     const { keyword, userId } = searchDto;
 
     const whereConditions = [];
@@ -91,11 +96,13 @@ export class ConversationService {
     if (userId) messageCondition.userId = userId;
     whereConditions.push(messageCondition);
 
-    return this.conversationsRepository.find({
+    const [items, total] = await this.conversationsRepository.findAndCount({
       where: whereConditions,
       relations: { messages: true },
       order: { updatedAt: 'DESC' },
+      ...pageBounds(searchDto),
     });
+    return toPage(items, total, searchDto);
   }
 
   async shareConversation(
@@ -162,14 +169,16 @@ export class ConversationService {
     return this.findOne(savedConversation.id);
   }
 
-  async findSavedByUser(userId: string): Promise<Conversation[]> {
-    return this.conversationsRepository.find({
-      where: {
-        userId: userId,
-        sharedFrom: Not(IsNull()),
-      },
+  async findSavedByUser(
+    userId: string,
+    pagination: PaginationDto = {},
+  ): Promise<Page<Conversation>> {
+    const [items, total] = await this.conversationsRepository.findAndCount({
+      where: { userId, sharedFrom: Not(IsNull()) },
       order: { createdAt: 'DESC' },
       relations: { messages: true },
+      ...pageBounds(pagination),
     });
+    return toPage(items, total, pagination);
   }
 }

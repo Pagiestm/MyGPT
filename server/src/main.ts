@@ -10,7 +10,6 @@ import * as crypto from 'crypto';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Applique les @Exclude des entités (mot de passe, contenu binaire des fichiers) à toutes les réponses
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.useGlobalPipes(

@@ -59,7 +59,6 @@ export type ConversationPatch = Partial<
   Pick<Conversation, 'name' | 'pinned' | 'archived' | 'folderId'>
 >;
 
-// Barre latérale : épinglées, puis dossiers, puis le reste par ancienneté
 export function organize(conversations: Conversation[], folderIds: string[]) {
   const known = new Set(folderIds);
   const pinned = conversations.filter((conversation) => conversation.pinned);

@@ -6,6 +6,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { UserRole } from './user-role.enum';
 
 jest.mock('bcrypt');
 
@@ -18,6 +19,7 @@ describe('UserService', () => {
     email: 'test@example.com',
     pseudo: 'testuser',
     password: 'hashedPassword',
+    role: UserRole.User,
     created_at: new Date(),
     conversations: [],
   };
@@ -30,6 +32,8 @@ describe('UserService', () => {
 
   beforeEach(async () => {
     mockRepository = {
+      countBy: jest.fn(),
+      findAndCount: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
@@ -96,7 +100,6 @@ describe('UserService', () => {
 
   describe('register', () => {
     it('should successfully create a new user', async () => {
-      // Mock des vérifications d'email et pseudo uniques
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       (mockRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
 
@@ -175,7 +178,6 @@ describe('UserService', () => {
       expect(result).toEqual({
         message: 'Aucune modification nécessaire, même pseudo.',
       });
-      // Vérifie qu'on a appelé findOne une seule fois (pour trouver l'utilisateur)
       expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
     });
   });
@@ -253,6 +255,49 @@ describe('UserService', () => {
       const result = await service.updatePreferences(user.id, { customInstructions: '   ' });
 
       expect(result.customInstructions).toBeNull();
+    });
+  });
+  describe('updateRole', () => {
+    it('promotes an account', async () => {
+      const target = { ...mockUser, role: UserRole.User };
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(target);
+      (mockRepository.save as jest.Mock).mockImplementation((u: User) => Promise.resolve(u));
+
+      const result = await service.updateRole('1', UserRole.Admin);
+
+      expect(result.role).toBe(UserRole.Admin);
+    });
+
+    it('refuses to demote the last administrator', async () => {
+      (mockRepository.findOne as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        role: UserRole.Admin,
+      });
+      (mockRepository.countBy as jest.Mock).mockResolvedValue(1);
+
+      await expect(service.updateRole('1', UserRole.User)).rejects.toThrow(
+        /dernier administrateur/,
+      );
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('allows demoting one administrator among several', async () => {
+      (mockRepository.findOne as jest.Mock).mockResolvedValue({
+        ...mockUser,
+        role: UserRole.Admin,
+      });
+      (mockRepository.countBy as jest.Mock).mockResolvedValue(2);
+      (mockRepository.save as jest.Mock).mockImplementation((u: User) => Promise.resolve(u));
+
+      expect((await service.updateRole('1', UserRole.User)).role).toBe(UserRole.User);
+    });
+
+    it('reports an unknown account', async () => {
+      (mockRepository.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.updateRole('absent', UserRole.Admin)).rejects.toThrow(
+        'Utilisateur introuvable',
+      );
     });
   });
 });

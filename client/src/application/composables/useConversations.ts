@@ -2,18 +2,23 @@ import { toValue, type MaybeRefOrGetter } from 'vue';
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada';
 import { nameFromPrompt, shareExpiration, type ConversationPatch } from '@/domain/conversation';
 import { conversationRepository } from '@/infrastructure/repositories/conversation.repository';
+import { usePaginatedList } from './usePaginatedList';
 import { queryKeys } from '../queryKeys';
 
 export function useConversationList(keyword: MaybeRefOrGetter<string>) {
-  return useQuery({
+  return usePaginatedList({
     key: () => [...queryKeys.conversations, 'list', toValue(keyword).trim()],
-    query: () => conversationRepository.list(toValue(keyword).trim() || undefined),
+    query: (offset, limit) =>
+      conversationRepository.list(toValue(keyword).trim() || undefined, offset, limit),
     placeholderData: (previous) => previous,
   });
 }
 
 export function useArchivedConversations() {
-  return useQuery({ key: queryKeys.archived, query: conversationRepository.listArchived });
+  return usePaginatedList({
+    key: queryKeys.archived,
+    query: (offset, limit) => conversationRepository.listArchived(offset, limit),
+  });
 }
 
 export function useConversation(id: MaybeRefOrGetter<string>) {
@@ -97,5 +102,8 @@ export function useSaveSharedConversation() {
 }
 
 export function useSavedConversations() {
-  return useQuery({ key: queryKeys.saved, query: conversationRepository.listSaved });
+  return usePaginatedList({
+    key: queryKeys.saved,
+    query: (offset, limit) => conversationRepository.listSaved(offset, limit),
+  });
 }

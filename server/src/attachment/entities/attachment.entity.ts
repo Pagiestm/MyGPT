@@ -29,7 +29,6 @@ export class Attachment {
   @Column('int')
   size: number;
 
-  // Contenu binaire : chargé seulement quand on en a besoin, jamais sérialisé
   @ApiHideProperty()
   @Exclude()
   @Column({ type: 'bytea', select: false })

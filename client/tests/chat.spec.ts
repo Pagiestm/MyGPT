@@ -94,8 +94,6 @@ test.describe('Messages', () => {
     await fakeApi(page, withThread({ aiReply: 'Voici la nouvelle réponse' }));
     await page.goto('/chat/c1');
 
-    // Saisie touche par touche : sous Firefox, fill() émet une fin de composition IME
-    // pendant laquelle Nuxt UI ignore volontairement la touche Entrée
     await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Une autre question');
     await page.keyboard.press('Enter');
 
@@ -256,12 +254,14 @@ test.describe('Réponses en flux', () => {
     await page.goto('/chat/c1');
 
     await page.getByRole('button', { name: "Modèle d'IA" }).click();
-    await page.getByRole('option', { name: /Pro/ }).click();
+    await page.getByRole('option', { name: /Llama 3\.2 3B/ }).click();
     await page.getByPlaceholder('Écrivez votre message...').pressSequentially('Question');
     await page.keyboard.press('Enter');
 
     await expect(page.getByText('Réponse de')).toBeVisible();
-    expect(api.chatRequests.at(-1)).toMatchObject({ model: 'pro' });
+    expect(api.chatRequests.at(-1)).toMatchObject({
+      model: 'webgpu:Llama-3.2-3B-Instruct-q4f16_1-MLC',
+    });
   });
 
   test('joint un fichier au message', async ({ page }) => {

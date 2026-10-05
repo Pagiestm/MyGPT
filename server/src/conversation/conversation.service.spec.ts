@@ -9,6 +9,7 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { ShareConversationDto } from './dto/share-conversation.dto';
 import { SearchConversationDto } from './dto/search-conversation.dto';
+import { UserRole } from '../user/user-role.enum';
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
@@ -16,6 +17,7 @@ const createMockRepository = <T>(): MockRepository<T> => ({
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
+  findAndCount: jest.fn(),
   findOne: jest.fn(),
   remove: jest.fn(),
 });
@@ -116,23 +118,28 @@ describe('ConversationService', () => {
           }),
         ];
 
-        conversationsRepository.find.mockResolvedValue(expectedConversations);
+        conversationsRepository.findAndCount.mockResolvedValue([
+          expectedConversations,
+          expectedConversations.length,
+        ]);
 
         const result = await service.findAll(userId);
 
-        expect(conversationsRepository.find).toHaveBeenCalledWith({
-          where: { userId, archived: false },
-          order: { pinned: 'DESC', updatedAt: 'DESC' },
-        });
-        expect(result).toEqual(expectedConversations);
+        expect(conversationsRepository.findAndCount).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { userId, archived: false },
+            order: { pinned: 'DESC', updatedAt: 'DESC' },
+          }),
+        );
+        expect(result.items).toEqual(expectedConversations);
       });
 
       it('should list archived conversations separately', async () => {
-        conversationsRepository.find.mockResolvedValue([]);
+        conversationsRepository.findAndCount.mockResolvedValue([[], [].length]);
 
         await service.findAll('user-123', { archived: true });
 
-        expect(conversationsRepository.find).toHaveBeenCalledWith(
+        expect(conversationsRepository.findAndCount).toHaveBeenCalledWith(
           expect.objectContaining({ where: { userId: 'user-123', archived: true } }),
         );
       });
@@ -150,12 +157,15 @@ describe('ConversationService', () => {
           }),
         ];
 
-        conversationsRepository.find.mockResolvedValue(expectedResults);
+        conversationsRepository.findAndCount.mockResolvedValue([
+          expectedResults,
+          expectedResults.length,
+        ]);
 
         const result = await service.search(searchDto);
 
-        expect(conversationsRepository.find).toHaveBeenCalled();
-        expect(result).toEqual(expectedResults);
+        expect(conversationsRepository.findAndCount).toHaveBeenCalled();
+        expect(result.items).toEqual(expectedResults);
       });
     });
 
@@ -171,6 +181,7 @@ describe('ConversationService', () => {
             email: 'test@example.com',
             pseudo: 'tester',
             password: '',
+            role: UserRole.User,
             conversations: [],
             created_at: undefined,
           },
@@ -436,7 +447,6 @@ describe('ConversationService', () => {
           sharedFrom: sharedConversation.id,
         });
 
-        // Conversation finale avec messages copiés
         const expectedSavedConversation = createMockConversation({
           ...newConversation,
           messages: [
@@ -558,27 +568,32 @@ describe('ConversationService', () => {
           }),
         ];
 
-        conversationsRepository.find.mockResolvedValue(savedConversations);
+        conversationsRepository.findAndCount.mockResolvedValue([
+          savedConversations,
+          savedConversations.length,
+        ]);
 
         const result = await service.findSavedByUser(userId);
 
-        expect(conversationsRepository.find).toHaveBeenCalledWith({
-          where: {
-            userId: userId,
-            sharedFrom: Not(IsNull()),
-          },
-          order: { createdAt: 'DESC' },
-          relations: { messages: true },
-        });
-        expect(result).toEqual(savedConversations);
+        expect(conversationsRepository.findAndCount).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: {
+              userId: userId,
+              sharedFrom: Not(IsNull()),
+            },
+            order: { createdAt: 'DESC' },
+            relations: { messages: true },
+          }),
+        );
+        expect(result.items).toEqual(savedConversations);
       });
 
       it('should return empty array if user has no saved conversations', async () => {
-        conversationsRepository.find.mockResolvedValue([]);
+        conversationsRepository.findAndCount.mockResolvedValue([[], [].length]);
 
         const result = await service.findSavedByUser('user-no-saves');
 
-        expect(result).toEqual([]);
+        expect(result.items).toEqual([]);
       });
     });
   });
