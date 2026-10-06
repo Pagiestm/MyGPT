@@ -1,5 +1,5 @@
 <template>
-  <div v-if="supported && items.length" class="flex items-center">
+  <div v-if="supported && items.length" class="flex min-w-0 items-center">
     <USelectMenu
       v-model="selected"
       :items="items"
@@ -9,9 +9,9 @@
       variant="ghost"
       size="sm"
       :content="{ align: 'start', side: 'top' }"
-      :ui="{ content: 'min-w-96' }"
+      :ui="{ content: 'min-w-0 sm:min-w-96', value: 'truncate' }"
       aria-label="Modèle d'IA"
-      class="w-auto"
+      class="w-auto min-w-0"
     >
       <template #item="{ item }">
         <span class="flex min-w-0 flex-col gap-0.5 py-0.5">
@@ -36,7 +36,7 @@
         :aria-label="`Capacités de ${current.label}`"
       />
       <template #content>
-        <div class="w-80 p-3">
+        <div class="w-80 max-w-[calc(100vw-2rem)] p-3">
           <p class="mb-2 text-sm font-medium text-highlighted">{{ current.label }}</p>
           <ModelProfile :model="current" />
         </div>

@@ -9,8 +9,8 @@
     <USkeleton v-if="isLoading" class="h-32 w-full" />
 
     <ul v-else class="divide-y divide-default rounded-(--radius-panel) border border-default">
-      <li v-for="item in models" :key="item.id" class="flex flex-col gap-3 px-3 py-3">
-        <div class="flex items-center gap-3">
+      <li v-for="item in models" :key="item.id" class="flex min-w-0 flex-col gap-3 px-3 py-3">
+        <div class="flex min-w-0 items-center gap-3">
           <span class="flex min-w-0 flex-col">
             <span class="truncate text-sm font-medium text-highlighted">
               {{ item.label }}
@@ -18,14 +18,14 @@
                 masqué
               </UBadge>
             </span>
-            <span class="truncate text-xs text-muted">
+            <span class="text-xs text-pretty text-muted">
               {{ item.description }} · {{ formatVram(item.vramMb) }} · révision
               {{ item.revision }}
             </span>
-            <span class="truncate font-mono text-xs text-dimmed">{{ item.id }}</span>
+            <span class="font-mono text-xs break-all text-dimmed">{{ item.id }}</span>
           </span>
 
-          <div class="ml-auto flex shrink-0 items-center gap-1">
+          <div class="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1">
             <UTooltip text="Voir et modifier les capacités">
               <UButton
                 :icon="opened === item.id ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -71,57 +71,70 @@
         <template v-if="opened === item.id">
           <ModelProfile :model="item" />
 
-          <UForm
-            :state="profile"
-            class="flex flex-wrap items-end gap-3"
-            @submit="saveProfile(item)"
-          >
-            <UFormField label="Taille" class="w-40">
-              <UInput v-model="profile.parameters" placeholder="3 milliards" />
+          <UForm :state="profile" class="flex flex-col gap-3" @submit="saveProfile(item)">
+            <UFormField label="Taille">
+              <UInput v-model="profile.parameters" placeholder="3 milliards" class="w-full" />
             </UFormField>
-            <UFormField label="Points forts" hint="séparés par une virgule" class="min-w-64 flex-1">
-              <UInput v-model="profile.strengths" placeholder="Rapide, Suit bien les consignes" />
+            <UFormField label="Points forts">
+              <UInput
+                v-model="profile.strengths"
+                placeholder="Rapide, Suit bien les consignes"
+                class="w-full"
+              />
             </UFormField>
-            <UFormField label="Limites" hint="séparées par une virgule" class="min-w-64 flex-1">
-              <UInput v-model="profile.limitations" placeholder="Raisonnement limité" />
+            <UFormField label="Limites">
+              <UInput
+                v-model="profile.limitations"
+                placeholder="Raisonnement limité, Surtout en anglais"
+                class="w-full"
+              />
             </UFormField>
-            <UButton type="submit" :loading="isSaving" color="neutral">Enregistrer</UButton>
+            <UButton type="submit" :loading="isSaving" color="neutral" class="self-start">
+              Enregistrer
+            </UButton>
           </UForm>
         </template>
       </li>
     </ul>
 
-    <UForm :state="draft" class="flex flex-wrap items-end gap-3" @submit="add">
-      <UFormField label="Modèle MLC" class="min-w-72 flex-1">
+    <UForm :state="draft" class="flex flex-col gap-3" @submit="add">
+      <p class="text-sm font-medium text-highlighted">Ajouter un modèle</p>
+
+      <UFormField label="Modèle MLC">
         <USelectMenu
           v-model="draft.id"
           :items="candidates"
           value-key="value"
           :loading="!candidates.length"
-          placeholder="Choisir dans le catalogue de WebLLM"
+          placeholder="Choisir un modèle"
           class="w-full"
         />
       </UFormField>
-      <UFormField label="Nom affiché" class="w-48">
-        <UInput v-model="draft.label" placeholder="Llama 3.2 3B" />
+      <UFormField label="Nom affiché">
+        <UInput v-model="draft.label" placeholder="Llama 3.2 3B" class="w-full" />
       </UFormField>
-      <UFormField label="Description" class="w-56">
-        <UInput v-model="draft.description" placeholder="Bon compromis" />
+      <UFormField label="Description">
+        <UInput v-model="draft.description" placeholder="Bon compromis" class="w-full" />
       </UFormField>
-      <UFormField label="Taille" class="w-36">
-        <UInput v-model="draft.parameters" placeholder="3 milliards" />
+      <UFormField label="Taille">
+        <UInput v-model="draft.parameters" placeholder="3 milliards" class="w-full" />
       </UFormField>
-      <UFormField label="Points forts" hint="séparés par une virgule" class="min-w-64 flex-1">
-        <UInput v-model="draft.strengths" placeholder="Rapide, Suit bien les consignes" />
+      <UFormField label="Points forts">
+        <UInput
+          v-model="draft.strengths"
+          placeholder="Rapide, Suit bien les consignes"
+          class="w-full"
+        />
       </UFormField>
-      <UFormField label="Limites" hint="séparées par une virgule" class="min-w-64 flex-1">
-        <UInput v-model="draft.limitations" placeholder="Raisonnement limité" />
+      <UFormField label="Limites">
+        <UInput
+          v-model="draft.limitations"
+          placeholder="Raisonnement limité, Surtout en anglais"
+          class="w-full"
+        />
       </UFormField>
-      <UButton type="submit" :loading="isSaving" :disabled="!draft.id || !draft.label">
-        Ajouter
-      </UButton>
 
-      <p v-if="facts" class="w-full text-xs text-muted">
+      <p v-if="facts" class="text-xs text-muted">
         D'après WebLLM : {{ formatVram(facts.vramMb) }}
         <template v-if="facts.contextWindow">
           · {{ formatContextWindow(facts.contextWindow) }}
@@ -131,6 +144,15 @@
           · {{ facts.requiredFeatures.map(featureLabel).join(' · ') }}
         </template>
       </p>
+
+      <UButton
+        type="submit"
+        :loading="isSaving"
+        :disabled="!draft.id || !draft.label"
+        class="self-start"
+      >
+        Ajouter
+      </UButton>
     </UForm>
   </div>
 </template>

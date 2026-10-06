@@ -25,8 +25,9 @@
         :model-value="state.preferredModel ?? undefined"
         :items="modelItems"
         :loading="!models"
-        placeholder="Modèle par défaut du serveur"
-        class="w-64"
+        placeholder="Choisi par le serveur"
+        class="w-full sm:w-64"
+        :ui="{ value: 'truncate' }"
         @update:model-value="(value) => (state.preferredModel = value ?? null)"
       />
     </UFormField>

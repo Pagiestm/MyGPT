@@ -1,12 +1,13 @@
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center gap-3">
-      <UFormField label="Portée" class="w-64">
+      <UFormField label="Portée" class="w-full sm:w-64">
         <USelect
           v-model="folderId"
           :items="folderItems"
           value-key="value"
           placeholder="Tout le compte"
+          class="w-full"
         />
       </UFormField>
 
@@ -41,11 +42,11 @@
       <li
         v-for="document in documents"
         :key="document.id"
-        class="flex items-center gap-3 px-3 py-2"
+        class="flex min-w-0 items-center gap-3 px-3 py-2"
       >
         <UIcon name="i-lucide-file-text" class="size-4 shrink-0 text-dimmed" />
         <span class="flex min-w-0 flex-col">
-          <span class="truncate text-sm font-medium text-highlighted">{{ document.name }}</span>
+          <span class="text-sm font-medium break-all text-highlighted">{{ document.name }}</span>
           <span class="text-xs text-muted">
             {{ formatSize(document.size) }} · {{ document.chunkCount }} extraits ·
             {{ folderName(document.folderId) }}

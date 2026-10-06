@@ -8,17 +8,21 @@
     <USkeleton v-if="isLoading" class="h-24 w-full" />
 
     <ul v-else class="divide-y divide-default rounded-(--radius-panel) border border-default">
-      <li v-for="account in accounts" :key="account.id" class="flex items-center gap-3 px-3 py-2">
+      <li
+        v-for="account in accounts"
+        :key="account.id"
+        class="flex min-w-0 flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3"
+      >
         <span class="flex min-w-0 flex-col">
           <span class="truncate text-sm font-medium text-highlighted">{{ account.pseudo }}</span>
-          <span class="truncate text-xs text-muted">{{ account.email }}</span>
+          <span class="text-xs break-all text-muted sm:truncate">{{ account.email }}</span>
         </span>
         <USelect
           :model-value="account.role"
           :items="roleItems"
           value-key="value"
           size="sm"
-          class="ml-auto w-36 shrink-0"
+          class="w-full shrink-0 sm:ml-auto sm:w-36"
           :aria-label="`Rôle de ${account.pseudo}`"
           @update:model-value="(role) => change(account, role as UserRole)"
         />

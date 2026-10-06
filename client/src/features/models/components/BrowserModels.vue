@@ -20,8 +20,12 @@
       <USkeleton v-if="isLoading" class="h-32 w-full" />
 
       <ul v-else class="divide-y divide-default rounded-(--radius-panel) border border-default">
-        <li v-for="item in webgpuModels" :key="item.id" class="flex flex-col gap-2 px-3 py-3">
-          <div class="flex items-center gap-3">
+        <li
+          v-for="item in webgpuModels"
+          :key="item.id"
+          class="flex min-w-0 flex-col gap-2 px-3 py-3"
+        >
+          <div class="flex min-w-0 items-center gap-3">
             <span class="flex min-w-0 flex-col">
               <span class="truncate text-sm font-medium text-highlighted">{{ item.label }}</span>
               <span class="text-xs text-muted">
@@ -51,7 +55,7 @@
           </div>
 
           <ModelProfile v-if="opened === item.id" :model="item" />
-          <p v-else class="truncate text-xs text-muted">
+          <p v-else class="text-xs text-balance text-muted">
             {{ item.description }} · {{ formatVram(item.vramMb) }}
             <template v-if="item.strengths.length"> · {{ item.strengths.join(' · ') }}</template>
           </p>
