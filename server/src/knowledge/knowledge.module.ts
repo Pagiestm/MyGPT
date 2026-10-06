@@ -5,6 +5,7 @@ import {
   ListDocuments,
   RemoveDocument,
   RetrieveContext,
+  SearchDocuments,
   SplitDocumentIntoChunks,
   StoreDocument,
 } from './application/knowledge.use-cases';
@@ -23,6 +24,7 @@ import { KnowledgeController } from './infrastructure/http/knowledge.controller'
     ListDocuments,
     RemoveDocument,
     RetrieveContext,
+    SearchDocuments,
   ],
   exports: [RetrieveContext],
 })

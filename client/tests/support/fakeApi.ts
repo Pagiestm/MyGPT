@@ -61,6 +61,7 @@ export interface FakeState {
   chatRequests: Record<string, unknown>[];
   documents: unknown[];
   googleSignIn: boolean;
+  knowledgeMatches: { content: string; name: string; score: number }[];
   failures: Partial<Record<'login' | 'register', { status: number; message: string }>>;
 }
 
@@ -174,6 +175,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     chatRequests: [],
     documents: [],
     googleSignIn: false,
+    knowledgeMatches: [],
     failures: {},
     ...initial,
   };
@@ -280,6 +282,10 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
   }
 
   if (path === '/knowledge' && method === 'GET') return json(200, page(state.documents, url));
+
+  if (path === '/knowledge/search' && method === 'POST') {
+    return json(200, state.knowledgeMatches);
+  }
 
   if (path === '/folders' && method === 'GET') return json(200, state.folders);
   if (path === '/folders' && method === 'POST') {

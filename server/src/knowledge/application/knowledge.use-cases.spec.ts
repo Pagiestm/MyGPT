@@ -7,6 +7,7 @@ import {
   ListDocuments,
   RemoveDocument,
   RetrieveContext,
+  SearchDocuments,
   StoreDocument,
 } from './knowledge.use-cases';
 
@@ -47,6 +48,7 @@ describe('Knowledge use cases', () => {
   let list: ListDocuments;
   let remove: RemoveDocument;
   let retrieve: RetrieveContext;
+  let search: SearchDocuments;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -61,6 +63,7 @@ describe('Knowledge use cases', () => {
         ListDocuments,
         RemoveDocument,
         RetrieveContext,
+        SearchDocuments,
         { provide: KNOWLEDGE_REPOSITORY, useValue: knowledge },
       ],
     }).compile();
@@ -69,6 +72,7 @@ describe('Knowledge use cases', () => {
     list = module.get(ListDocuments);
     remove = module.get(RemoveDocument);
     retrieve = module.get(RetrieveContext);
+    search = module.get(SearchDocuments);
   });
 
   describe('StoreDocument', () => {
@@ -130,6 +134,38 @@ describe('Knowledge use cases', () => {
       knowledge.search.mockRejectedValue(new Error('index corrompu'));
 
       expect(await retrieve.execute('u1', 'f1', vector())).toBeNull();
+    });
+  });
+
+  describe('SearchDocuments', () => {
+    it('rend les extraits tels quels, sans seuil de pertinence', async () => {
+      knowledge.search.mockResolvedValue([
+        { content: 'Proche', name: 'notes.md', score: 0.9 },
+        { content: 'Lointain', name: 'notes.md', score: 0.05 },
+      ]);
+
+      await expect(search.execute('u1', vector())).resolves.toHaveLength(2);
+    });
+
+    it('limite la recherche au dossier demandé', async () => {
+      knowledge.search.mockResolvedValue([]);
+
+      await search.execute('u1', vector(), { folderId: 'f1', limit: 3 });
+
+      expect(knowledge.search).toHaveBeenCalledWith('u1', 'f1', vector(), 3);
+    });
+
+    it('cherche dans tout le compte quand aucun dossier n’est donné', async () => {
+      knowledge.search.mockResolvedValue([]);
+
+      await search.execute('u1', vector());
+
+      expect(knowledge.search).toHaveBeenCalledWith('u1', null, vector(), 10);
+    });
+
+    it('refuse un vecteur de mauvaise taille au lieu d’interroger la base', async () => {
+      await expect(search.execute('u1', [0.1])).rejects.toThrow(/768 dimensions/);
+      expect(knowledge.search).not.toHaveBeenCalled();
     });
   });
 

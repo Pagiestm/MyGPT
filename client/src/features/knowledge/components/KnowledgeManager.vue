@@ -33,6 +33,31 @@
       s'appliquent à toutes vos conversations.
     </p>
 
+    <UInput
+      v-model="keyword"
+      icon="i-lucide-search"
+      placeholder="Chercher un passage dans vos documents"
+      class="w-full"
+      :loading="searching"
+      aria-label="Chercher dans la base de connaissances"
+    />
+
+    <ul
+      v-if="matches?.length"
+      class="divide-y divide-default rounded-(--radius-panel) border border-default"
+    >
+      <li v-for="(match, index) in matches" :key="index" class="flex flex-col gap-1 px-3 py-2">
+        <span class="flex items-baseline justify-between gap-2">
+          <span class="truncate text-xs font-medium text-highlighted">{{ match.name }}</span>
+          <span class="shrink-0 text-xs text-dimmed">{{ Math.round(match.score * 100) }} %</span>
+        </span>
+        <p class="text-sm text-pretty text-muted">{{ match.content }}</p>
+      </li>
+    </ul>
+    <p v-else-if="searched && !searching" class="text-sm text-muted">
+      Aucun passage ne correspond à cette recherche.
+    </p>
+
     <USkeleton v-if="isLoading" class="h-20 w-full" />
     <p v-else-if="!documents?.length" class="text-sm text-muted">
       Aucun document indexé pour cette portée.
@@ -72,14 +97,20 @@ import BaseLoadMore from '@/shared/ui/BaseLoadMore.vue';
 import UButton from '@nuxt/ui/components/Button.vue';
 import UFormField from '@nuxt/ui/components/FormField.vue';
 import UIcon from '@nuxt/ui/components/Icon.vue';
+import UInput from '@nuxt/ui/components/Input.vue';
 import USelect from '@nuxt/ui/components/Select.vue';
 import USkeleton from '@nuxt/ui/components/Skeleton.vue';
 import { useToast } from '@nuxt/ui/composables';
 import { computed, ref, useTemplateRef } from 'vue';
-import { ACCEPTED_DOCUMENTS, MAX_DOCUMENT_SIZE, formatSize } from '../types';
+import { ACCEPTED_DOCUMENTS, MAX_DOCUMENT_SIZE, MIN_SEARCH_LENGTH, formatSize } from '../types';
 import { getErrorMessage } from '@/shared/lib/http';
 import { useFolders } from '@/features/folders';
-import { useDeleteDocument, useDocuments, useUploadDocument } from '../composables/useKnowledge';
+import {
+  useDeleteDocument,
+  useDocuments,
+  useKnowledgeSearch,
+  useUploadDocument,
+} from '../composables/useKnowledge';
 
 const toast = useToast();
 const picker = useTemplateRef<HTMLInputElement>('picker');
@@ -89,6 +120,10 @@ const { data: folders } = useFolders();
 const { items: documents, isLoading, hasMore, loadMore, loadingMore } = useDocuments(folderId);
 const { mutateAsync: upload, isLoading: isUploading } = useUploadDocument();
 const { mutateAsync: deleteDocument } = useDeleteDocument();
+
+const keyword = ref('');
+const { data: matches, isLoading: searching } = useKnowledgeSearch(keyword, folderId);
+const searched = computed(() => keyword.value.trim().length >= MIN_SEARCH_LENGTH);
 
 const folderItems = computed(() => [
   { value: undefined, label: 'Tout le compte' },

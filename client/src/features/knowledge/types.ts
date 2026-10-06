@@ -19,3 +19,5 @@ export function formatSize(bytes: number) {
     ? `${Math.max(1, Math.round(bytes / 1024))} Ko`
     : `${(bytes / 1024 ** 2).toFixed(1)} Mo`;
 }
+
+export const MIN_SEARCH_LENGTH = 3;

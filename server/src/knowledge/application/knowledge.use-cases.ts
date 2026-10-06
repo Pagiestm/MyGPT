@@ -1,15 +1,21 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Page, PaginationDto } from '../../common/pagination.dto';
 import {
+  EMBEDDING_DIMENSIONS,
   KnowledgeDocument,
   type Chunk,
   type SourceFile,
   type SplitDocument,
 } from '../domain/knowledge-document';
-import { KNOWLEDGE_REPOSITORY, type KnowledgeRepository } from '../domain/knowledge.repository';
+import {
+  KNOWLEDGE_REPOSITORY,
+  type KnowledgeRepository,
+  type RetrievedChunk,
+} from '../domain/knowledge.repository';
 
 const TOP_K = 5;
 const MIN_SCORE = 0.3;
+const SEARCH_RESULTS = 10;
 
 @Injectable()
 export class SplitDocumentIntoChunks {
@@ -66,6 +72,29 @@ export class RemoveDocument {
     if (!document) throw new NotFoundException('Document introuvable');
     await this.knowledge.remove(document.id);
     return { id: document.id };
+  }
+}
+
+@Injectable()
+export class SearchDocuments {
+  constructor(@Inject(KNOWLEDGE_REPOSITORY) private readonly knowledge: KnowledgeRepository) {}
+
+  async execute(
+    userId: string,
+    embedding: number[],
+    options: { folderId?: string | null; limit?: number } = {},
+  ): Promise<RetrievedChunk[]> {
+    if (!KnowledgeDocument.isUsableEmbedding(embedding)) {
+      throw new BadRequestException(
+        `Vecteur attendu en ${EMBEDDING_DIMENSIONS} dimensions, reçu ${embedding.length}`,
+      );
+    }
+    return this.knowledge.search(
+      userId,
+      options.folderId ?? null,
+      embedding,
+      options.limit ?? SEARCH_RESULTS,
+    );
   }
 }
 

@@ -45,6 +45,23 @@ export class ChunkDto {
   embedding: number[];
 }
 
+export class SearchKnowledgeDto extends UploadDocumentDto {
+  @ApiProperty({ description: 'Vecteur de la requête, calculé par le navigateur', type: [Number] })
+  @IsArray()
+  @ArrayMinSize(EMBEDDING_DIMENSIONS)
+  @ArrayMaxSize(EMBEDDING_DIMENSIONS)
+  @IsNumber({}, { each: true })
+  embedding: number[];
+
+  @ApiProperty({ required: false, description: 'Nombre maximum d’extraits renvoyés' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  @IsOptional()
+  limit?: number;
+}
+
 export class StoreDocumentDto extends UploadDocumentDto {
   @ApiProperty({ description: 'Nom du fichier', example: 'procedure.md' })
   @IsString()

@@ -11,7 +11,25 @@ interface SplitDocument {
   chunks: string[];
 }
 
+export interface KnowledgeMatch {
+  content: string;
+  name: string;
+  score: number;
+}
+
 export const knowledgeApi = {
+  async search(keyword: string, folderId?: string): Promise<KnowledgeMatch[]> {
+    const [embedding] = await webllm.embed([keyword]);
+    if (!embedding) return [];
+
+    return http
+      .post<KnowledgeMatch[]>('/knowledge/search', {
+        embedding,
+        ...(folderId ? { folderId } : {}),
+      })
+      .then((r) => r.data);
+  },
+
   list: (folderId?: string, offset = 0, limit = PAGE_SIZE) =>
     http
       .get<Page<KnowledgeDocument>>('/knowledge', {

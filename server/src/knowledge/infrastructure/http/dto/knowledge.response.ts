@@ -46,3 +46,18 @@ export class KnowledgeDocumentResponse {
     };
   }
 }
+
+export class KnowledgeMatchResponse {
+  @ApiProperty({ description: 'Extrait du document' })
+  content: string;
+
+  @ApiProperty({ description: 'Document dont provient l’extrait' })
+  name: string;
+
+  @ApiProperty({ description: 'Proximité avec la requête, de 0 à 1', example: 0.82 })
+  score: number;
+
+  static from(match: { content: string; name: string; score: number | string }) {
+    return { content: match.content, name: match.name, score: Number(match.score) };
+  }
+}

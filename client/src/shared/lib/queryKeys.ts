@@ -1,5 +1,7 @@
 export const queryKeys = {
   authProviders: ['auth', 'providers'] as const,
+  knowledgeSearch: (keyword: string, folderId?: string) =>
+    ['knowledge', 'search', folderId ?? 'tout', keyword] as const,
   conversations: ['conversations'] as const,
   archived: ['conversations', 'archived'] as const,
   conversation: (id: string) => ['conversation', id] as const,

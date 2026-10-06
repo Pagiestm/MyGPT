@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -14,7 +15,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiCookieAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
 import type { AuthenticatedRequest } from '../../../common/authenticated-request';
 import type { Page } from '../../../common/pagination.dto';
@@ -22,11 +30,12 @@ import { MAX_DOCUMENT_SIZE } from '../../domain/knowledge-document';
 import {
   ListDocuments,
   RemoveDocument,
+  SearchDocuments,
   SplitDocumentIntoChunks,
   StoreDocument,
 } from '../../application/knowledge.use-cases';
-import { ListDocumentsDto, StoreDocumentDto } from './dto/knowledge.dto';
-import { KnowledgeDocumentResponse } from './dto/knowledge.response';
+import { ListDocumentsDto, SearchKnowledgeDto, StoreDocumentDto } from './dto/knowledge.dto';
+import { KnowledgeDocumentResponse, KnowledgeMatchResponse } from './dto/knowledge.response';
 
 @ApiTags('knowledge')
 @ApiCookieAuth()
@@ -38,6 +47,7 @@ export class KnowledgeController {
     private readonly splitDocument: SplitDocumentIntoChunks,
     private readonly storeDocument: StoreDocument,
     private readonly removeDocument: RemoveDocument,
+    private readonly searchDocuments: SearchDocuments,
   ) {}
 
   @Get()
@@ -74,6 +84,21 @@ export class KnowledgeController {
     @Body() dto: StoreDocumentDto,
   ): Promise<KnowledgeDocumentResponse> {
     return KnowledgeDocumentResponse.from(await this.storeDocument.execute(req.user.id, dto));
+  }
+
+  @Post('search')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Chercher un extrait dans ses documents' })
+  @ApiResponse({ status: 200, type: [KnowledgeMatchResponse] })
+  async search(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: SearchKnowledgeDto,
+  ): Promise<KnowledgeMatchResponse[]> {
+    const matches = await this.searchDocuments.execute(req.user.id, dto.embedding, {
+      folderId: dto.folderId,
+      limit: dto.limit,
+    });
+    return matches.map((match) => KnowledgeMatchResponse.from(match));
   }
 
   @Delete(':id')
