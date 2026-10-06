@@ -34,6 +34,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const isProduction = process.env.NODE_ENV === 'production';
 
+  app.enableCors({
+    origin: (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-CSRF-Token'],
+  });
+
   app.use(
     helmet({
       contentSecurityPolicy: false,
@@ -50,7 +57,6 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
-      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
@@ -97,13 +103,6 @@ async function bootstrap() {
     .addCookieAuth(SESSION_COOKIE)
     .build();
   SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
-
-  app.enableCors({
-    origin: (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-CSRF-Token'],
-  });
 
   await app.listen(process.env.PORT ?? 3000);
 }
