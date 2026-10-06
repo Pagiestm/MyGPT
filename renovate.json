@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    "group:allNonMajor",
+    "group:monorepos",
+    ":maintainLockFilesWeekly",
+    ":automergeMinor",
+    ":prConcurrentLimitNone",
+    ":prHourlyLimitNone"
+  ],
+  "timezone": "Europe/Paris",
+  "minimumReleaseAge": "3 days",
+  "platformAutomerge": false,
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null
+  },
+  "packageRules": [
+    {
+      "description": "Avant la 1.0, une mineure peut casser comme une majeure. Relecture avant fusion.",
+      "matchCurrentVersion": "<1.0.0",
+      "matchUpdateTypes": ["minor"],
+      "groupName": "paquets 0.x",
+      "automerge": false
+    },
+    {
+      "description": "Node.js en LTS uniquement (majeures paires), images Docker et CI ensemble.",
+      "matchPackageNames": ["node"],
+      "allowedVersions": "/^[0-9]*[02468]([.-].*)?$/",
+      "groupName": "Node.js"
+    },
+    {
+      "description": "pgvector publie ses images sous la forme pgNN, que Renovate ne sait pas lire autrement.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["pgvector/pgvector"],
+      "versioning": "regex:^pg(?<major>\\d+)$"
+    },
+    {
+      "description": "Une majeure de PostgreSQL impose de migrer les données du volume : montée faite à la main.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["pgvector/pgvector"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "pgAdmin est un outil de développement suivi en latest : rien à épingler.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["dpage/pgadmin4"],
+      "enabled": false
+    },
+    {
+      "description": "Une montée de web-llm change la version des runtimes wasm et fait retélécharger les modèles chez tous les utilisateurs.",
+      "matchPackageNames": ["@mlc-ai/web-llm"],
+      "groupName": "moteur WebGPU",
+      "automerge": false
+    }
+  ]
+}
