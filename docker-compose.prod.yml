@@ -1,0 +1,52 @@
+name: mygpt-prod
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME est requis}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD est requis}
+      POSTGRES_DB: ${DB_DATABASE:?DB_DATABASE est requis}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile.prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME est requis}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD est requis}
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE est requis}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET est requis (32 caractères minimum)}
+      CLIENT_URL: ${CLIENT_URL:?CLIENT_URL est requis, par exemple https://mygpt.example.fr}
+    expose:
+      - '3000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL est requis, par exemple https://api.mygpt.example.fr}
+    restart: unless-stopped
+    ports:
+      - '${HTTP_PORT:-8080}:80'
+    depends_on:
+      - server
+
+volumes:
+  db-data:

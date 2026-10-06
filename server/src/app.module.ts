@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CsrfController } from './common/csrf.controller';
+import { HealthController } from './common/health.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { throttlers } from './app.throttlers';
@@ -32,7 +33,7 @@ import { ModelsModule } from './models/models.module';
     KnowledgeModule,
     ModelsModule,
   ],
-  controllers: [CsrfController],
+  controllers: [CsrfController, HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottleGuard }],
 })
 export class AppModule {}
