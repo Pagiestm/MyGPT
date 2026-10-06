@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
 - **Modèle exécuté dans le navigateur** (WebGPU) : rien à installer, aucune donnée envoyée pour générer
 - **Base de connaissances (RAG)** : documents indexés dans pgvector, vectorisés eux aussi dans le navigateur
 - Réponses au fil de l'eau, Stop, régénération, questions modifiables, titre automatique
-- Dossiers, épinglage, archives, recherche globale (Ctrl/⌘ + K), partage par lien
+- Dossiers, épinglage, archives, recherche globale (Ctrl/⌘ + K), partage par lien, export Markdown
 - Pièces jointes, dictée vocale, lecture à voix haute, Markdown et code colorés, thème clair/sombre
 
 ## Stack
@@ -66,6 +66,15 @@ Variables obligatoires, le démarrage échoue sans elles : `DB_USERNAME`, `DB_PA
 `VITE_API_URL` est figée au build : les variables Vite sont inlinées dans le bundle. Changer d'URL d'API impose de reconstruire l'image client.
 
 `GET /health` vérifie le serveur et sa base, et sert de `HEALTHCHECK` aux deux images. Les migrations s'appliquent au démarrage.
+
+Caddy termine le TLS et obtient les certificats Let's Encrypt tout seul : renseignez `APP_DOMAIN`, `API_DOMAIN` et `ACME_EMAIL`. Lui seul est exposé, sur 80 et 443.
+
+Un service de sauvegarde dépose un `pg_dump` dans le volume `db-backups`, toutes les 24 heures par défaut (`BACKUP_INTERVAL`), conservé 7 jours (`BACKUP_KEEP_DAYS`). Pour restaurer :
+
+```bash
+docker compose -f docker-compose.prod.yml exec db-backup \
+  pg_restore -h db -U "$DB_USERNAME" -d "$DB_DATABASE" --clean /backups/mygpt-AAAAMMJJ-HHMMSS.dump
+```
 
 ## Comment fonctionnent les modèles
 

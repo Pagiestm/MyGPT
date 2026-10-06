@@ -16,6 +16,31 @@ services:
       timeout: 5s
       retries: 10
 
+  db-backup:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:?DB_PASSWORD est requis}
+    volumes:
+      - db-backups:/backups
+    entrypoint: ['sh', '-c']
+    command:
+      - |
+        while true; do
+          nom="/backups/mygpt-$$(date +%Y%m%d-%H%M%S).dump"
+          if pg_dump -h db -U "${DB_USERNAME}" -d "${DB_DATABASE}" -Fc -f "$$nom"; then
+            echo "sauvegarde $$nom ($$(du -h "$$nom" | cut -f1))"
+            find /backups -name 'mygpt-*.dump' -mtime +${BACKUP_KEEP_DAYS:-7} -delete
+          else
+            echo "echec de la sauvegarde" >&2
+            rm -f "$$nom"
+          fi
+          sleep ${BACKUP_INTERVAL:-86400}
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
   server:
     build:
       context: .
@@ -46,10 +71,32 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:?VITE_API_URL est requis, par exemple https://api.mygpt.example.fr}
     restart: unless-stopped
-    ports:
-      - '${HTTP_PORT:-8080}:80'
+    expose:
+      - '80'
     depends_on:
+      - server
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN est requis, par exemple mygpt.example.fr}
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN est requis, par exemple api.mygpt.example.fr}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL est requis pour les certificats Let's Encrypt}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+      - '${HTTPS_PORT:-443}:443/udp'
+    depends_on:
+      - client
       - server
 
 volumes:
   db-data:
+  db-backups:
+  caddy-data:
+  caddy-config:
