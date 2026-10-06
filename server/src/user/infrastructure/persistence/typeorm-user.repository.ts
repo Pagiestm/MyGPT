@@ -21,6 +21,11 @@ export class TypeormUserRepository implements UserRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    const row = await this.users.findOne({ where: { googleId } });
+    return row ? toDomain(row) : null;
+  }
+
   async findByPseudo(pseudo: string): Promise<User | null> {
     const row = await this.users.findOne({ where: { pseudo } });
     return row ? toDomain(row) : null;
@@ -53,7 +58,8 @@ function toDomain(row: UserOrm): User {
     id: row.id,
     email: row.email,
     pseudo: row.pseudo,
-    passwordHash: row.password,
+    passwordHash: row.password ?? null,
+    googleId: row.googleId ?? null,
     role: row.role,
     customInstructions: row.customInstructions ?? null,
     preferredModel: row.preferredModel ?? null,
@@ -67,6 +73,7 @@ function toOrm(user: User): Partial<UserOrm> {
     email: user.email,
     pseudo: user.pseudo,
     password: user.passwordHash,
+    googleId: user.googleId,
     role: user.role,
     customInstructions: user.customInstructions,
     preferredModel: user.preferredModel,

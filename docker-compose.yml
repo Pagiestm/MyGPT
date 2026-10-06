@@ -49,6 +49,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-root}
       DB_DATABASE: ${DB_DATABASE:-my-gpt}
       CLIENT_URL: http://localhost:${CLIENT_PORT:-5173}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:${SERVER_PORT:-3000}/auth/google/callback}
       TSC_WATCHFILE: DynamicPriorityPolling # hot-reload sur volume Windows/macOS
     ports:
       - '${SERVER_PORT:-3000}:3000'

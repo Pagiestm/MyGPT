@@ -87,17 +87,26 @@ Sans WebGPU, l'application le signale au lieu d'échouer. Il n'y a pas de repli 
 
 ## Sécurité
 
-| Protection        | Mise en oeuvre                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| Sessions          | stockées en base (`user_sessions`), elles survivent aux redéploiements               |
-| Secret de session | obligatoire en production, 32 caractères minimum, refus de démarrer sinon            |
-| Cookie de session | `httpOnly`, `secure` et `sameSite: strict` en production                             |
-| CSRF              | double soumission : cookie `mygpt.csrf` + en-tête `X-CSRF-Token` sur toute écriture  |
-| Origine           | les requêtes d'écriture venant d'une origine non déclarée sont refusées              |
-| En-têtes          | `helmet` (HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`)                     |
-| Débit             | 30 req/s et 300 req/min par IP ; 10 tentatives / 15 min sur connexion et inscription |
+| Protection        | Mise en oeuvre                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Sessions          | stockées en base (`user_sessions`), elles survivent aux redéploiements                    |
+| Secret de session | obligatoire en production, 32 caractères minimum, refus de démarrer sinon                 |
+| Cookie de session | `httpOnly`, `secure` et `sameSite: strict` en production                                  |
+| CSRF              | double soumission : cookie `mygpt.csrf` + en-tête `X-CSRF-Token` sur toute écriture       |
+| Connexion Google  | optionnelle : sans `GOOGLE_CLIENT_ID` ni `GOOGLE_CLIENT_SECRET`, le bouton n'apparaît pas |
+| Origine           | les requêtes d'écriture venant d'une origine non déclarée sont refusées                   |
+| En-têtes          | `helmet` (HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`)                          |
+| Débit             | 30 req/s et 300 req/min par IP ; 10 tentatives / 15 min sur connexion et inscription      |
 
 Le client récupère le jeton sur `GET /csrf`, le met en cache et le renvoie via un intercepteur axios ; sur un 403 il le renouvelle et rejoue la requête une fois.
+
+### Connexion avec Google
+
+Facultative. Renseignez `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` et `GOOGLE_CALLBACK_URL` ([console Google](https://console.cloud.google.com/apis/credentials)) : le bouton apparaît alors sur la connexion et l'inscription.
+
+Un compte Google dont l'email est déjà connu est **lié** au compte existant, qui garde son mot de passe. Un email inconnu crée un compte sans mot de passe, dont le pseudo reprend le nom Google et reste modifiable dans les réglages.
+
+La génération reste dans le navigateur : Google ne voit que les connexions, jamais les conversations.
 
 ## Rôles et migrations
 

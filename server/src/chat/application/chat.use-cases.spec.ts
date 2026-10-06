@@ -66,6 +66,7 @@ const account = (overrides: Partial<Parameters<typeof User.rehydrate>[0]> = {}) 
     email: 'alice@example.com',
     pseudo: 'alice',
     passwordHash: 'hashed',
+    googleId: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,

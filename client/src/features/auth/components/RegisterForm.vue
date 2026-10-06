@@ -35,6 +35,8 @@
       label="S'inscrire"
     />
   </UForm>
+
+  <GoogleSignIn label="S'inscrire avec Google" />
 </template>
 
 <script setup lang="ts">
@@ -51,6 +53,7 @@ import { useAuthStore } from '../stores/auth.store';
 import { registerSchema, type RegisterInput } from '../types';
 import PasswordChecklist from './PasswordChecklist.vue';
 import PasswordInput from './PasswordInput.vue';
+import GoogleSignIn from './GoogleSignIn.vue';
 
 const auth = useAuthStore();
 const router = useRouter();

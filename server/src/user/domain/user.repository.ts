@@ -7,6 +7,7 @@ export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findByPseudo(pseudo: string): Promise<User | null>;
+  findByGoogleId(googleId: string): Promise<User | null>;
   list(pagination: PaginationDto): Promise<Page<User>>;
   countAdmins(): Promise<number>;
   save(user: User): Promise<User>;

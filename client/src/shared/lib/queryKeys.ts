@@ -1,4 +1,5 @@
 export const queryKeys = {
+  authProviders: ['auth', 'providers'] as const,
   conversations: ['conversations'] as const,
   archived: ['conversations', 'archived'] as const,
   conversation: (id: string) => ['conversation', id] as const,

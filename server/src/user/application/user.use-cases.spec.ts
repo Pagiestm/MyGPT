@@ -13,6 +13,7 @@ import {
   GetUserByEmail,
   ListUsers,
   RegisterUser,
+  SignInWithGoogle,
   UpdatePreferences,
   VerifyCredentials,
 } from './user.use-cases';
@@ -23,6 +24,7 @@ const account = (overrides: Partial<Parameters<typeof User.rehydrate>[0]> = {}) 
     email: 'alice@example.com',
     pseudo: 'alice42',
     passwordHash: 'hashed',
+    googleId: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,
@@ -35,6 +37,7 @@ describe('User use cases', () => {
     findById: jest.fn(),
     findByEmail: jest.fn(),
     findByPseudo: jest.fn(),
+    findByGoogleId: jest.fn(),
     list: jest.fn(),
     countAdmins: jest.fn(),
     save: jest.fn((saved: User) => Promise.resolve(saved)),
@@ -51,12 +54,14 @@ describe('User use cases', () => {
   let list: ListUsers;
   let role: ChangeRole;
   let credentials: VerifyCredentials;
+  let google: SignInWithGoogle;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     users.findById.mockResolvedValue(account());
     users.findByEmail.mockResolvedValue(null);
     users.findByPseudo.mockResolvedValue(null);
+    users.findByGoogleId.mockResolvedValue(null);
     hasher.hash.mockResolvedValue('hashed');
 
     const module = await Test.createTestingModule({
@@ -70,6 +75,7 @@ describe('User use cases', () => {
         ListUsers,
         ChangeRole,
         VerifyCredentials,
+        SignInWithGoogle,
         { provide: USER_REPOSITORY, useValue: users },
         { provide: PASSWORD_HASHER, useValue: hasher },
       ],
@@ -84,6 +90,7 @@ describe('User use cases', () => {
     list = module.get(ListUsers);
     role = module.get(ChangeRole);
     credentials = module.get(VerifyCredentials);
+    google = module.get(SignInWithGoogle);
   });
 
   describe('GetUser', () => {
@@ -216,9 +223,79 @@ describe('User use cases', () => {
     });
   });
 
+  describe('SignInWithGoogle', () => {
+    const profile = {
+      googleId: 'g-1',
+      email: 'alice@example.com',
+      displayName: 'Alice Dupont',
+    };
+
+    it('reconnaît un compte Google déjà lié sans rien réécrire', async () => {
+      users.findByGoogleId.mockResolvedValue(account({ googleId: 'g-1' }));
+
+      await expect(google.execute(profile)).resolves.toMatchObject({ id: 'u1' });
+      expect(users.save).not.toHaveBeenCalled();
+    });
+
+    it('lie Google à un compte existant portant le même email', async () => {
+      users.findByEmail.mockResolvedValue(account());
+
+      const linked = await google.execute(profile);
+
+      expect(linked.googleId).toBe('g-1');
+      expect(linked.id).toBe('u1');
+    });
+
+    it('conserve le mot de passe du compte lié, qui reste utilisable', async () => {
+      users.findByEmail.mockResolvedValue(account());
+
+      const linked = await google.execute(profile);
+
+      expect(linked.passwordHash).toBe('hashed');
+      expect(linked.signsInWithPassword).toBe(true);
+    });
+
+    it('crée un compte sans mot de passe quand l’email est inconnu', async () => {
+      const created = await google.execute(profile);
+
+      expect(created.passwordHash).toBeNull();
+      expect(created.signsInWithPassword).toBe(false);
+      expect(created.googleId).toBe('g-1');
+    });
+
+    it('reprend le nom Google comme pseudo', async () => {
+      const created = await google.execute(profile);
+
+      expect(created.pseudo).toBe('Alice_Dupont');
+    });
+
+    it('évite la collision quand ce pseudo est déjà pris', async () => {
+      users.findByPseudo.mockImplementation((pseudo: string) =>
+        Promise.resolve(pseudo === 'Alice_Dupont' ? account({ id: 'autre' }) : null),
+      );
+
+      const created = await google.execute(profile);
+
+      expect(created.pseudo).toBe('Alice_Dupont_2');
+    });
+
+    it('retombe sur l’email quand Google ne donne aucun nom', async () => {
+      const created = await google.execute({ ...profile, displayName: '' });
+
+      expect(created.pseudo).toBe('alice');
+    });
+  });
+
   describe('VerifyCredentials', () => {
     it('returns nothing for an unknown email, without hashing anything', async () => {
       await expect(credentials.execute('absent@example.com', 'x')).resolves.toBeNull();
+      expect(hasher.matches).not.toHaveBeenCalled();
+    });
+
+    it('refuse un compte Google qui n’a pas de mot de passe', async () => {
+      users.findByEmail.mockResolvedValue(account({ passwordHash: null, googleId: 'g-1' }));
+
+      await expect(credentials.execute('alice@example.com', 'peu importe')).resolves.toBeNull();
       expect(hasher.matches).not.toHaveBeenCalled();
     });
 

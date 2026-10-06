@@ -24,6 +24,8 @@
       label="Se connecter"
     />
   </UForm>
+
+  <GoogleSignIn label="Se connecter avec Google" />
 </template>
 
 <script setup lang="ts">
@@ -39,6 +41,7 @@ import { getErrorMessage } from '@/shared/lib/http';
 import { useAuthStore } from '../stores/auth.store';
 import { loginSchema, type LoginInput } from '../types';
 import PasswordInput from './PasswordInput.vue';
+import GoogleSignIn from './GoogleSignIn.vue';
 
 const auth = useAuthStore();
 const route = useRoute();

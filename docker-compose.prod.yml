@@ -30,6 +30,9 @@ services:
       DB_DATABASE: ${DB_DATABASE:?DB_DATABASE est requis}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET est requis (32 caractères minimum)}
       CLIENT_URL: ${CLIENT_URL:?CLIENT_URL est requis, par exemple https://mygpt.example.fr}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
     expose:
       - '3000'
     depends_on:

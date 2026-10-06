@@ -7,6 +7,8 @@ import { ThrottleAuth } from '../../../common/decorators/throttle-auth.decorator
 import { GetProfile } from '../../application/auth.use-cases';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
+import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
+import { googleOauthConfig } from '../../google.config';
 import { LoginDto } from './dto/login.dto';
 import { ProfileResponse } from './dto/profile.response';
 
@@ -28,6 +30,27 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   login(@Request() req: AuthenticatedRequest) {
     return { message: 'Connexion réussie', user: { pseudo: req.user.pseudo } };
+  }
+
+  @Get('providers')
+  @ApiOperation({ summary: 'Moyens de connexion proposés par cette instance' })
+  @ApiResponse({ status: 200, schema: { properties: { google: { type: 'boolean' } } } })
+  providers(): { google: boolean } {
+    return { google: !!googleOauthConfig() };
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  @ApiOperation({ summary: 'Démarrer la connexion avec Google' })
+  signInWithGoogle(): void {}
+
+  @UseGuards(GoogleCallbackGuard)
+  @Get('google/callback')
+  @ApiOperation({ summary: 'Retour de Google : ouvre la session et renvoie vers le client' })
+  googleCallback(@Request() req: AuthenticatedRequest, @Res() res: Response): void {
+    const client = (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',')[0].trim();
+    res.redirect(`${client}/chat`);
+    void req;
   }
 
   @UseGuards(AuthenticatedGuard)

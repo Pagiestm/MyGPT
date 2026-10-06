@@ -52,6 +52,47 @@ export class RegisterUser {
   }
 }
 
+export interface GoogleProfile {
+  googleId: string;
+  email: string;
+  displayName: string;
+}
+
+@Injectable()
+export class SignInWithGoogle {
+  constructor(@Inject(USER_REPOSITORY) private readonly users: UserRepository) {}
+
+  async execute(profile: GoogleProfile): Promise<User> {
+    const known = await this.users.findByGoogleId(profile.googleId);
+    if (known) return known;
+
+    const sameEmail = await this.users.findByEmail(profile.email);
+    if (sameEmail) {
+      sameEmail.linkGoogle(profile.googleId);
+      return this.users.save(sameEmail);
+    }
+
+    return this.users.save(
+      User.create({
+        email: profile.email,
+        pseudo: await this.freePseudo(profile.displayName || profile.email.split('@')[0] || ''),
+        googleId: profile.googleId,
+      }),
+    );
+  }
+
+  private async freePseudo(suggestion: string): Promise<string> {
+    const base = User.pseudoFrom(suggestion);
+    if (!(await this.users.findByPseudo(base))) return base;
+
+    for (let suffix = 2; suffix < 1000; suffix++) {
+      const candidate = `${base.slice(0, 20 - String(suffix).length - 1)}_${suffix}`;
+      if (!(await this.users.findByPseudo(candidate))) return candidate;
+    }
+    throw new ConflictException('Impossible de trouver un pseudo disponible');
+  }
+}
+
 @Injectable()
 export class ChangePseudo {
   constructor(

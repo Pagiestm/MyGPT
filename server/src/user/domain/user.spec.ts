@@ -59,4 +59,40 @@ describe('User', () => {
   it('does not consider a plain user as losing admin rights', () => {
     expect(account().losesAdminRights(UserRole.User)).toBe(false);
   });
+
+  describe('comptes Google', () => {
+    it('un compte créé par Google n’a pas de mot de passe', () => {
+      const user = User.create({ email: 'a@b.fr', pseudo: 'alice', googleId: 'g-1' });
+
+      expect(user.passwordHash).toBeNull();
+      expect(user.signsInWithPassword).toBe(false);
+    });
+
+    it('lier Google ne retire pas le mot de passe existant', () => {
+      const user = account();
+
+      user.linkGoogle('g-1');
+
+      expect(user.googleId).toBe('g-1');
+      expect(user.signsInWithPassword).toBe(true);
+    });
+
+    describe('pseudoFrom', () => {
+      it('retire les accents et remplace ce qui n’est pas autorisé', () => {
+        expect(User.pseudoFrom('Théotime Pagiès')).toBe('Theotime_Pagies');
+      });
+
+      it('tronque à la longueur maximale', () => {
+        expect(User.pseudoFrom('a'.repeat(40))).toHaveLength(20);
+      });
+
+      it('complète un nom trop court pour être un pseudo', () => {
+        expect(User.pseudoFrom('Jo').length).toBeGreaterThanOrEqual(3);
+      });
+
+      it('ne laisse pas de séparateur en bordure', () => {
+        expect(User.pseudoFrom('  !Alice!  ')).toBe('Alice');
+      });
+    });
+  });
 });

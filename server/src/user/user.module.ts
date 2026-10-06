@@ -10,6 +10,7 @@ import {
   GetUserByEmail,
   ListUsers,
   RegisterUser,
+  SignInWithGoogle,
   UpdatePreferences,
   VerifyCredentials,
 } from './application/user.use-cases';
@@ -33,7 +34,8 @@ import { UserController } from './infrastructure/http/user.controller';
     ListUsers,
     ChangeRole,
     VerifyCredentials,
+    SignInWithGoogle,
   ],
-  exports: [GetUser, GetUserByEmail, VerifyCredentials],
+  exports: [GetUser, GetUserByEmail, VerifyCredentials, SignInWithGoogle],
 })
 export class UserModule {}

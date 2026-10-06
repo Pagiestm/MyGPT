@@ -60,6 +60,7 @@ export interface FakeState {
   streamError: string | null;
   chatRequests: Record<string, unknown>[];
   documents: unknown[];
+  googleSignIn: boolean;
   failures: Partial<Record<'login' | 'register', { status: number; message: string }>>;
 }
 
@@ -172,6 +173,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     streamError: null,
     chatRequests: [],
     documents: [],
+    googleSignIn: false,
     failures: {},
     ...initial,
   };
@@ -199,6 +201,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     const json = (status: number, data?: unknown) =>
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data ?? {}) });
 
+    if (path === '/auth/providers') return json(200, { google: state.googleSignIn === true });
     if (path === '/auth/profile') return state.user ? json(200, state.user) : json(401);
     if (path === '/auth/login') {
       const failure = state.failures.login;

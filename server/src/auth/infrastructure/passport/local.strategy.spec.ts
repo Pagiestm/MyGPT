@@ -11,6 +11,7 @@ const account = () =>
     email: 'test@example.com',
     pseudo: 'testuser',
     passwordHash: 'hashed',
+    googleId: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,
