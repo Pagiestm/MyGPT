@@ -13,7 +13,17 @@
 
     <UFormField label="Mot de passe" name="password">
       <PasswordInput v-model="state.password" autocomplete="current-password" />
+      <template v-if="byEmail" #hint>
+        <ULink to="/mot-de-passe-oublie" class="text-xs">Mot de passe oublié ?</ULink>
+      </template>
     </UFormField>
+
+    <UCheckbox
+      v-model="state.remember"
+      name="remember"
+      label="Rester connecté"
+      description="Trente jours au lieu d'une heure. À éviter sur un appareil partagé."
+    />
 
     <UButton
       type="submit"
@@ -30,6 +40,7 @@
 
 <script setup lang="ts">
 import UButton from '@nuxt/ui/components/Button.vue';
+import UCheckbox from '@nuxt/ui/components/Checkbox.vue';
 import UForm from '@nuxt/ui/components/Form.vue';
 import UFormField from '@nuxt/ui/components/FormField.vue';
 import UInput from '@nuxt/ui/components/Input.vue';
@@ -40,10 +51,13 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { getErrorMessage } from '@/shared/lib/http';
 import { useAuthStore } from '../stores/auth.store';
 import { loginSchema, type LoginInput } from '../types';
+import ULink from '@nuxt/ui/components/Link.vue';
+import { usePasswordRecovery } from '@/features/account';
 import PasswordInput from './PasswordInput.vue';
 import GoogleSignIn from './GoogleSignIn.vue';
 
 const auth = useAuthStore();
+const { byEmail } = usePasswordRecovery();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -51,6 +65,7 @@ const toast = useToast();
 const state = reactive({
   email: typeof route.query.email === 'string' ? route.query.email : '',
   password: '',
+  remember: false,
 });
 const loading = ref(false);
 

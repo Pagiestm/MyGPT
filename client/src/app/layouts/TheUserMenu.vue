@@ -40,6 +40,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     { label: 'Réglages', icon: 'i-lucide-settings', to: '/settings' },
     { label: 'Bibliothèque', icon: 'i-lucide-library', to: '/library' },
+    { label: 'Corbeille', icon: 'i-lucide-trash-2', to: '/corbeille' },
     ...(isAdmin(auth.user)
       ? [{ label: 'Administration', icon: 'i-lucide-shield', to: '/admin' }]
       : []),

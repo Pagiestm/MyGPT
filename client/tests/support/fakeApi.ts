@@ -62,6 +62,8 @@ export interface FakeState {
   documents: unknown[];
   googleSignIn: boolean;
   knowledgeMatches: { content: string; name: string; score: number }[];
+  passwordRecovery: boolean;
+  trashed: FakeConversation[];
   failures: Partial<Record<'login' | 'register', { status: number; message: string }>>;
 }
 
@@ -176,6 +178,8 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     documents: [],
     googleSignIn: false,
     knowledgeMatches: [],
+    passwordRecovery: false,
+    trashed: [],
     failures: {},
     ...initial,
   };
@@ -204,6 +208,20 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data ?? {}) });
 
     if (path === '/auth/providers') return json(200, { google: state.googleSignIn === true });
+    if (path === '/users/password/forgot' && method === 'POST') {
+      return json(202, {
+        message: 'Si un compte existe pour cet email, un lien vient de lui être envoyé.',
+      });
+    }
+    if (path === '/users/password/reset' && method === 'POST') {
+      const payload = request.postDataJSON() as { token?: string };
+      return payload?.token === 'jeton-valide'
+        ? json(204)
+        : json(400, { message: 'Ce lien est expiré ou a déjà servi' });
+    }
+    if (path === '/users/password/recovery') {
+      return json(200, { byEmail: state.passwordRecovery === true });
+    }
     if (path === '/auth/profile') return state.user ? json(200, state.user) : json(401);
     if (path === '/auth/login') {
       const failure = state.failures.login;
@@ -282,6 +300,20 @@ function handleAuthenticated(route: Route, state: FakeState, ctx: Context) {
   }
 
   if (path === '/knowledge' && method === 'GET') return json(200, page(state.documents, url));
+
+  if (path === '/conversations/trash' && method === 'GET') {
+    return json(200, page(state.trashed, url));
+  }
+  if (segments[0] === 'conversations' && segments[2] === 'restore' && method === 'POST') {
+    const index = state.trashed.findIndex((c) => c.id === segments[1]);
+    const [restored] = state.trashed.splice(index, 1);
+    if (restored) state.conversations.push(restored);
+    return json(201, restored ?? {});
+  }
+  if (segments[0] === 'conversations' && segments[2] === 'permanent' && method === 'DELETE') {
+    state.trashed = state.trashed.filter((c) => c.id !== segments[1]);
+    return json(204);
+  }
 
   if (path === '/knowledge/search' && method === 'POST') {
     return json(200, state.knowledgeMatches);

@@ -15,6 +15,14 @@
         </UPageCard>
 
         <UPageCard
+          title="Sécurité"
+          description="Votre email de connexion et votre mot de passe."
+          variant="subtle"
+        >
+          <SecurityForm />
+        </UPageCard>
+
+        <UPageCard
           title="Personnalisation"
           description="Adaptez les réponses de l'assistant à vos besoins."
           variant="subtle"
@@ -65,6 +73,7 @@ import UPageCard from '@nuxt/ui/components/PageCard.vue';
 import ProfileForm from '@/features/account/components/ProfileForm.vue';
 import PreferencesForm from '@/features/account/components/PreferencesForm.vue';
 import DeleteAccount from '@/features/account/components/DeleteAccount.vue';
+import SecurityForm from '@/features/account/components/SecurityForm.vue';
 import { KnowledgeManager } from '@/features/knowledge';
 import { version } from '@/shared/lib/version';
 import { BrowserModels } from '@/features/models';

@@ -25,7 +25,7 @@ const password = z
     'Le mot de passe doit contenir au moins 1 majuscule, 1 chiffre et 1 caractère spécial',
   );
 
-export const loginSchema = z.object({ email, password });
+export const loginSchema = z.object({ email, password, remember: z.boolean().optional() });
 export const registerSchema = z.object({ email, pseudo: pseudoSchema, password });
 
 export type LoginInput = z.infer<typeof loginSchema>;

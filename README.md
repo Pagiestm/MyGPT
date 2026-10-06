@@ -22,7 +22,8 @@ https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
 - **Modèle exécuté dans le navigateur** (WebGPU) : rien à installer, aucune donnée envoyée pour générer
 - **Base de connaissances (RAG)** : documents indexés dans pgvector, vectorisés eux aussi dans le navigateur
 - Réponses au fil de l'eau, Stop, régénération, questions modifiables, titre automatique
-- Dossiers, épinglage, archives, recherche globale (Ctrl/⌘ + K), partage par lien, export Markdown
+- Dossiers, épinglage, archives, corbeille (30 jours), recherche globale (Ctrl/⌘ + K), partage par lien, export Markdown
+- Pièces jointes et documents **PDF** : le texte en est extrait pour que le modèle le lise
 - Pièces jointes, dictée vocale, lecture à voix haute, Markdown et code colorés, thème clair/sombre
 
 ## Stack
@@ -49,6 +50,7 @@ docker compose up -d
 | Application   | http://localhost:5173     |                                    |
 | API / Swagger | http://localhost:3000/api |                                    |
 | pgAdmin       | http://localhost:5050     | hôte `db`, `postgres` / `root`     |
+| Mailpit       | http://localhost:8025     | tous les courriels envoyés en dev  |
 | PostgreSQL    | `localhost:5432`          | `postgres` / `root`, base `my-gpt` |
 
 Le code est monté dans les conteneurs : le rechargement à chaud fonctionne. Après un changement de dépendances, `docker compose up -d --build`. Sans Docker pour les apps : `docker compose up -d db pgadmin` puis `npm run dev`.
@@ -108,6 +110,12 @@ Sans WebGPU, l'application le signale au lieu d'échouer. Il n'y a pas de repli 
 | Débit             | 30 req/s et 300 req/min par IP ; 10 tentatives / 15 min sur connexion et inscription      |
 
 Le client récupère le jeton sur `GET /csrf`, le met en cache et le renvoie via un intercepteur axios ; sur un 403 il le renouvelle et rejoue la requête une fois.
+
+### Mot de passe oublié
+
+Le lien n'apparaît que si l'instance sait envoyer des courriels (`SMTP_HOST` et `MAIL_FROM`). Le jeton est valable une heure, ne sert qu'une fois, et n'est jamais stocké en clair : seule son empreinte l'est. La réponse est la même que l'email existe ou non, pour ne pas révéler qui a un compte.
+
+Les courriels sont écrits en MJML (`server/src/common/mail/`), compilés en HTML à l'envoi. En développement, Mailpit les capture tous.
 
 ### Connexion avec Google
 

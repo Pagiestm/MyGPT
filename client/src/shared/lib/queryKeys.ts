@@ -1,9 +1,11 @@
 export const queryKeys = {
   authProviders: ['auth', 'providers'] as const,
+  passwordRecovery: ['auth', 'password-recovery'] as const,
   knowledgeSearch: (keyword: string, folderId?: string) =>
     ['knowledge', 'search', folderId ?? 'tout', keyword] as const,
   conversations: ['conversations'] as const,
   archived: ['conversations', 'archived'] as const,
+  trash: ['conversations', 'trash'] as const,
   conversation: (id: string) => ['conversation', id] as const,
   messages: (conversationId: string) => ['messages', conversationId] as const,
   messageSearch: (conversationId: string, keyword: string) =>
