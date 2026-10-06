@@ -17,7 +17,19 @@ import {
   type MessageRepository,
 } from '../../message/domain/message.repository';
 import { GetUser } from '../../user/application/user.use-cases';
+import { extractPdfText, isPdf } from '../../common/pdf/pdf-text';
 import { isBrowserModel, type AiAttachment, type AiTurn } from '../domain/prompt';
+
+async function readable(file: {
+  name: string;
+  mimeType: string;
+  data: Buffer;
+}): Promise<AiAttachment> {
+  if (!isPdf(file.mimeType)) return file;
+
+  const text = await extractPdfText(file.data).catch(() => '');
+  return text.trim() ? { name: file.name, mimeType: 'text/plain', data: Buffer.from(text) } : file;
+}
 
 export interface ExchangeContext {
   question: Message;
@@ -155,11 +167,7 @@ export class BuildExchangeContext {
     return {
       question: question ?? asked,
       history: previous.map((message) => message.asTurn()),
-      attachments: files.map((file) => ({
-        name: file.name,
-        mimeType: file.mimeType,
-        data: file.data,
-      })),
+      attachments: await Promise.all(files.map((file) => readable(file))),
       systemInstruction: parts.length ? parts.join('\n\n') : undefined,
     };
   }

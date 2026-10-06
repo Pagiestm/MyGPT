@@ -47,8 +47,8 @@ export function toMessages(context: ExchangeContext): PromptMessage[] {
 
 export function describe(attachments: AiAttachment[]): string[] {
   return attachments.map((file) =>
-    file.mimeType.startsWith('image/') || file.mimeType === 'application/pdf'
-      ? `Fichier joint « ${file.name} » : non lisible par un modèle exécuté dans le navigateur.`
+    file.mimeType.startsWith('image/')
+      ? `Fichier joint « ${file.name} » : image, non lisible par un modèle exécuté dans le navigateur.`
       : `Fichier joint « ${file.name} » :\n\`\`\`\n${file.data.toString('utf8')}\n\`\`\``,
   );
 }

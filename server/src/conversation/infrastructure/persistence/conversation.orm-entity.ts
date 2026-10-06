@@ -58,6 +58,9 @@ export class ConversationOrm {
   @JoinColumn({ name: 'folderId' })
   folder: FolderOrm | null;
 
+  @Column({ type: 'timestamp', nullable: true })
+  deletedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

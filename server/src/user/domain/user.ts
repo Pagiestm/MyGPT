@@ -10,6 +10,8 @@ export interface UserState {
   pseudo: string;
   passwordHash: string | null;
   googleId: string | null;
+  resetTokenHash: string | null;
+  resetTokenExpiresAt: Date | null;
   role: UserRole;
   customInstructions: string | null;
   preferredModel: string | null;
@@ -19,10 +21,12 @@ export interface UserState {
 export class User {
   private constructor(
     readonly id: string,
-    readonly email: string,
+    public email: string,
     public pseudo: string,
-    readonly passwordHash: string | null,
+    public passwordHash: string | null,
     public googleId: string | null,
+    private resetTokenHash: string | null,
+    private resetTokenExpiresAt: Date | null,
     public role: UserRole,
     public customInstructions: string | null,
     public preferredModel: string | null,
@@ -41,6 +45,8 @@ export class User {
       User.cleanPseudo(input.pseudo),
       input.passwordHash ?? null,
       input.googleId ?? null,
+      null,
+      null,
       UserRole.User,
       null,
       null,
@@ -55,6 +61,8 @@ export class User {
       state.pseudo,
       state.passwordHash,
       state.googleId,
+      state.resetTokenHash,
+      state.resetTokenExpiresAt,
       state.role,
       state.customInstructions,
       state.preferredModel,
@@ -72,6 +80,42 @@ export class User {
 
   linkGoogle(googleId: string): void {
     this.googleId = googleId;
+  }
+
+  get pendingReset(): { tokenHash: string; expiresAt: Date } | null {
+    if (!this.resetTokenHash || !this.resetTokenExpiresAt) return null;
+    return { tokenHash: this.resetTokenHash, expiresAt: this.resetTokenExpiresAt };
+  }
+
+  changeEmail(email: string): void {
+    const cleaned = email.trim().toLowerCase();
+    if (!cleaned) throw new DomainError("L'email est requis");
+    this.email = cleaned;
+  }
+
+  changePassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+    this.forgetReset();
+  }
+
+  openReset(tokenHash: string, expiresAt: Date): void {
+    if (!this.passwordHash && this.googleId) {
+      throw new DomainError(
+        'Ce compte se connecte avec Google : il n’a pas de mot de passe à réinitialiser',
+      );
+    }
+    this.resetTokenHash = tokenHash;
+    this.resetTokenExpiresAt = expiresAt;
+  }
+
+  acceptsReset(tokenHash: string, now = new Date()): boolean {
+    if (!this.resetTokenHash || !this.resetTokenExpiresAt) return false;
+    return this.resetTokenHash === tokenHash && this.resetTokenExpiresAt > now;
+  }
+
+  forgetReset(): void {
+    this.resetTokenHash = null;
+    this.resetTokenExpiresAt = null;
   }
 
   rename(pseudo: string): void {

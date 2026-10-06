@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { toPage } from '../../common/pagination.dto';
+import { toPage } from '../../common/http/pagination.dto';
 import { GetReadableConversation } from '../../conversation/application/conversation.use-cases';
 import { Message } from '../domain/message';
 import { MESSAGE_REPOSITORY } from '../domain/message.repository';

@@ -19,6 +19,12 @@ export class UserOrm {
   @Column({ type: 'varchar', nullable: true, unique: true })
   googleId: string | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  resetTokenHash: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetTokenExpiresAt: Date | null;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.User })
   role: UserRole;
 

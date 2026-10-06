@@ -21,12 +21,15 @@ import {
   ApiCookieAuth,
 } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
-import { PaginationDto, type Page } from '../../../common/pagination.dto';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
+import { PaginationDto, type Page } from '../../../common/http/pagination.dto';
 import type { Response } from 'express';
 import {
   DeleteConversation,
   ExportConversation,
+  ListTrash,
+  PurgeConversation,
+  RestoreConversation,
   GetReadableConversation,
   ListConversations,
   ListSavedConversations,
@@ -58,6 +61,9 @@ export class ConversationController {
     private readonly updateConversation: UpdateConversation,
     private readonly deleteConversation: DeleteConversation,
     private readonly exportConversation: ExportConversation,
+    private readonly listTrash: ListTrash,
+    private readonly restoreConversation: RestoreConversation,
+    private readonly purgeConversation: PurgeConversation,
     private readonly shareConversation: ShareConversation,
     private readonly revoke: RevokeShare,
   ) {}
@@ -127,6 +133,41 @@ export class ConversationController {
   ): Promise<Page<ConversationResponse>> {
     const page = await this.listSaved.execute(req.user.id, pagination);
     return { ...page, items: page.items.map((item) => ConversationResponse.from(item)) };
+  }
+
+  @Get('trash')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Conversations supprimées, récupérables pendant trente jours' })
+  @ApiResponse({ status: 200, type: [ConversationResponse] })
+  async trash(
+    @Request() req: AuthenticatedRequest,
+    @Query() pagination: PaginationDto,
+  ): Promise<Page<ConversationResponse>> {
+    const page = await this.listTrash.execute(req.user.id, pagination);
+    return { ...page, items: page.items.map((item) => ConversationResponse.from(item)) };
+  }
+
+  @Post(':id/restore')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Sortir une conversation de la corbeille' })
+  @ApiResponse({ status: 201, type: ConversationResponse })
+  async restore(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<ConversationResponse> {
+    return ConversationResponse.from(await this.restoreConversation.execute(id, req.user.id));
+  }
+
+  @Delete(':id/permanent')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Supprimer définitivement, sans retour possible' })
+  @ApiResponse({ status: 204, description: 'Conversation effacée' })
+  purge(@Request() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    return this.purgeConversation.execute(id, req.user.id);
   }
 
   @Post('save-shared')
@@ -212,9 +253,9 @@ export class ConversationController {
   @UseGuards(AuthenticatedGuard)
   @ApiCookieAuth()
   @HttpCode(204)
-  @ApiOperation({ summary: 'Supprimer une conversation' })
+  @ApiOperation({ summary: 'Mettre une conversation à la corbeille' })
   @ApiParam({ name: 'id', description: 'ID unique de la conversation' })
-  @ApiResponse({ status: 204, description: 'Conversation supprimée' })
+  @ApiResponse({ status: 204, description: 'Conversation mise à la corbeille' })
   @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   remove(@Request() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {

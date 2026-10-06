@@ -1,6 +1,6 @@
 import { ArgumentsHost, BadRequestException, Catch, type ExceptionFilter } from '@nestjs/common';
 import type { HttpAdapterHost } from '@nestjs/core';
-import { DomainError } from './domain/domain-error';
+import { DomainError } from '../domain/domain-error';
 
 @Catch(DomainError)
 export class DomainErrorFilter implements ExceptionFilter {

@@ -12,6 +12,8 @@ const account = () =>
     pseudo: 'testuser',
     passwordHash: 'hashed',
     googleId: null,
+    resetTokenHash: null,
+    resetTokenExpiresAt: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,

@@ -24,8 +24,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
-import type { Page } from '../../../common/pagination.dto';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
+import type { Page } from '../../../common/http/pagination.dto';
 import { MAX_DOCUMENT_SIZE } from '../../domain/knowledge-document';
 import {
   ListDocuments,

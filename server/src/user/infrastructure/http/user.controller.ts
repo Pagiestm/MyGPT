@@ -19,10 +19,12 @@ import { Roles } from '../../../auth/infrastructure/http/decorators/roles.decora
 import { UserRole } from '../../domain/user-role.enum';
 import { RolesGuard } from '../../../auth/infrastructure/http/guards/roles.guard';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
-import { PaginationDto, toPage } from '../../../common/pagination.dto';
-import { ThrottleAuth } from '../../../common/decorators/throttle-auth.decorator';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
+import { PaginationDto, toPage } from '../../../common/http/pagination.dto';
+import { ThrottleAuth } from '../../../common/http/throttle-auth.decorator';
 import {
+  ChangeEmail,
+  ChangePassword,
   ChangePseudo,
   ChangeRole,
   DeleteAccount,
@@ -30,6 +32,14 @@ import {
   RegisterUser,
   UpdatePreferences,
 } from '../../application/user.use-cases';
+import { RequestPasswordReset, ResetPassword } from '../../application/password-reset.use-cases';
+import { smtpConfigured } from '../../../common/mail/smtp.mailer';
+import {
+  ChangeEmailDto,
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePseudoDto } from './dto/update-user.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -46,6 +56,10 @@ export class UserController {
     private readonly deleteAccount: DeleteAccount,
     private readonly listUsers: ListUsers,
     private readonly changeRole: ChangeRole,
+    private readonly changePassword: ChangePassword,
+    private readonly changeEmail: ChangeEmail,
+    private readonly requestReset: RequestPasswordReset,
+    private readonly resetPassword: ResetPassword,
   ) {}
 
   @ThrottleAuth()
@@ -91,6 +105,64 @@ export class UserController {
       throw new BadRequestException("Ce modèle n'est pas disponible");
     }
     return PreferencesResponse.from(await this.updatePreferences.execute(req.user.id, dto));
+  }
+
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @Patch('profile/password')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Changer son mot de passe' })
+  @ApiResponse({ status: 204, description: 'Mot de passe changé' })
+  @ApiResponse({ status: 401, description: 'Mot de passe actuel incorrect' })
+  async updatePassword(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    await this.changePassword.execute(req.user.id, dto.currentPassword, dto.newPassword);
+  }
+
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @Patch('profile/email')
+  @ApiOperation({ summary: 'Changer son email, confirmé par le mot de passe' })
+  @ApiResponse({ status: 200, type: UserResponse })
+  @ApiResponse({ status: 401, description: 'Mot de passe incorrect' })
+  @ApiResponse({ status: 409, description: 'Email déjà utilisé' })
+  async updateEmail(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ChangeEmailDto,
+  ): Promise<UserResponse> {
+    return UserResponse.from(await this.changeEmail.execute(req.user.id, dto.email, dto.password));
+  }
+
+  @ThrottleAuth()
+  @Post('password/forgot')
+  @HttpCode(202)
+  @ApiOperation({ summary: 'Demander un lien de réinitialisation' })
+  @ApiResponse({ status: 202, description: 'Demande acceptée, sans révéler si le compte existe' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const client = (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',')[0].trim();
+    await this.requestReset.execute(dto.email, client);
+    return {
+      message: 'Si un compte existe pour cet email, un lien vient de lui être envoyé.',
+    };
+  }
+
+  @ThrottleAuth()
+  @Post('password/reset')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Choisir un nouveau mot de passe avec le jeton reçu' })
+  @ApiResponse({ status: 204, description: 'Mot de passe remplacé' })
+  @ApiResponse({ status: 400, description: 'Lien expiré ou déjà utilisé' })
+  async applyReset(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.resetPassword.execute(dto.token, dto.password);
+  }
+
+  @Get('password/recovery')
+  @ApiOperation({ summary: 'Cette instance sait-elle envoyer un lien de réinitialisation ?' })
+  @ApiResponse({ status: 200, schema: { properties: { byEmail: { type: 'boolean' } } } })
+  recovery(): { byEmail: boolean } {
+    return { byEmail: smtpConfigured() };
   }
 
   @Get()

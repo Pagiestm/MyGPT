@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
 import {
   CreateFolder,
   DeleteFolder,

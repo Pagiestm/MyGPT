@@ -4,8 +4,9 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
-import type { Page, PaginationDto } from '../../common/pagination.dto';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
 import { User } from '../domain/user';
 import { UserRole } from '../domain/user-role.enum';
 import { PASSWORD_HASHER, type PasswordHasher } from '../domain/password-hasher';
@@ -127,6 +128,51 @@ export class UpdatePreferences {
     const user = await this.get.execute(userId);
     if (input.customInstructions !== undefined) user.guideWith(input.customInstructions);
     if (input.preferredModel !== undefined) user.prefer(input.preferredModel);
+    return this.users.save(user);
+  }
+}
+
+@Injectable()
+export class ChangePassword {
+  constructor(
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasher,
+    private readonly get: GetUser,
+  ) {}
+
+  async execute(userId: string, current: string, next: string): Promise<void> {
+    const user = await this.get.execute(userId);
+
+    if (!user.passwordHash || !(await this.hasher.matches(current, user.passwordHash))) {
+      throw new UnauthorizedException('Mot de passe actuel incorrect');
+    }
+
+    user.changePassword(await this.hasher.hash(next));
+    await this.users.save(user);
+  }
+}
+
+@Injectable()
+export class ChangeEmail {
+  constructor(
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+    @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasher,
+    private readonly get: GetUser,
+  ) {}
+
+  async execute(userId: string, email: string, password: string): Promise<User> {
+    const user = await this.get.execute(userId);
+
+    if (!user.passwordHash || !(await this.hasher.matches(password, user.passwordHash))) {
+      throw new UnauthorizedException('Mot de passe incorrect');
+    }
+
+    const taken = await this.users.findByEmail(email.trim().toLowerCase());
+    if (taken && taken.id !== user.id) {
+      throw new ConflictException('Un utilisateur avec cet email existe déjà');
+    }
+
+    user.changeEmail(email);
     return this.users.save(user);
   }
 }

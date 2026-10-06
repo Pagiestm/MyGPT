@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { Page, PaginationDto } from '../../common/pagination.dto';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
+import { extractPdfText, isPdf } from '../../common/pdf/pdf-text';
 import {
   EMBEDDING_DIMENSIONS,
   KnowledgeDocument,
@@ -19,8 +20,16 @@ const SEARCH_RESULTS = 10;
 
 @Injectable()
 export class SplitDocumentIntoChunks {
-  execute(file: SourceFile): SplitDocument {
-    return KnowledgeDocument.split(file);
+  async execute(file: SourceFile): Promise<SplitDocument> {
+    if (!isPdf(file.mimeType)) return KnowledgeDocument.split(file);
+
+    const text = await extractPdfText(file.data).catch(() => '');
+    if (!text.trim()) {
+      throw new BadRequestException(
+        'Ce PDF ne contient aucun texte : il est probablement scanné en images.',
+      );
+    }
+    return KnowledgeDocument.split({ ...file, mimeType: 'text/plain', data: Buffer.from(text) });
   }
 }
 

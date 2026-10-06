@@ -1,5 +1,6 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { Page, PaginationDto } from '../../common/pagination.dto';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
 import { GetOwnedFolder } from '../../folder/application/folder.use-cases';
 import { Conversation, type ConversationChanges } from '../domain/conversation';
 import {
@@ -124,6 +125,8 @@ export class UpdateConversation {
   }
 }
 
+const TRASH_KEPT_DAYS = 30;
+
 @Injectable()
 export class DeleteConversation {
   constructor(
@@ -133,7 +136,62 @@ export class DeleteConversation {
 
   async execute(id: string, userId: string): Promise<void> {
     const conversation = await this.owned.execute(id, userId);
+    conversation.moveToTrash();
+    await this.conversations.save(conversation);
+  }
+}
+
+@Injectable()
+export class ListTrash {
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY) private readonly conversations: ConversationRepository,
+  ) {}
+
+  execute(userId: string, pagination: PaginationDto = {}): Promise<Page<Conversation>> {
+    return this.conversations.listTrashed(userId, pagination);
+  }
+}
+
+@Injectable()
+export class RestoreConversation {
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY) private readonly conversations: ConversationRepository,
+    private readonly owned: GetOwnedConversation,
+  ) {}
+
+  async execute(id: string, userId: string): Promise<Conversation> {
+    const conversation = await this.owned.execute(id, userId);
+    conversation.restore();
+    return this.conversations.save(conversation);
+  }
+}
+
+@Injectable()
+export class PurgeConversation {
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY) private readonly conversations: ConversationRepository,
+    private readonly owned: GetOwnedConversation,
+  ) {}
+
+  async execute(id: string, userId: string): Promise<void> {
+    const conversation = await this.owned.execute(id, userId);
     await this.conversations.remove(conversation.id);
+  }
+}
+
+@Injectable()
+export class EmptyExpiredTrash {
+  private readonly logger = new Logger(EmptyExpiredTrash.name);
+
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY) private readonly conversations: ConversationRepository,
+  ) {}
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async execute(): Promise<void> {
+    const limit = new Date(Date.now() - TRASH_KEPT_DAYS * 24 * 3_600_000);
+    const purged = await this.conversations.purgeTrashedBefore(limit);
+    if (purged) this.logger.log(`${purged} conversations supprimées définitivement`);
   }
 }
 

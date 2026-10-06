@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, IsNull, Not, Repository } from 'typeorm';
-import { pageBounds, toPage, type Page, type PaginationDto } from '../../../common/pagination.dto';
+import { ILike, IsNull, LessThan, Not, Repository } from 'typeorm';
+import {
+  pageBounds,
+  toPage,
+  type Page,
+  type PaginationDto,
+} from '../../../common/http/pagination.dto';
 import { Conversation } from '../../domain/conversation';
 import type { ConversationRepository } from '../../domain/conversation.repository';
 import { ConversationOrm } from './conversation.orm-entity';
@@ -28,16 +33,30 @@ export class TypeormConversationRepository implements ConversationRepository {
     pagination: PaginationDto,
   ): Promise<Page<Conversation>> {
     const [rows, total] = await this.conversations.findAndCount({
-      where: { userId, archived },
+      where: { userId, archived, deletedAt: IsNull() },
       order: { pinned: 'DESC', updatedAt: 'DESC' },
       ...pageBounds(pagination),
     });
     return toPage(rows.map(toDomain), total, pagination);
   }
 
+  async listTrashed(userId: string, pagination: PaginationDto): Promise<Page<Conversation>> {
+    const [rows, total] = await this.conversations.findAndCount({
+      where: { userId, deletedAt: Not(IsNull()) },
+      order: { deletedAt: 'DESC' },
+      ...pageBounds(pagination),
+    });
+    return toPage(rows.map(toDomain), total, pagination);
+  }
+
+  async purgeTrashedBefore(limit: Date): Promise<number> {
+    const { affected } = await this.conversations.delete({ deletedAt: LessThan(limit) });
+    return affected ?? 0;
+  }
+
   async listSavedByUser(userId: string, pagination: PaginationDto): Promise<Page<Conversation>> {
     const [rows, total] = await this.conversations.findAndCount({
-      where: { userId, sharedFrom: Not(IsNull()) },
+      where: { userId, sharedFrom: Not(IsNull()), deletedAt: IsNull() },
       order: { createdAt: 'DESC' },
       ...pageBounds(pagination),
     });
@@ -51,8 +70,8 @@ export class TypeormConversationRepository implements ConversationRepository {
   ): Promise<Page<Conversation>> {
     const [rows, total] = await this.conversations.findAndCount({
       where: [
-        { userId, name: ILike(`%${keyword}%`) },
-        { userId, messages: { content: ILike(`%${keyword}%`) } },
+        { userId, deletedAt: IsNull(), name: ILike(`%${keyword}%`) },
+        { userId, deletedAt: IsNull(), messages: { content: ILike(`%${keyword}%`) } },
       ],
       order: { updatedAt: 'DESC' },
       ...pageBounds(pagination),
@@ -107,6 +126,7 @@ function toDomain(row: ConversationOrm): Conversation {
     archived: row.archived,
     titleLocked: row.titleLocked,
     folderId: row.folderId ?? null,
+    deletedAt: row.deletedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   });
@@ -125,5 +145,6 @@ function toOrm(conversation: Conversation): Partial<ConversationOrm> {
     archived: conversation.archived,
     titleLocked: conversation.titleLocked,
     folderId: conversation.folderId,
+    deletedAt: conversation.deletedAt,
   };
 }

@@ -15,7 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request as ExpressRequest, Response } from 'express';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
 import { MAX_FILE_SIZE } from '../../domain/attachment';
 import { ReadAttachment, UploadAttachment } from '../../application/attachment.use-cases';
 import { AttachmentResponse } from './dto/attachment.response';

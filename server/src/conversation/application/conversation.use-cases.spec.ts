@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { toPage } from '../../common/pagination.dto';
+import { toPage } from '../../common/http/pagination.dto';
 import { GetOwnedFolder } from '../../folder/application/folder.use-cases';
 import { Conversation } from '../domain/conversation';
 import { CONVERSATION_REPOSITORY } from '../domain/conversation.repository';
@@ -33,6 +33,7 @@ const conversation = (overrides: Partial<Parameters<typeof Conversation.rehydrat
     archived: false,
     titleLocked: false,
     folderId: null,
+    deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

@@ -1,4 +1,4 @@
-import type { Page, PaginationDto } from '../../common/pagination.dto';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
 import type { Conversation } from './conversation';
 
 export const CONVERSATION_REPOSITORY = Symbol('ConversationRepository');
@@ -12,6 +12,8 @@ export interface ConversationRepository {
     pagination: PaginationDto,
   ): Promise<Page<Conversation>>;
   listSavedByUser(userId: string, pagination: PaginationDto): Promise<Page<Conversation>>;
+  listTrashed(userId: string, pagination: PaginationDto): Promise<Page<Conversation>>;
+  purgeTrashedBefore(limit: Date): Promise<number>;
   search(userId: string, keyword: string, pagination: PaginationDto): Promise<Page<Conversation>>;
   ownerPseudoOf(id: string): Promise<string | null>;
   folderInstructionsOf(id: string): Promise<{ name: string; instructions: string | null } | null>;

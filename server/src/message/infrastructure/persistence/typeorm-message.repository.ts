@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, LessThan, MoreThan, Not, Repository } from 'typeorm';
-import { pageBounds, toPage, type Page, type PaginationDto } from '../../../common/pagination.dto';
+import {
+  pageBounds,
+  toPage,
+  type Page,
+  type PaginationDto,
+} from '../../../common/http/pagination.dto';
 import { Message } from '../../domain/message';
 import type { MessageHit, MessageRepository } from '../../domain/message.repository';
 import { MessageOrm } from './message.orm-entity';

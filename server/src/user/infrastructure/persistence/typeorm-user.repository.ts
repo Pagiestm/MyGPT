@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { pageBounds, toPage, type Page, type PaginationDto } from '../../../common/pagination.dto';
+import {
+  pageBounds,
+  toPage,
+  type Page,
+  type PaginationDto,
+} from '../../../common/http/pagination.dto';
 import { User } from '../../domain/user';
 import { UserRole } from '../../domain/user-role.enum';
 import type { UserRepository } from '../../domain/user.repository';
@@ -23,6 +28,11 @@ export class TypeormUserRepository implements UserRepository {
 
   async findByGoogleId(googleId: string): Promise<User | null> {
     const row = await this.users.findOne({ where: { googleId } });
+    return row ? toDomain(row) : null;
+  }
+
+  async findByResetToken(tokenHash: string): Promise<User | null> {
+    const row = await this.users.findOne({ where: { resetTokenHash: tokenHash } });
     return row ? toDomain(row) : null;
   }
 
@@ -60,6 +70,8 @@ function toDomain(row: UserOrm): User {
     pseudo: row.pseudo,
     passwordHash: row.password ?? null,
     googleId: row.googleId ?? null,
+    resetTokenHash: row.resetTokenHash ?? null,
+    resetTokenExpiresAt: row.resetTokenExpiresAt ?? null,
     role: row.role,
     customInstructions: row.customInstructions ?? null,
     preferredModel: row.preferredModel ?? null,
@@ -74,6 +86,8 @@ function toOrm(user: User): Partial<UserOrm> {
     pseudo: user.pseudo,
     password: user.passwordHash,
     googleId: user.googleId,
+    resetTokenHash: user.pendingReset?.tokenHash ?? null,
+    resetTokenExpiresAt: user.pendingReset?.expiresAt ?? null,
     role: user.role,
     customInstructions: user.customInstructions,
     preferredModel: user.preferredModel,

@@ -1,11 +1,13 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { toPage } from '../../common/pagination.dto';
+import { toPage } from '../../common/http/pagination.dto';
 import { User } from '../domain/user';
 import { UserRole } from '../domain/user-role.enum';
 import { PASSWORD_HASHER } from '../domain/password-hasher';
 import { USER_REPOSITORY } from '../domain/user.repository';
 import {
+  ChangeEmail,
+  ChangePassword,
   ChangePseudo,
   ChangeRole,
   DeleteAccount,
@@ -25,6 +27,8 @@ const account = (overrides: Partial<Parameters<typeof User.rehydrate>[0]> = {}) 
     pseudo: 'alice42',
     passwordHash: 'hashed',
     googleId: null,
+    resetTokenHash: null,
+    resetTokenExpiresAt: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,
@@ -38,6 +42,7 @@ describe('User use cases', () => {
     findByEmail: jest.fn(),
     findByPseudo: jest.fn(),
     findByGoogleId: jest.fn(),
+    findByResetToken: jest.fn(),
     list: jest.fn(),
     countAdmins: jest.fn(),
     save: jest.fn((saved: User) => Promise.resolve(saved)),
@@ -55,6 +60,8 @@ describe('User use cases', () => {
   let role: ChangeRole;
   let credentials: VerifyCredentials;
   let google: SignInWithGoogle;
+  let password: ChangePassword;
+  let emailChange: ChangeEmail;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -76,6 +83,8 @@ describe('User use cases', () => {
         ChangeRole,
         VerifyCredentials,
         SignInWithGoogle,
+        ChangePassword,
+        ChangeEmail,
         { provide: USER_REPOSITORY, useValue: users },
         { provide: PASSWORD_HASHER, useValue: hasher },
       ],
@@ -91,6 +100,8 @@ describe('User use cases', () => {
     role = module.get(ChangeRole);
     credentials = module.get(VerifyCredentials);
     google = module.get(SignInWithGoogle);
+    password = module.get(ChangePassword);
+    emailChange = module.get(ChangeEmail);
   });
 
   describe('GetUser', () => {
@@ -170,6 +181,80 @@ describe('User use cases', () => {
       const saved = await preferences.execute('u1', { customInstructions: '   ' });
 
       expect(saved.customInstructions).toBeNull();
+    });
+  });
+
+  describe('ChangePassword', () => {
+    it('refuse si le mot de passe actuel est faux', async () => {
+      hasher.matches.mockResolvedValue(false);
+
+      await expect(password.execute('u1', 'faux', 'N0uveau@Mdp1')).rejects.toThrow(
+        'Mot de passe actuel incorrect',
+      );
+      expect(users.save).not.toHaveBeenCalled();
+    });
+
+    it('refuse pour un compte Google sans mot de passe', async () => {
+      users.findById.mockResolvedValue(account({ passwordHash: null, googleId: 'g-1' }));
+
+      await expect(password.execute('u1', 'peu importe', 'N0uveau@Mdp1')).rejects.toThrow(
+        'Mot de passe actuel incorrect',
+      );
+    });
+
+    it('enregistre le nouveau mot de passe haché', async () => {
+      hasher.matches.mockResolvedValue(true);
+      hasher.hash.mockResolvedValue('nouveau-hash');
+
+      await password.execute('u1', 'ancien', 'N0uveau@Mdp1');
+
+      expect((users.save.mock.calls[0]![0] as User).passwordHash).toBe('nouveau-hash');
+    });
+
+    it('invalide une demande de réinitialisation en cours', async () => {
+      const user = account();
+      user.openReset('un-hash', new Date(Date.now() + 60_000));
+      users.findById.mockResolvedValue(user);
+      hasher.matches.mockResolvedValue(true);
+
+      await password.execute('u1', 'ancien', 'N0uveau@Mdp1');
+
+      expect(user.pendingReset).toBeNull();
+    });
+  });
+
+  describe('ChangeEmail', () => {
+    it('refuse sans le bon mot de passe', async () => {
+      hasher.matches.mockResolvedValue(false);
+
+      await expect(emailChange.execute('u1', 'neuf@example.com', 'faux')).rejects.toThrow(
+        'Mot de passe incorrect',
+      );
+    });
+
+    it('refuse un email déjà pris par quelqu’un d’autre', async () => {
+      hasher.matches.mockResolvedValue(true);
+      users.findByEmail.mockResolvedValue(account({ id: 'u2' }));
+
+      await expect(emailChange.execute('u1', 'pris@example.com', 'bon')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('accepte de réenregistrer sa propre adresse', async () => {
+      hasher.matches.mockResolvedValue(true);
+      users.findByEmail.mockResolvedValue(account());
+
+      await expect(emailChange.execute('u1', 'alice@example.com', 'bon')).resolves.toBeDefined();
+    });
+
+    it('normalise l’adresse enregistrée', async () => {
+      hasher.matches.mockResolvedValue(true);
+      users.findByEmail.mockResolvedValue(null);
+
+      const saved = await emailChange.execute('u1', '  NEUF@Example.COM  ', 'bon');
+
+      expect(saved.email).toBe('neuf@example.com');
     });
   });
 

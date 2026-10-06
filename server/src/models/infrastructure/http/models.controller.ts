@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
 import { Roles } from '../../../auth/infrastructure/http/decorators/roles.decorator';
 import { RolesGuard } from '../../../auth/infrastructure/http/guards/roles.guard';
 import { UserRole } from '../../../user/domain/user-role.enum';

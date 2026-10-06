@@ -42,6 +42,7 @@ const conversation = (overrides: Partial<Parameters<typeof Conversation.rehydrat
     archived: false,
     titleLocked: false,
     folderId: null,
+    deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -67,6 +68,8 @@ const account = (overrides: Partial<Parameters<typeof User.rehydrate>[0]> = {}) 
     pseudo: 'alice',
     passwordHash: 'hashed',
     googleId: null,
+    resetTokenHash: null,
+    resetTokenExpiresAt: null,
     role: UserRole.User,
     customInstructions: null,
     preferredModel: null,
@@ -254,6 +257,38 @@ describe('Chat use cases', () => {
       await context.execute('u1', conversation(), stored());
 
       expect(knowledge.execute).not.toHaveBeenCalled();
+    });
+
+    it('remplace un PDF joint par son texte, pour que le modèle puisse le lire', async () => {
+      const pdf = Buffer.from(
+        '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n' +
+          '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n' +
+          '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R' +
+          '/Resources<</Font<</F1 5 0 R>>>>>>endobj\n' +
+          '4 0 obj<</Length 48>>stream\nBT /F1 12 Tf 20 100 Td (Clause de confidentialite) Tj ET\n' +
+          'endstream endobj\n' +
+          '5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R>>',
+        'latin1',
+      );
+      attachments.execute.mockResolvedValue([
+        { name: 'contrat.pdf', mimeType: 'application/pdf', data: pdf },
+      ]);
+
+      const result = await context.execute('u1', conversation(), stored());
+
+      expect(result.attachments[0]!.mimeType).toBe('text/plain');
+      expect(result.attachments[0]!.data.toString()).toContain('Clause de confidentialite');
+    });
+
+    it('garde une image telle quelle, aucun texte à en tirer', async () => {
+      const image = Buffer.from('binaire');
+      attachments.execute.mockResolvedValue([
+        { name: 'schema.png', mimeType: 'image/png', data: image },
+      ]);
+
+      const result = await context.execute('u1', conversation(), stored());
+
+      expect(result.attachments[0]!.mimeType).toBe('image/png');
     });
 
     it('scopes the document search to the folder of the conversation', async () => {

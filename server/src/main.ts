@@ -8,12 +8,12 @@ import helmet from 'helmet';
 import passport from 'passport';
 import { AppModule } from './app.module';
 import { dataSourceOptions } from './database/data-source.options';
-import { OriginGuard } from './common/origin.guard';
-import { SESSION_COOKIE } from './common/session-cookie';
-import { DomainErrorFilter } from './common/domain-error.filter';
-import { doubleCsrfProtection } from './common/csrf';
+import { OriginGuard } from './common/http/origin.guard';
+import { SESSION_COOKIE } from './common/http/session-cookie';
+import { DomainErrorFilter } from './common/http/domain-error.filter';
+import { doubleCsrfProtection } from './common/http/csrf';
 
-const ONE_HOUR = 3600000;
+const ONE_HOUR = 3_600_000;
 
 function sessionSecret(): string {
   const secret = process.env.SESSION_SECRET;

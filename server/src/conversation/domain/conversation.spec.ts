@@ -14,6 +14,7 @@ const conversation = (overrides: Partial<Parameters<typeof Conversation.rehydrat
     archived: false,
     titleLocked: false,
     folderId: null,
+    deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -116,6 +117,49 @@ describe('Conversation', () => {
     expect(copy.shareLink).toBeNull();
     expect(copy.pinned).toBe(false);
     expect(copy.folderId).toBeNull();
+  });
+
+  describe('corbeille', () => {
+    it('une conversation neuve n’est pas à la corbeille', () => {
+      expect(conversation().isTrashed).toBe(false);
+    });
+
+    it('la mise à la corbeille coupe le partage en cours', () => {
+      const existing = conversation({ shareLink: 'abc', pinned: true });
+
+      existing.moveToTrash();
+
+      expect(existing.isTrashed).toBe(true);
+      expect(existing.shareLink).toBeNull();
+      expect(existing.pinned).toBe(false);
+    });
+
+    it('une conversation à la corbeille n’est plus lisible par un visiteur', () => {
+      const existing = conversation({ isPublic: true, shareLink: 'abc' });
+
+      existing.moveToTrash();
+
+      expect(existing.isReadableBy(undefined)).toBe(false);
+      expect(existing.isReadableBy('u2')).toBe(false);
+    });
+
+    it('son propriétaire y accède toujours, pour la restaurer', () => {
+      const existing = conversation();
+
+      existing.moveToTrash();
+
+      expect(existing.isReadableBy('u1')).toBe(true);
+    });
+
+    it('la restauration la rend de nouveau ordinaire', () => {
+      const existing = conversation();
+      existing.moveToTrash();
+
+      existing.restore();
+
+      expect(existing.isTrashed).toBe(false);
+      expect(existing.deletedAt).toBeNull();
+    });
   });
 
   it('honours the name chosen for a copy', () => {

@@ -40,12 +40,13 @@ describe('describe', () => {
     expect(line).not.toContain('binaire');
   });
 
-  it('treats a PDF the same way as an image', () => {
+  it('inline un PDF, dont le texte a été extrait en amont', () => {
     const [line] = describeAttachments([
-      { name: 'contrat.pdf', mimeType: 'application/pdf', data: Buffer.from('%PDF') },
+      { name: 'contrat.pdf', mimeType: 'text/plain', data: Buffer.from('Article 1') },
     ]);
 
-    expect(line).toContain('non lisible');
+    expect(line).toContain('Article 1');
+    expect(line).not.toContain('non lisible');
   });
 });
 

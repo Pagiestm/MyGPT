@@ -2,7 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PASSWORD_HASHER } from './domain/password-hasher';
 import { USER_REPOSITORY } from './domain/user.repository';
+import { MAILER } from '../common/mail/mailer';
+import { SmtpMailer } from '../common/mail/smtp.mailer';
+import { RequestPasswordReset, ResetPassword } from './application/password-reset.use-cases';
 import {
+  ChangeEmail,
+  ChangePassword,
   ChangePseudo,
   ChangeRole,
   DeleteAccount,
@@ -25,6 +30,11 @@ import { UserController } from './infrastructure/http/user.controller';
   providers: [
     { provide: USER_REPOSITORY, useClass: TypeormUserRepository },
     { provide: PASSWORD_HASHER, useClass: BcryptPasswordHasher },
+    { provide: MAILER, useClass: SmtpMailer },
+    ChangePassword,
+    ChangeEmail,
+    RequestPasswordReset,
+    ResetPassword,
     GetUser,
     GetUserByEmail,
     RegisterUser,

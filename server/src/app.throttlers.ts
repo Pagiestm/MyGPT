@@ -1,5 +1,5 @@
 import type { ThrottlerOptions } from '@nestjs/throttler';
-import { AUTH_THROTTLER, AUTH_WINDOW_MS } from './common/decorators/throttle-auth.decorator';
+import { AUTH_THROTTLER, AUTH_WINDOW_MS } from './common/http/throttle-auth.decorator';
 
 export const throttlers: ThrottlerOptions[] = [
   { name: 'short', ttl: 1000, limit: 30 },

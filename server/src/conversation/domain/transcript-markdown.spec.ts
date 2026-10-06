@@ -15,6 +15,7 @@ const conversation = (name = 'Comment fonctionne NestJS ?') =>
     archived: false,
     titleLocked: true,
     folderId: null,
+    deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   });

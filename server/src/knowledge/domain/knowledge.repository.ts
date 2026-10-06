@@ -1,4 +1,4 @@
-import type { Page, PaginationDto } from '../../common/pagination.dto';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
 import type { Chunk, KnowledgeDocument } from './knowledge-document';
 
 export interface RetrievedChunk {

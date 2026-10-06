@@ -121,10 +121,7 @@ export class KnowledgeDocument {
       ['application/json', 'application/xml'].includes(file.mimeType) ||
       TEXT_EXTENSIONS.test(file.name);
     if (!textual) {
-      throw new DomainError(
-        'Formats acceptés : texte, Markdown, CSV, JSON, XML, YAML, HTML. ' +
-          'Convertissez les PDF en texte avant de les envoyer.',
-      );
+      throw new DomainError('Formats acceptés : PDF, texte, Markdown, CSV, JSON, XML, YAML, HTML.');
     }
     return file.data.toString('utf8');
   }

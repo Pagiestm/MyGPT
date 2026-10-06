@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { CsrfController } from './common/csrf.controller';
-import { HealthController } from './common/health.controller';
+import { CsrfController } from './common/http/csrf.controller';
+import { HealthController } from './common/http/health.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { throttlers } from './app.throttlers';
-import { ThrottleGuard } from './common/guards/throttle.guard';
+import { ThrottleGuard } from './common/http/throttle.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './database/data-source.options';
 import { AuthModule } from './auth/auth.module';
@@ -23,6 +24,7 @@ import { ModelsModule } from './models/models.module';
     ConfigModule.forRoot({ envFilePath: '../.env' }),
     TypeOrmModule.forRoot(dataSourceOptions),
     ThrottlerModule.forRoot(throttlers),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
     ConversationModule,

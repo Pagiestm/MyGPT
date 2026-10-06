@@ -15,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { IsUUID } from 'class-validator';
-import { PaginationDto } from '../../../../common/pagination.dto';
+import { PaginationDto } from '../../../../common/http/pagination.dto';
 import { EMBEDDING_DIMENSIONS, MAX_DOCUMENT_SIZE } from '../../../domain/knowledge-document';
 
 export class UploadDocumentDto {

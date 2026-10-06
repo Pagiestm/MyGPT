@@ -1,15 +1,17 @@
-import { Controller, Post, UseGuards, Request, Get, Res } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Request, Get, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiCookieAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { SESSION_COOKIE } from '../../../common/session-cookie';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
-import { ThrottleAuth } from '../../../common/decorators/throttle-auth.decorator';
+import { SESSION_COOKIE } from '../../../common/http/session-cookie';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
+import { ThrottleAuth } from '../../../common/http/throttle-auth.decorator';
 import { GetProfile } from '../../application/auth.use-cases';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { GoogleAuthGuard, GoogleCallbackGuard } from './guards/google-auth.guard';
 import { googleOauthConfig } from '../../google.config';
 import { LoginDto } from './dto/login.dto';
+
+const REMEMBERED_SESSION_MS = 30 * 24 * 3_600_000;
 import { ProfileResponse } from './dto/profile.response';
 
 @ApiTags('Authentication')
@@ -28,7 +30,10 @@ export class AuthController {
     schema: { properties: { message: { type: 'string', example: 'Connexion réussie' } } },
   })
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
-  login(@Request() req: AuthenticatedRequest) {
+  login(@Request() req: AuthenticatedRequest, @Body() dto: LoginDto) {
+    if (dto.remember && req.session?.cookie) {
+      req.session.cookie.maxAge = REMEMBERED_SESSION_MS;
+    }
     return { message: 'Connexion réussie', user: { pseudo: req.user.pseudo } };
   }
 

@@ -1,7 +1,7 @@
 import { Body, Controller, Param, ParseUUIDPipe, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
 import { MessageResponse } from '../../../message/infrastructure/http/dto/message.response';
 import {
   assertBrowserModel,

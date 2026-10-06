@@ -1,10 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { toPage } from '../../common/pagination.dto';
+import { toPage } from '../../common/http/pagination.dto';
 import { EMBEDDING_DIMENSIONS, KnowledgeDocument } from '../domain/knowledge-document';
 import { KNOWLEDGE_REPOSITORY } from '../domain/knowledge.repository';
 import {
   ListDocuments,
+  SplitDocumentIntoChunks,
   RemoveDocument,
   RetrieveContext,
   SearchDocuments,
@@ -48,6 +49,7 @@ describe('Knowledge use cases', () => {
   let list: ListDocuments;
   let remove: RemoveDocument;
   let retrieve: RetrieveContext;
+  let split: SplitDocumentIntoChunks;
   let search: SearchDocuments;
 
   beforeEach(async () => {
@@ -60,6 +62,7 @@ describe('Knowledge use cases', () => {
     const module = await Test.createTestingModule({
       providers: [
         StoreDocument,
+        SplitDocumentIntoChunks,
         ListDocuments,
         RemoveDocument,
         RetrieveContext,
@@ -69,6 +72,7 @@ describe('Knowledge use cases', () => {
     }).compile();
 
     store = module.get(StoreDocument);
+    split = module.get(SplitDocumentIntoChunks);
     list = module.get(ListDocuments);
     remove = module.get(RemoveDocument);
     retrieve = module.get(RetrieveContext);
@@ -95,6 +99,52 @@ describe('Knowledge use cases', () => {
 
       await expect(store.execute('u1', input())).rejects.toThrow('disque plein');
       expect(knowledge.remove).toHaveBeenCalledWith('d1');
+    });
+  });
+
+  describe('SplitDocumentIntoChunks', () => {
+    const pdf = (texte: string) =>
+      Buffer.from(
+        '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n' +
+          '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n' +
+          '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R' +
+          '/Resources<</Font<</F1 5 0 R>>>>>>endobj\n' +
+          `4 0 obj<</Length 48>>stream\nBT /F1 12 Tf 20 100 Td (${texte}) Tj ET\nendstream endobj\n` +
+          '5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R>>',
+        'latin1',
+      );
+
+    it('extrait le texte d’un PDF au lieu de le refuser', async () => {
+      const result = await split.execute({
+        name: 'contrat.pdf',
+        mimeType: 'application/pdf',
+        size: 1000,
+        data: pdf('Article premier'),
+      });
+
+      expect(result.chunks.join(' ')).toContain('Article premier');
+    });
+
+    it('le dit clairement quand le PDF ne contient aucun texte', async () => {
+      await expect(
+        split.execute({
+          name: 'scan.pdf',
+          mimeType: 'application/pdf',
+          size: 1000,
+          data: Buffer.from('%PDF-1.4 sans texte'),
+        }),
+      ).rejects.toThrow(/scanné en images/);
+    });
+
+    it('laisse passer un fichier texte sans rien extraire', async () => {
+      const result = await split.execute({
+        name: 'notes.md',
+        mimeType: 'text/markdown',
+        size: 7,
+        data: Buffer.from('Bonjour'),
+      });
+
+      expect(result.chunks).toEqual(['Bonjour']);
     });
   });
 

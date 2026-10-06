@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { Page, PaginationDto } from '../../common/pagination.dto';
-import { toPage } from '../../common/pagination.dto';
+import type { Page, PaginationDto } from '../../common/http/pagination.dto';
+import { toPage } from '../../common/http/pagination.dto';
 import { GetReadableConversation } from '../../conversation/application/conversation.use-cases';
 import type { Message } from '../domain/message';
 import {

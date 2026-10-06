@@ -8,8 +8,8 @@ import {
   ApiCookieAuth,
 } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
-import type { AuthenticatedRequest } from '../../../common/authenticated-request';
-import { PaginationDto, type Page } from '../../../common/pagination.dto';
+import type { AuthenticatedRequest } from '../../../common/http/authenticated-request';
+import { PaginationDto, type Page } from '../../../common/http/pagination.dto';
 import {
   GetMessage,
   ListMessages,

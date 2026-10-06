@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { pageBounds, toPage, type Page, type PaginationDto } from '../../../common/pagination.dto';
+import {
+  pageBounds,
+  toPage,
+  type Page,
+  type PaginationDto,
+} from '../../../common/http/pagination.dto';
 import { KnowledgeDocument, type Chunk } from '../../domain/knowledge-document';
 import type { KnowledgeRepository, RetrievedChunk } from '../../domain/knowledge.repository';
 import { KnowledgeChunkOrm } from './knowledge-chunk.orm-entity';

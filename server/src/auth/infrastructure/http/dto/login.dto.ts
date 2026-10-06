@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -23,4 +31,12 @@ export class LoginDto {
   })
   @IsNotEmpty({ message: 'Le mot de passe est requis' })
   password: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Garder la session ouverte trente jours au lieu d’une heure',
+  })
+  @IsBoolean()
+  @IsOptional()
+  remember?: boolean;
 }

@@ -15,6 +15,7 @@ export interface ConversationState {
   archived: boolean;
   titleLocked: boolean;
   folderId: string | null;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +41,7 @@ export class Conversation {
     public archived: boolean,
     public titleLocked: boolean,
     public folderId: string | null,
+    private trashedAt: Date | null,
     readonly createdAt: Date,
     readonly updatedAt: Date,
   ) {}
@@ -63,6 +65,7 @@ export class Conversation {
       false,
       false,
       input.folderId ?? null,
+      null,
       now,
       now,
     );
@@ -81,6 +84,7 @@ export class Conversation {
       state.archived,
       state.titleLocked,
       state.folderId,
+      state.deletedAt,
       state.createdAt,
       state.updatedAt,
     );
@@ -90,7 +94,26 @@ export class Conversation {
     return this.userId === userId;
   }
 
+  get deletedAt(): Date | null {
+    return this.trashedAt;
+  }
+
+  get isTrashed(): boolean {
+    return this.trashedAt !== null;
+  }
+
+  moveToTrash(now = new Date()): void {
+    this.trashedAt = now;
+    this.pinned = false;
+    this.revokeShare();
+  }
+
+  restore(): void {
+    this.trashedAt = null;
+  }
+
   isReadableBy(userId: string | undefined, now = new Date()): boolean {
+    if (this.isTrashed) return !!userId && this.belongsTo(userId);
     return (!!userId && this.belongsTo(userId)) || this.isPublic || this.isShared(now);
   }
 
@@ -140,6 +163,7 @@ export class Conversation {
       false,
       false,
       false,
+      null,
       null,
       now,
       now,
