@@ -12,7 +12,7 @@ export interface KnowledgeDocument {
 export const MAX_DOCUMENT_SIZE = 2 * 1024 * 1024;
 
 export const ACCEPTED_DOCUMENTS =
-  '.txt,.md,.markdown,.csv,.tsv,.json,.xml,.yaml,.yml,.html,.htm,.rst,.log,.ini,.toml,.sql';
+  '.pdf,.txt,.md,.markdown,.csv,.tsv,.json,.xml,.yaml,.yml,.html,.htm,.rst,.log,.ini,.toml,.sql';
 
 export function formatSize(bytes: number) {
   return bytes < 1024 * 1024

@@ -29,7 +29,7 @@
     </div>
 
     <p class="text-xs text-muted">
-      Texte, Markdown, CSV, JSON, XML, YAML ou HTML, 2 Mo maximum. Les documents sans dossier
+      PDF, texte, Markdown, CSV, JSON, XML, YAML ou HTML, 2 Mo maximum. Les documents sans dossier
       s'appliquent à toutes vos conversations.
     </p>
 
