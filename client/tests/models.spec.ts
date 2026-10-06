@@ -29,6 +29,32 @@ test.describe('Modèles', () => {
     await expect(page.getByRole('option', { name: /Qwen 2\.5 Coder 7B/ })).toBeVisible();
   });
 
+  test('le sélecteur décrit chaque modèle sans avoir à l’ouvrir ailleurs', async ({ page }) => {
+    await fakeApi(page, signedIn);
+    await page.goto('/chat');
+
+    await page.getByRole('button', { name: "Modèle d'IA" }).click();
+
+    const option = page.getByRole('option', { name: /Llama 3\.2 3B/ });
+    await expect(option).toContainText('Bon compromis');
+    await expect(option).toContainText('Suit bien les consignes');
+    await expect(option).toContainText('2,2 Go');
+  });
+
+  test('les capacités du modèle choisi sont consultables depuis le chat', async ({ page }) => {
+    await fakeApi(page, signedIn);
+    await page.goto('/chat');
+
+    await page.getByRole('button', { name: 'Capacités de Llama 3.2 3B' }).click();
+
+    await expect(page.getByText('3 milliards de paramètres')).toBeVisible();
+    await expect(page.getByText('Points forts')).toBeVisible();
+    await expect(
+      page.getByText('Moins précis que les modèles de 7 milliards et plus'),
+    ).toBeVisible();
+    await expect(page.getByText('4 k jetons')).toBeVisible();
+  });
+
   test('les réglages indiquent ce qui est déjà téléchargé', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));

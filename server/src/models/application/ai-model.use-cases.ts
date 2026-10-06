@@ -10,6 +10,12 @@ export interface AiModelInput {
   vramMb?: number;
   position?: number;
   enabled?: boolean;
+  parameters?: string | null;
+  strengths?: string[];
+  limitations?: string[];
+  contextWindow?: number | null;
+  lowResource?: boolean;
+  requiredFeatures?: string[];
   refreshWeights?: boolean;
 }
 
@@ -24,11 +30,39 @@ export class SeedCatalog implements OnModuleInit {
   }
 
   async execute(): Promise<void> {
-    if (await this.models.count()) return;
+    if (await this.models.count()) {
+      await this.fillMissingProfiles();
+      return;
+    }
     await this.models.saveMany(
       SEED_MODELS.map((seed, position) => AiModel.create({ ...seed, position })),
     );
     this.logger.log(`Catalogue initialisé avec ${SEED_MODELS.length} modèles`);
+  }
+
+  private async fillMissingProfiles(): Promise<void> {
+    const existing = await this.models.findAll();
+    const incomplete = existing.filter(
+      (model) => !model.strengths.length && !model.limitations.length && !model.parameters,
+    );
+
+    const filled = incomplete.flatMap((model) => {
+      const seed = SEED_MODELS.find((candidate) => candidate.id === model.id);
+      if (!seed) return [];
+      model.describeAs({
+        parameters: seed.parameters,
+        strengths: seed.strengths,
+        limitations: seed.limitations,
+        contextWindow: seed.contextWindow,
+        lowResource: seed.lowResource,
+        requiredFeatures: seed.requiredFeatures,
+      });
+      return [model];
+    });
+
+    if (!filled.length) return;
+    await this.models.saveMany(filled);
+    this.logger.log(`Capacités complétées pour ${filled.length} modèles du catalogue`);
   }
 }
 
@@ -65,14 +99,16 @@ export class GetModel {
 export class AddModel {
   constructor(@Inject(AI_MODEL_REPOSITORY) private readonly models: AiModelRepository) {}
 
-  async execute(input: {
-    id: string;
-    label: string;
-    description: string;
-    vramMb: number;
-    position?: number;
-    enabled?: boolean;
-  }): Promise<AiModel> {
+  async execute(
+    input: {
+      id: string;
+      label: string;
+      description: string;
+      vramMb: number;
+      position?: number;
+      enabled?: boolean;
+    } & Omit<AiModelInput, 'refreshWeights'>,
+  ): Promise<AiModel> {
     if (await this.models.findById(input.id)) {
       throw new BadRequestException('Ce modèle est déjà au catalogue');
     }

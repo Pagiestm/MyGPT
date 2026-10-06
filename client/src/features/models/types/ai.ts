@@ -8,6 +8,14 @@ export interface AiModel {
   position: number;
   enabled: boolean;
   revision: number;
+  /** Rédigé par un administrateur */
+  parameters: string | null;
+  strengths: string[];
+  limitations: string[];
+  /** Annoncé par WebLLM */
+  contextWindow: number | null;
+  lowResource: boolean;
+  requiredFeatures: string[];
   downloaded?: boolean;
 }
 

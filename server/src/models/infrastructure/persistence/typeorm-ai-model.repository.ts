@@ -51,6 +51,12 @@ function toDomain(row: AiModelOrm): AiModel {
     position: row.position,
     enabled: row.enabled,
     revision: row.revision,
+    parameters: row.parameters ?? null,
+    strengths: row.strengths ?? [],
+    limitations: row.limitations ?? [],
+    contextWindow: row.contextWindow ?? null,
+    lowResource: row.lowResource,
+    requiredFeatures: row.requiredFeatures ?? [],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   });
@@ -65,5 +71,11 @@ function toOrm(model: AiModel): Partial<AiModelOrm> {
     position: model.position,
     enabled: model.enabled,
     revision: model.revision,
+    parameters: model.parameters,
+    strengths: model.strengths,
+    limitations: model.limitations,
+    contextWindow: model.contextWindow,
+    lowResource: model.lowResource,
+    requiredFeatures: model.requiredFeatures,
   };
 }

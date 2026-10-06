@@ -72,6 +72,12 @@ export const MODELS = [
     position: 0,
     enabled: true,
     revision: 1,
+    parameters: '3 milliards',
+    strengths: ['Bon compromis qualité / vitesse', 'Suit bien les consignes'],
+    limitations: ['Moins précis que les modèles de 7 milliards et plus'],
+    contextWindow: 4096,
+    lowResource: true,
+    requiredFeatures: [],
   },
   {
     id: 'webgpu:Phi-4-mini-instruct-q4f16_1-MLC',
@@ -81,6 +87,12 @@ export const MODELS = [
     position: 1,
     enabled: true,
     revision: 1,
+    parameters: '3,8 milliards',
+    strengths: ['Réponses concises', 'Mathématiques'],
+    limitations: ['Surtout entraîné en anglais'],
+    contextWindow: 4096,
+    lowResource: false,
+    requiredFeatures: [],
   },
   {
     id: 'webgpu:Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC',
@@ -90,6 +102,12 @@ export const MODELS = [
     position: 2,
     enabled: true,
     revision: 1,
+    parameters: '7 milliards',
+    strengths: ['Spécialisé code', 'Nombreux langages'],
+    limitations: ['Moins bon hors programmation'],
+    contextWindow: 4096,
+    lowResource: false,
+    requiredFeatures: [],
   },
 ];
 

@@ -15,11 +15,14 @@ export {
   onModelDownload,
   webllm,
   WebgpuUnavailableError,
+  type LibraryFacts,
   type PromptMessage,
 } from './api/webllm';
 export type { AiModel, AiModels, AiProvider, ModelCatalog } from './types/ai';
 export {
   BROWSER_MODEL_PREFIX,
+  featureLabel,
+  formatContextWindow,
   EMBEDDING_DIMENSIONS,
   EMBEDDING_MODEL,
   formatVram,
@@ -28,3 +31,4 @@ export {
   withBrowserPrefix,
   type ModelDownload,
 } from './types/webgpu';
+export { default as ModelProfile } from './components/ModelProfile.vue';

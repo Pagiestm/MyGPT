@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada';
 import type { AiModels } from '../types/ai';
-import { modelsApi, type ModelInput } from '@/features/models/api/models.api';
+import { modelsApi, type ModelChanges, type ModelInput } from '../api/models.api';
 import { webllm } from '../api/webllm';
 import { queryKeys } from '@/shared/lib/queryKeys';
 
@@ -50,11 +50,16 @@ function invalidateCatalog(cache: ReturnType<typeof useQueryCache>) {
   ]);
 }
 
+export type SaveModelPayload =
+  { id?: undefined; input: ModelInput } | { id: string; input: ModelChanges };
+
 export function useSaveModel() {
   const cache = useQueryCache();
   return useMutation({
-    mutation: ({ id, input }: { id?: string; input: ModelInput }) =>
-      id ? modelsApi.update(id, input) : modelsApi.create(input),
+    mutation: (payload: SaveModelPayload) =>
+      payload.id === undefined
+        ? modelsApi.create(payload.input)
+        : modelsApi.update(payload.id, payload.input),
     onSettled: () => invalidateCatalog(cache),
   });
 }

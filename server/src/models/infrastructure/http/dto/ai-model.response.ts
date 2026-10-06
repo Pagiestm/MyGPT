@@ -31,6 +31,29 @@ export class AiModelResponse {
   })
   revision: number;
 
+  @ApiProperty({ required: false, nullable: true, example: '3 milliards' })
+  parameters: string | null;
+
+  @ApiProperty({ type: [String], example: ['Suit bien les consignes'] })
+  strengths: string[];
+
+  @ApiProperty({ type: [String], example: ['Moins précis que les modèles plus gros'] })
+  limitations: string[];
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Fenêtre de contexte annoncée par WebLLM, en jetons',
+    example: 4096,
+  })
+  contextWindow: number | null;
+
+  @ApiProperty({ description: 'Tient sur un GPU modeste, d’après WebLLM' })
+  lowResource: boolean;
+
+  @ApiProperty({ type: [String], example: ['shader-f16'] })
+  requiredFeatures: string[];
+
   @ApiProperty()
   createdAt: Date;
 
@@ -46,6 +69,12 @@ export class AiModelResponse {
       position: model.position,
       enabled: model.enabled,
       revision: model.revision,
+      parameters: model.parameters,
+      strengths: model.strengths,
+      limitations: model.limitations,
+      contextWindow: model.contextWindow,
+      lowResource: model.lowResource,
+      requiredFeatures: model.requiredFeatures,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };

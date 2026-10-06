@@ -9,6 +9,13 @@ import {
 } from '../types/webgpu';
 import { createReasoningFilter, stripReasoning } from '@/features/models/lib/reasoning';
 
+export interface LibraryFacts {
+  vramMb: number;
+  contextWindow: number | null;
+  lowResource: boolean;
+  requiredFeatures: string[];
+}
+
 export interface PromptMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -195,6 +202,18 @@ export const webllm = {
     const { prebuiltAppConfig } = await lib();
     const record = prebuiltAppConfig.model_list.find((item) => item.model_id === toWebllmId(model));
     return Math.round(record?.vram_required_MB ?? 0) || 1;
+  },
+
+  /** Ce que WebLLM sait du modèle. Tout le reste du profil est rédigé par un administrateur. */
+  async profileFor(model: string): Promise<LibraryFacts> {
+    const { prebuiltAppConfig } = await lib();
+    const record = prebuiltAppConfig.model_list.find((item) => item.model_id === toWebllmId(model));
+    return {
+      vramMb: Math.round(record?.vram_required_MB ?? 0) || 1,
+      contextWindow: record?.overrides?.context_window_size ?? null,
+      lowResource: record?.low_resource_required ?? false,
+      requiredFeatures: record?.required_features ?? [],
+    };
   },
 
   async isDownloaded(model: string): Promise<boolean> {

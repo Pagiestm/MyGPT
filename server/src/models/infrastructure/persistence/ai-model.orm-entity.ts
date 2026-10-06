@@ -23,6 +23,24 @@ export class AiModelOrm {
   @Column('int', { default: 1 })
   revision: number;
 
+  @Column({ type: 'varchar', nullable: true })
+  parameters: string | null;
+
+  @Column('text', { array: true, default: () => "'{}'" })
+  strengths: string[];
+
+  @Column('text', { array: true, default: () => "'{}'" })
+  limitations: string[];
+
+  @Column('int', { nullable: true })
+  contextWindow: number | null;
+
+  @Column({ default: false })
+  lowResource: boolean;
+
+  @Column('text', { array: true, default: () => "'{}'" })
+  requiredFeatures: string[];
+
   @CreateDateColumn()
   createdAt: Date;
 

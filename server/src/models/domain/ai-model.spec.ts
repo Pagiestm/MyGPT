@@ -54,4 +54,54 @@ describe('AiModel', () => {
 
     expect(() => model.describeAs({ vramMb: -1 })).toThrow(DomainError);
   });
+
+  describe('capability profile', () => {
+    it('starts without a profile when none is given', () => {
+      const model = AiModel.create(input);
+
+      expect(model.strengths).toEqual([]);
+      expect(model.limitations).toEqual([]);
+      expect(model.parameters).toBeNull();
+      expect(model.contextWindow).toBeNull();
+      expect(model.lowResource).toBe(false);
+    });
+
+    it('drops blank traits rather than showing empty badges', () => {
+      const model = AiModel.create({ ...input, strengths: ['  Rapide  ', '   ', ''] });
+
+      expect(model.strengths).toEqual(['Rapide']);
+    });
+
+    it('refuses more traits than a reader can take in', () => {
+      expect(() =>
+        AiModel.create({ ...input, strengths: ['a', 'b', 'c', 'd', 'e', 'f', 'g'] }),
+      ).toThrow(DomainError);
+    });
+
+    it('refuses a trait too long to fit on a badge', () => {
+      expect(() => AiModel.create({ ...input, limitations: ['x'.repeat(81)] })).toThrow(
+        DomainError,
+      );
+    });
+
+    it('refuses a context window that could not exist', () => {
+      expect(() => AiModel.create({ ...input, contextWindow: 0 })).toThrow(DomainError);
+    });
+
+    it('lets the profile be edited without touching the weights', () => {
+      const model = AiModel.create(input);
+
+      model.describeAs({ strengths: ['Mathématiques'], parameters: '  4 milliards  ' });
+
+      expect(model.strengths).toEqual(['Mathématiques']);
+      expect(model.parameters).toBe('4 milliards');
+      expect(model.revision).toBe(1);
+    });
+
+    it('treats a blank size as no size at all', () => {
+      const model = AiModel.create({ ...input, parameters: '   ' });
+
+      expect(model.parameters).toBeNull();
+    });
+  });
 });

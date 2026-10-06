@@ -71,8 +71,48 @@ describe('AI model use cases', () => {
       expect(seeded.map((item) => item.position)).toEqual(SEED_MODELS.map((_, index) => index));
     });
 
-    it('never overwrites a catalogue someone has already edited', async () => {
+    it('never re-seeds a catalogue that already has models', async () => {
       models.count.mockResolvedValue(3);
+      models.findAll.mockResolvedValue([]);
+
+      await seed.execute();
+
+      expect(models.saveMany).not.toHaveBeenCalled();
+    });
+
+    it('completes the profile of a seeded model that predates this field', async () => {
+      const seeded = SEED_MODELS[0]!;
+      models.count.mockResolvedValue(8);
+      models.findAll.mockResolvedValue([
+        AiModel.create({
+          id: seeded.id,
+          label: seeded.label,
+          description: seeded.description,
+          vramMb: seeded.vramMb,
+          position: 0,
+        }),
+      ]);
+
+      await seed.execute();
+
+      const filled = models.saveMany.mock.calls[0]![0] as AiModel[];
+      expect(filled[0]!.strengths).toEqual(seeded.strengths);
+      expect(filled[0]!.parameters).toBe(seeded.parameters);
+    });
+
+    it('never overwrites a profile an administrator has written', async () => {
+      const seeded = SEED_MODELS[0]!;
+      models.count.mockResolvedValue(8);
+      models.findAll.mockResolvedValue([
+        AiModel.create({
+          id: seeded.id,
+          label: seeded.label,
+          description: seeded.description,
+          vramMb: seeded.vramMb,
+          position: 0,
+          strengths: ['Mon propre texte'],
+        }),
+      ]);
 
       await seed.execute();
 

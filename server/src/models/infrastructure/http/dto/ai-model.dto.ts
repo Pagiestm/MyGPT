@@ -1,5 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsInt,
   IsNotEmpty,
@@ -52,6 +54,69 @@ export class CreateAiModelDto {
   @IsBoolean()
   @IsOptional()
   enabled?: boolean;
+
+  @ApiProperty({ required: false, description: 'Taille du modèle', example: '3 milliards' })
+  @IsString()
+  @MaxLength(40)
+  @IsOptional()
+  parameters?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Ce à quoi le modèle est bon, rédigé par un administrateur',
+    type: [String],
+    example: ['Suit bien les consignes', 'GPU modeste suffisant'],
+  })
+  @IsArray()
+  @ArrayMaxSize(6)
+  @IsString({ each: true })
+  @MaxLength(80, { each: true })
+  @IsOptional()
+  strengths?: string[];
+
+  @ApiProperty({
+    required: false,
+    description: 'Ses limites connues, rédigées par un administrateur',
+    type: [String],
+    example: ['Moins précis que les modèles de 7 milliards et plus'],
+  })
+  @IsArray()
+  @ArrayMaxSize(6)
+  @IsString({ each: true })
+  @MaxLength(80, { each: true })
+  @IsOptional()
+  limitations?: string[];
+
+  @ApiProperty({
+    required: false,
+    description: 'Fenêtre de contexte annoncée par WebLLM, en jetons',
+    example: 4096,
+  })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  contextWindow?: number;
+
+  @ApiProperty({
+    required: false,
+    description: 'WebLLM annonce que le modèle tient sur un GPU modeste',
+  })
+  @IsBoolean()
+  @IsOptional()
+  lowResource?: boolean;
+
+  @ApiProperty({
+    required: false,
+    description: 'Fonctionnalités WebGPU exigées par WebLLM',
+    type: [String],
+    example: ['shader-f16'],
+  })
+  @IsArray()
+  @ArrayMaxSize(6)
+  @IsString({ each: true })
+  @MaxLength(80, { each: true })
+  @IsOptional()
+  requiredFeatures?: string[];
 }
 
 export class UpdateAiModelDto extends PartialType(CreateAiModelDto) {
