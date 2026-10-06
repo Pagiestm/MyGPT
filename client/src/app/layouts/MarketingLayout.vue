@@ -55,7 +55,8 @@
         <div class="flex flex-col gap-3">
           <AppLogo />
           <p class="max-w-xs text-sm text-muted">
-            Assistant conversationnel propulsé par Gemini. Le code source est disponible sur GitHub.
+            Assistant conversationnel dont le modèle s'exécute dans votre navigateur. Le code source
+            est disponible sur GitHub.
           </p>
         </div>
 

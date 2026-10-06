@@ -35,12 +35,16 @@ const steps = [
     description: 'Un email, un pseudo et un mot de passe suffisent.',
   },
   {
-    title: 'Posez votre première question',
-    description: 'Écrivez comme vous parlez, ou partez d’une suggestion.',
+    title: 'Choisissez un modèle',
+    description: 'Du plus léger au plus capable. Il se télécharge une fois, puis reste en cache.',
   },
   {
-    title: 'Continuez la conversation',
-    description: 'Précisez, reformulez : MyGPT garde le contexte de l’échange.',
+    title: 'Posez votre première question',
+    description: 'La réponse est générée dans votre navigateur, sans quitter votre machine.',
+  },
+  {
+    title: 'Ajoutez vos documents',
+    description: 'L’assistant s’en sert pour répondre, pour tout le compte ou un dossier.',
   },
   {
     title: 'Partagez si vous le souhaitez',

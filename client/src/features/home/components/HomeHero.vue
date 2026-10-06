@@ -8,7 +8,8 @@
           Posez votre question.
         </h1>
         <p class="enter text-lg text-pretty text-muted" style="--enter-delay: 80ms">
-          MyGPT vous répond avec Gemini, garde vos conversations et vous laisse les partager.
+          Le modèle tourne dans votre navigateur. Rien de ce que vous écrivez n'est envoyé à un
+          service d'IA, et il n'y a ni abonnement ni clé à fournir.
         </p>
       </div>
 

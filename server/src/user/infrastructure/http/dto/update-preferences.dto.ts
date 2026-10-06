@@ -13,7 +13,7 @@ export class UpdatePreferencesDto {
 
   @ApiPropertyOptional({
     description: 'Modèle utilisé par défaut (null pour revenir au modèle par défaut)',
-    example: 'gemini-3.8-flash',
+    example: 'webgpu:Llama-3.2-3B-Instruct-q4f16_1-MLC',
     nullable: true,
   })
   @ValidateIf((_, value) => value !== null)

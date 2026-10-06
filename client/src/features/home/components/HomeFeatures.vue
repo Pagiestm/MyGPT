@@ -33,27 +33,42 @@ import UIcon from '@nuxt/ui/components/Icon.vue';
 
 const features = [
   {
+    icon: 'i-lucide-cpu',
+    title: 'Le modèle tourne chez vous',
+    description: 'En WebGPU, dans cet onglet. Rien à installer, aucun abonnement, aucune clé.',
+  },
+  {
+    icon: 'i-lucide-library-big',
+    title: 'Vos documents comme source',
+    description: 'Déposez vos fichiers : l’assistant s’appuie dessus avant de répondre.',
+  },
+  {
+    icon: 'i-lucide-sliders-horizontal',
+    title: 'Le modèle de votre choix',
+    description: 'Points forts, limites et mémoire requise affichés avant de choisir.',
+  },
+  {
     icon: 'i-lucide-message-square-text',
     title: 'Des réponses lisibles',
     description: 'Titres, listes, tableaux et code coloré, copiable en un clic.',
   },
   {
-    icon: 'i-lucide-pencil',
+    icon: 'i-lucide-pencil-line',
     title: 'Questions modifiables',
     description: 'Corrigez une question déjà posée : la réponse est régénérée.',
   },
   {
-    icon: 'i-lucide-history',
-    title: 'Historique complet',
-    description: 'Chaque conversation est gardée, classée par date et renommable.',
+    icon: 'i-lucide-folder-tree',
+    title: 'Classé, archivé, retrouvé',
+    description: 'Dossiers, épinglage, archives et recherche dans tous vos messages.',
   },
   {
-    icon: 'i-lucide-search',
-    title: 'Recherche',
-    description: 'Retrouvez une conversation par son titre, ou un message précis.',
+    icon: 'i-lucide-paperclip',
+    title: 'Pièces jointes',
+    description: 'Joignez un texte ou du code à votre question, lu par le modèle.',
   },
   {
-    icon: 'i-lucide-link',
+    icon: 'i-lucide-share-2',
     title: 'Partage en un lien',
     description: 'Lecture seule, sans compte, avec une date d’expiration si besoin.',
   },

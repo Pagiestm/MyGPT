@@ -29,10 +29,16 @@ import UIcon from '@nuxt/ui/components/Icon.vue';
 
 const points = [
   {
+    icon: 'i-lucide-cpu',
+    title: 'Rien ne part chez un tiers',
+    description:
+      'La génération a lieu dans votre onglet. Aucun service d’IA ne voit vos questions.',
+  },
+  {
     icon: 'i-lucide-lock',
     title: 'Privé par défaut',
     description:
-      'Seul votre compte accède à vos conversations. La session expire au bout d’une heure.',
+      'Vos conversations restent sur ce serveur, visibles de vous seul. La session expire au bout d’une heure.',
   },
   {
     icon: 'i-lucide-link-2-off',
