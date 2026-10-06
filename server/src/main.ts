@@ -1,44 +1,88 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import passport from 'passport';
-import * as crypto from 'crypto';
+import { AppModule } from './app.module';
+import { dataSourceOptions } from './database/data-source.options';
+import { OriginGuard } from './common/origin.guard';
+import { doubleCsrfProtection } from './common/csrf';
+
+const ONE_HOUR = 3600000;
+
+function sessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (secret && secret.length >= 32) return secret;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'SESSION_SECRET est obligatoire en production et doit faire au moins 32 caractères',
+    );
+  }
+  new Logger('bootstrap').warn(
+    'SESSION_SECRET absente ou trop courte : secret de développement utilisé',
+  );
+  return 'secret-de-developpement-uniquement-32c';
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-
+  app.useGlobalGuards(new OriginGuard());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
-  const cookieName = `ca_sid_${crypto.createHash('sha256').update('mygpt-salt').digest('hex').substring(0, 8)}`;
+  app.use(cookieParser());
 
+  const PgStore = connectPgSimple(session);
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'ma-cle-secrete',
+      store: new PgStore({
+        conObject: {
+          host: dataSourceOptions.type === 'postgres' ? process.env.DB_HOST : undefined,
+          port: Number(process.env.DB_PORT ?? 5432),
+          user: process.env.DB_USERNAME,
+          password: String(process.env.DB_PASSWORD),
+          database: process.env.DB_DATABASE,
+        },
+        tableName: 'user_sessions',
+        createTableIfMissing: true,
+        pruneSessionInterval: 900,
+      }),
+      secret: sessionSecret(),
       resave: false,
       saveUninitialized: false,
-      name: cookieName,
+      rolling: true,
+      name: 'mygpt_sid',
       cookie: {
-        maxAge: 3600000, // 1 heure en millisecondes
-        secure: process.env.NODE_ENV === 'production', // Utiliser HTTPS en production
+        maxAge: ONE_HOUR,
+        secure: isProduction,
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: isProduction ? 'strict' : 'lax',
       },
     }),
   );
+
+  app.use(doubleCsrfProtection);
 
   app.use(passport.initialize());
   app.use(passport.session());
@@ -47,18 +91,15 @@ async function bootstrap() {
     .setTitle('MyGPT API')
     .setDescription('API pour le service MyGPT')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addCookieAuth('mygpt_sid')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
 
   app.enableCors({
-    origin: clientUrl,
+    origin: (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-CSRF-Token'],
   });
 
   await app.listen(process.env.PORT ?? 3000);

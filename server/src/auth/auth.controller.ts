@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import type { Request as ExpressRequest, Response } from 'express';
 import { Session, SessionData } from 'express-session';
 import { UserRole } from '../user/user-role.enum';
+import { ThrottleAuth } from '../common/decorators/throttle-auth.decorator';
 
 interface RequestWithUser extends ExpressRequest {
   user: {
@@ -24,6 +25,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @UseGuards(LocalAuthGuard)
+  @ThrottleAuth()
   @Post('login')
   @ApiOperation({ summary: 'Connecte un utilisateur' })
   @ApiBody({ type: LoginDto })

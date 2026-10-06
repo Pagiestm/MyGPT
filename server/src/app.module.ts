@@ -1,5 +1,11 @@
 import { Module } from '@nestjs/common';
+import { CsrfController } from './common/csrf.controller';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { throttlers } from './app.throttlers';
+import { ThrottleGuard } from './common/guards/throttle.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { dataSourceOptions } from './database/data-source.options';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
@@ -14,16 +20,8 @@ import { ModelsModule } from './models/models.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: '../.env' }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: String(process.env.DB_PASSWORD),
-      database: process.env.DB_DATABASE,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV !== 'production',
-    }),
+    TypeOrmModule.forRoot(dataSourceOptions),
+    ThrottlerModule.forRoot(throttlers),
     AuthModule,
     UserModule,
     ConversationModule,
@@ -34,7 +32,7 @@ import { ModelsModule } from './models/models.module';
     KnowledgeModule,
     ModelsModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [CsrfController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottleGuard }],
 })
 export class AppModule {}

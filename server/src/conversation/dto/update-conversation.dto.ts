@@ -1,6 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
-import { PartialType } from '@nestjs/mapped-types';
 import { CreateConversationDto } from './create-conversation.dto';
 
 export class UpdateConversationDto extends PartialType(CreateConversationDto) {

@@ -26,6 +26,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { Request as ExpressRequest } from 'express';
 import { PaginationDto } from '../common/pagination.dto';
+import { ThrottleAuth } from '../common/decorators/throttle-auth.decorator';
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -39,6 +40,7 @@ interface AuthenticatedRequest extends ExpressRequest {
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ThrottleAuth()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: CreateUserDto })

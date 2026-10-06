@@ -159,7 +159,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
   };
 
   const isApi = (url: URL) =>
-    /^\/(auth|users|conversations|messages|chat|folders|attachments|knowledge|models)(\/|$)/.test(
+    /^\/(auth|users|conversations|messages|chat|folders|attachments|knowledge|models|csrf)(\/|$)/.test(
       url.pathname,
     );
 
@@ -170,6 +170,14 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     const method = request.method();
     const path = url.pathname;
     const body: Record<string, unknown> = readJsonBody(request);
+    if (path === '/csrf') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ token: 'jeton-de-test' }),
+      });
+    }
+
     const json = (status: number, data?: unknown) =>
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data ?? {}) });
 

@@ -108,6 +108,36 @@ Les modèles à raisonnement (Qwen 3, DeepSeek-R1) émettent des blocs `<think>`
 
 Sans WebGPU, l'application le signale au lieu d'échouer. Il n'y a pas de repli vers un service en ligne.
 
+## Sécurité
+
+| Protection        | Mise en oeuvre                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| Sessions          | stockées en base (`user_sessions`), elles survivent aux redéploiements                      |
+| Secret de session | obligatoire en production, 32 caractères minimum, refus de démarrer sinon                   |
+| Cookie de session | `httpOnly`, `secure` et `sameSite: strict` en production                                    |
+| CSRF              | double soumission : cookie `csrf_token` + en-tête `X-CSRF-Token` sur toute méthode non sûre |
+| Origine           | les requêtes d'écriture venant d'une origine non déclarée sont refusées                     |
+| En-têtes          | `helmet` (HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`)                            |
+| Débit             | 10 req/s et 120 req/min par IP ; 10 tentatives / 15 min sur connexion et inscription        |
+
+Le client récupère le jeton sur `GET /csrf`, le met en cache et le renvoie automatiquement via un
+intercepteur axios ; sur un 403 il le renouvelle et rejoue la requête une fois.
+
+## Migrations
+
+Le schéma est décrit par les entités. En développement, `synchronize` les applique ; en
+production il est désactivé et les **migrations** font foi, appliquées au démarrage.
+
+```bash
+npm run migration:generate -w server -- src/database/migrations/NomDeLaMigration
+npm run migration:run -w server
+npm run migration:revert -w server
+npm run migration:show -w server
+```
+
+La configuration est partagée entre Nest et le CLI TypeORM
+(`server/src/database/data-source.options.ts`), pour qu'ils ne puissent pas diverger.
+
 ## Rôles et administration
 
 Deux rôles sur `users.role` : `user` et `admin`. Un administrateur gère le catalogue de modèles et les rôles ; tout le reste se déduit de la propriété des données.
@@ -154,6 +184,7 @@ Depuis la racine ; `-w server` ou `-w client` pour cibler un workspace.
 | `npm run typecheck`               | Vérification TypeScript (client + serveur) |
 | `npm test` / `test:cov`           | Tests unitaires Jest (serveur)             |
 | `npm run test:e2e`                | Tests end-to-end Playwright (client)       |
+| `npm run migration:*`             | Migrations TypeORM (`-w server`)           |
 
 ## Tests
 
