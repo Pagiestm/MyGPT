@@ -1,10 +1,14 @@
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import ui from '@nuxt/ui/vite';
 import { uiConfig } from './ui.config';
 
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
     vue(),
     // Composants et composables Nuxt UI importés explicitement dans chaque fichier

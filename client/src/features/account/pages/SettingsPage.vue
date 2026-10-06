@@ -49,6 +49,8 @@
         <UPageCard title="Zone de danger" variant="subtle">
           <DeleteAccount />
         </UPageCard>
+
+        <p class="text-center text-xs text-dimmed">MyGPT v{{ version }}</p>
       </UContainer>
     </template>
   </UDashboardPanel>
@@ -64,5 +66,6 @@ import ProfileForm from '@/features/account/components/ProfileForm.vue';
 import PreferencesForm from '@/features/account/components/PreferencesForm.vue';
 import DeleteAccount from '@/features/account/components/DeleteAccount.vue';
 import { KnowledgeManager } from '@/features/knowledge';
+import { version } from '@/shared/lib/version';
 import { BrowserModels } from '@/features/models';
 </script>

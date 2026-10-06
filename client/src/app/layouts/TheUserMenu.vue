@@ -23,6 +23,7 @@ import { useColorMode } from '@vueuse/core';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { useAuthStore } from '@/features/auth';
 import { isAdmin } from '@/shared/types/user';
+import { version } from '@/shared/lib/version';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -32,7 +33,10 @@ const { store: colorMode } = useColorMode();
 const initials = computed(() => auth.user?.pseudo.slice(0, 2).toUpperCase() ?? '');
 
 const items = computed<DropdownMenuItem[][]>(() => [
-  [{ label: auth.user?.email ?? '', type: 'label' }],
+  [
+    { label: auth.user?.email ?? '', type: 'label' },
+    { label: `MyGPT v${version}`, type: 'label', class: 'py-0 text-xs text-dimmed' },
+  ],
   [
     { label: 'Réglages', icon: 'i-lucide-settings', to: '/settings' },
     { label: 'Bibliothèque', icon: 'i-lucide-library', to: '/library' },
