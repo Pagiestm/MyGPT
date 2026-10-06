@@ -7,6 +7,16 @@ import type {
 import { PAGE_SIZE, type Page } from '@/shared/types/pagination';
 
 export const conversationApi = {
+  trash: (offset = 0, limit = PAGE_SIZE) =>
+    http
+      .get<Page<Conversation>>('/conversations/trash', { params: { offset, limit } })
+      .then((r) => r.data),
+
+  restore: (id: string) =>
+    http.post<Conversation>(`/conversations/${id}/restore`).then((r) => r.data),
+
+  purge: (id: string) => http.delete(`/conversations/${id}/permanent`).then(() => undefined),
+
   list: (keyword?: string, offset = 0, limit = PAGE_SIZE) =>
     http
       .get<Page<Conversation>>(keyword ? '/conversations/search' : '/conversations', {

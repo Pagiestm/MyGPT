@@ -27,6 +27,12 @@ export const chatRoutes: RouteRecordRaw[] = [
     meta: { layout: 'app', requiresAuth: true, title: 'Archives' },
   },
   {
+    path: '/corbeille',
+    name: 'trash',
+    component: () => import('./pages/TrashPage.vue'),
+    meta: { layout: 'app', requiresAuth: true, title: 'Corbeille' },
+  },
+  {
     path: '/s/:link',
     name: 'shared-conversation',
     component: () => import('./pages/SharedConversationPage.vue'),

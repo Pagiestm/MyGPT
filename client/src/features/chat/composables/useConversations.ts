@@ -18,6 +18,32 @@ export function useConversationList(keyword: MaybeRefOrGetter<string>) {
   });
 }
 
+export function useTrashedConversations() {
+  return usePaginatedList({
+    key: () => queryKeys.trash,
+    query: (offset, limit) => conversationApi.trash(offset, limit),
+  });
+}
+
+export function useRestoreConversation() {
+  const cache = useQueryCache();
+  return useMutation({
+    mutation: (id: string) => conversationApi.restore(id),
+    onSettled: () => {
+      void cache.invalidateQueries({ key: queryKeys.trash });
+      void cache.invalidateQueries({ key: queryKeys.conversations });
+    },
+  });
+}
+
+export function usePurgeConversation() {
+  const cache = useQueryCache();
+  return useMutation({
+    mutation: (id: string) => conversationApi.purge(id),
+    onSettled: () => cache.invalidateQueries({ key: queryKeys.trash }),
+  });
+}
+
 export function useArchivedConversations() {
   return usePaginatedList({
     key: queryKeys.archived,
