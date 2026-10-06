@@ -1,15 +1,63 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConversationService } from './conversation.service';
-import { ConversationController } from './conversation.controller';
-import { Conversation } from './entities/conversation.entity';
-import { Message } from '../message/entities/message.entity';
 import { FolderModule } from '../folder/folder.module';
+import { MessageOrm } from '../message/infrastructure/persistence/message.orm-entity';
+import { CONVERSATION_REPOSITORY } from './domain/conversation.repository';
+import { CONVERSATION_TRANSCRIPT } from './domain/conversation-transcript';
+import {
+  DeleteConversation,
+  GetConversation,
+  GetFolderGuidance,
+  GetOwnedConversation,
+  GetReadableConversation,
+  ListConversations,
+  ListSavedConversations,
+  OpenSharedConversation,
+  RevokeShare,
+  SaveSharedConversation,
+  SearchConversations,
+  ShareConversation,
+  StartConversation,
+  TitleConversation,
+  TouchConversation,
+  UpdateConversation,
+} from './application/conversation.use-cases';
+import { ConversationOrm } from './infrastructure/persistence/conversation.orm-entity';
+import { TypeormConversationRepository } from './infrastructure/persistence/typeorm-conversation.repository';
+import { TypeormConversationTranscript } from './infrastructure/persistence/typeorm-conversation-transcript';
+import { ConversationController } from './infrastructure/http/conversation.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Conversation, Message]), FolderModule],
+  imports: [TypeOrmModule.forFeature([ConversationOrm, MessageOrm]), FolderModule],
   controllers: [ConversationController],
-  providers: [ConversationService],
-  exports: [ConversationService],
+  providers: [
+    { provide: CONVERSATION_REPOSITORY, useClass: TypeormConversationRepository },
+    { provide: CONVERSATION_TRANSCRIPT, useClass: TypeormConversationTranscript },
+    GetConversation,
+    GetOwnedConversation,
+    GetReadableConversation,
+    StartConversation,
+    ListConversations,
+    ListSavedConversations,
+    SearchConversations,
+    UpdateConversation,
+    DeleteConversation,
+    ShareConversation,
+    RevokeShare,
+    OpenSharedConversation,
+    SaveSharedConversation,
+    TitleConversation,
+    TouchConversation,
+    GetFolderGuidance,
+  ],
+  exports: [
+    CONVERSATION_REPOSITORY,
+    GetConversation,
+    GetOwnedConversation,
+    GetReadableConversation,
+    TitleConversation,
+    TouchConversation,
+    GetFolderGuidance,
+  ],
 })
 export class ConversationModule {}

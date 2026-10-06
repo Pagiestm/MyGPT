@@ -1,4 +1,4 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import session from 'express-session';
@@ -9,6 +9,8 @@ import passport from 'passport';
 import { AppModule } from './app.module';
 import { dataSourceOptions } from './database/data-source.options';
 import { OriginGuard } from './common/origin.guard';
+import { SESSION_COOKIE } from './common/session-cookie';
+import { DomainErrorFilter } from './common/domain-error.filter';
 import { doubleCsrfProtection } from './common/csrf';
 
 const ONE_HOUR = 3600000;
@@ -41,6 +43,7 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalFilters(new DomainErrorFilter(app.get(HttpAdapterHost)));
   app.useGlobalGuards(new OriginGuard());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -72,7 +75,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       rolling: true,
-      name: 'mygpt_sid',
+      name: SESSION_COOKIE,
       cookie: {
         maxAge: ONE_HOUR,
         secure: isProduction,
@@ -91,7 +94,7 @@ async function bootstrap() {
     .setTitle('MyGPT API')
     .setDescription('API pour le service MyGPT')
     .setVersion('1.0')
-    .addCookieAuth('mygpt_sid')
+    .addCookieAuth(SESSION_COOKIE)
     .build();
   SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
 
