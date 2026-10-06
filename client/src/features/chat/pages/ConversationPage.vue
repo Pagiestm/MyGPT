@@ -8,6 +8,7 @@
         </template>
         <template #right>
           <MessageSearch :conversation-id="id" @select="focusMessage" />
+          <ExportConversation v-if="conversation" :conversation-id="conversation.id" />
           <ShareModal v-if="conversation" :conversation="conversation" />
         </template>
       </UDashboardNavbar>
@@ -80,6 +81,7 @@ import BaseLoadMore from '@/shared/ui/BaseLoadMore.vue';
 import ConversationTitle from '@/features/chat/components/ConversationTitle.vue';
 import MessageSearch from '@/features/chat/components/MessageSearch.vue';
 import ShareModal from '@/features/chat/components/ShareModal.vue';
+import ExportConversation from '@/features/chat/components/ExportConversation.vue';
 
 const props = defineProps<{ id: string }>();
 

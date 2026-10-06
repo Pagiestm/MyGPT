@@ -6,6 +6,7 @@ import { CONVERSATION_REPOSITORY } from './domain/conversation.repository';
 import { CONVERSATION_TRANSCRIPT } from './domain/conversation-transcript';
 import {
   DeleteConversation,
+  ExportConversation,
   GetConversation,
   GetFolderGuidance,
   GetOwnedConversation,
@@ -42,6 +43,7 @@ import { ConversationController } from './infrastructure/http/conversation.contr
     SearchConversations,
     UpdateConversation,
     DeleteConversation,
+    ExportConversation,
     ShareConversation,
     RevokeShare,
     OpenSharedConversation,

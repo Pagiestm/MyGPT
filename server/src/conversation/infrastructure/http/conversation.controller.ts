@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Res,
   UseGuards,
   Request,
   HttpCode,
@@ -22,8 +23,10 @@ import {
 import { AuthenticatedGuard } from '../../../auth/infrastructure/http/guards/authenticated.guard';
 import type { AuthenticatedRequest } from '../../../common/authenticated-request';
 import { PaginationDto, type Page } from '../../../common/pagination.dto';
+import type { Response } from 'express';
 import {
   DeleteConversation,
+  ExportConversation,
   GetReadableConversation,
   ListConversations,
   ListSavedConversations,
@@ -54,6 +57,7 @@ export class ConversationController {
     private readonly readable: GetReadableConversation,
     private readonly updateConversation: UpdateConversation,
     private readonly deleteConversation: DeleteConversation,
+    private readonly exportConversation: ExportConversation,
     private readonly shareConversation: ShareConversation,
     private readonly revoke: RevokeShare,
   ) {}
@@ -165,6 +169,27 @@ export class ConversationController {
     @Param('id') id: string,
   ): Promise<ConversationResponse> {
     return ConversationResponse.from(await this.readable.execute(id, req.user.id));
+  }
+
+  @Get(':id/export')
+  @UseGuards(AuthenticatedGuard)
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Télécharger la conversation entière en Markdown' })
+  @ApiParam({ name: 'id', description: 'ID unique de la conversation' })
+  @ApiResponse({ status: 200, description: 'Fichier Markdown' })
+  @ApiResponse({ status: 404, description: 'Conversation non trouvée' })
+  async exportOne(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { fileName, markdown } = await this.exportConversation.execute(id, req.user.id);
+
+    res.set({
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+    });
+    res.send(markdown);
   }
 
   @Patch(':id')

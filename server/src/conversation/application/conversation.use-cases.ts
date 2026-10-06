@@ -6,6 +6,7 @@ import {
   CONVERSATION_REPOSITORY,
   type ConversationRepository,
 } from '../domain/conversation.repository';
+import { toFileName, toMarkdown } from '../domain/transcript-markdown';
 import {
   CONVERSATION_TRANSCRIPT,
   type ConversationTranscript,
@@ -209,6 +210,24 @@ export class SaveSharedConversation {
     const copy = await this.conversations.save(shared.copyFor(userId, input.newName));
     await this.transcript.copy(shared.id, copy.id);
     return copy;
+  }
+}
+
+@Injectable()
+export class ExportConversation {
+  constructor(
+    @Inject(CONVERSATION_TRANSCRIPT) private readonly transcript: ConversationTranscript,
+    private readonly owned: GetOwnedConversation,
+  ) {}
+
+  async execute(id: string, userId: string): Promise<{ fileName: string; markdown: string }> {
+    const conversation = await this.owned.execute(id, userId);
+    const messages = await this.transcript.read(conversation.id);
+
+    return {
+      fileName: toFileName(conversation),
+      markdown: toMarkdown(conversation, messages),
+    };
   }
 }
 
