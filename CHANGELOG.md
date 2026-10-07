@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/Pagiestm/MyGPT/compare/v1.5.0...v1.5.1) (2026-10-07)
+
+### Bug Fixes
+
+- **chat:** rendre le menu des conversations atteignable au doigt ([663b7f1](https://github.com/Pagiestm/MyGPT/commit/663b7f1b7873e36e5679441b0e39f74857803df5))
+- **models:** n'offrir que les modèles que l'appareil peut exécuter ([f932ab4](https://github.com/Pagiestm/MyGPT/commit/f932ab49e42dfa5ca0e3312f610e431bccf58d76))
+
 # [1.5.0](https://github.com/Pagiestm/MyGPT/compare/v1.4.2...v1.5.0) (2026-10-07)
 
 ### Features
