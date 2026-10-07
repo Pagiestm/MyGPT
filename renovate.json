@@ -54,6 +54,11 @@
       "matchPackageNames": ["@mlc-ai/web-llm"],
       "groupName": "moteur WebGPU",
       "automerge": false
+    },
+    {
+      "description": "TypeScript 7 retire typescript/lib/tsc, dont vue-tsc a besoin. À rouvrir quand vue-tsc saura s'en passer.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }
