@@ -1,3 +1,9 @@
+# [1.4.0](https://github.com/Pagiestm/MyGPT/compare/v1.3.2...v1.4.0) (2026-10-07)
+
+### Features
+
+- **ops:** servir le client depuis Vercel sur un domaine propre ([38e7b5b](https://github.com/Pagiestm/MyGPT/commit/38e7b5b7c9ccc793efa06d017c587f925f50d278))
+
 ## [1.3.2](https://github.com/Pagiestm/MyGPT/compare/v1.3.1...v1.3.2) (2026-10-07)
 
 ### Bug Fixes
