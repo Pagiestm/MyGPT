@@ -63,9 +63,11 @@ Deux chemins, selon que vous hébergez vous-même ou non.
 
 `render.yaml` décrit les deux services : l'API construite depuis `server/Dockerfile.prod`, et le client en site statique.
 
-**Une seule origine.** Le client porte le domaine ; l'API reste sur son adresse `onrender.com` et n'est jointe qu'à travers une réécriture `/api/*`. Le navigateur ne parle donc qu'à un seul hôte : le cookie de session, en `sameSite: strict`, suit sans difficulté, et il n'y a aucun CORS à régler.
+**Une seule origine.** Le navigateur ne parle qu'à l'hôte du client ; l'API n'est jointe qu'à travers une réécriture `/api/*`. Le cookie de session, en `sameSite: strict`, suit donc sans difficulté, et il n'y a aucun CORS à régler.
 
-Après le premier déploiement, Render attribue une adresse à l'API. Reportez-la dans `render.yaml` à la place de `mygpt-api-XXXX`, puis redéployez — c'est la cible de la réécriture.
+Peu importe lequel des deux hôtes porte le site : l'adresse `onrender.com` convient aussi bien qu'un domaine à vous. Le plan gratuit de Render n'inclut que deux domaines personnalisés par espace de travail, au-delà desquels il faut une carte.
+
+Après le premier déploiement, Render attribue une adresse à l'API. Reportez-la dans `render.yaml` comme cible de la réécriture, et reprenez l'adresse du site statique dans `CLIENT_URL` et `GOOGLE_CALLBACK_URL`.
 
 Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord :
 
@@ -76,7 +78,7 @@ Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord
 | `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                      |
 
-Côté DNS, un seul enregistrement : un `CNAME` du sous-domaine vers l'adresse `onrender.com` du site statique.
+Pour servir le site depuis un domaine à vous, un seul enregistrement DNS suffit : un `CNAME` du sous-domaine vers l'adresse `onrender.com` du site statique, puis le domaine à déclarer dans le service.
 
 Le service web gratuit s'endort après quinze minutes et met environ une minute à se réveiller. Un ping régulier sur `/health` l'en empêche. Cette sonde ne touche pas la base, exprès : la tenir éveillée consommerait le quota de calcul de Neon. Pour vérifier aussi la base, utilisez `/health/ready`.
 
