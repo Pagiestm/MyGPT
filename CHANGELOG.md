@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/Pagiestm/MyGPT/compare/v1.3.0...v1.3.1) (2026-10-07)
+
+### Bug Fixes
+
+- **ops:** redéployer les services quand le blueprint change ([490c737](https://github.com/Pagiestm/MyGPT/commit/490c73778d49285865a66037bb08977162347ad3))
+
 # [1.3.0](https://github.com/Pagiestm/MyGPT/compare/v1.2.0...v1.3.0) (2026-10-07)
 
 ### Features
