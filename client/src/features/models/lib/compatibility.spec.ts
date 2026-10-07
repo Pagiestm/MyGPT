@@ -37,7 +37,13 @@ const catalogue = [
 ];
 
 function device(partial: Partial<DeviceProfile>): DeviceProfile {
-  return { features: new Set(['shader-f16']), maxBufferSize: 4 * GO, memoryGb: null, ...partial };
+  return {
+    features: new Set(['shader-f16']),
+    maxBufferSize: 4 * GO,
+    memoryGb: null,
+    handheld: false,
+    ...partial,
+  };
 }
 
 describe('canRun', () => {
@@ -67,6 +73,17 @@ describe('canRun', () => {
   it('ne se laisse pas brider par le plafond de navigator.deviceMemory', () => {
     expect(canRun(machine, device({ memoryGb: 8 }))).toBe(true);
     expect(canRun(machine, device({ memoryGb: null }))).toBe(true);
+  });
+
+  it('plafonne un téléphone qui accorde pile le gigaoctet demandé', () => {
+    const telephone = device({ maxBufferSize: 1 * GO, memoryGb: null, handheld: true });
+    expect(canRun(frugal, telephone)).toBe(false);
+    expect(canRun(leger, telephone)).toBe(true);
+  });
+
+  it('plafonne un appareil tactile même sans mémoire annoncée ni tampons étroits', () => {
+    expect(canRun(frugal, device({ handheld: true }))).toBe(false);
+    expect(canRun(frugal, device({ handheld: false }))).toBe(true);
   });
 
   it('plafonne un appareil étroit même quand il annonce la mémoire maximale', () => {

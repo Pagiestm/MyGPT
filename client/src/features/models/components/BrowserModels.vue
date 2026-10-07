@@ -91,6 +91,7 @@ const device = computed(() => {
   const found = profile.value;
   if (!found) return null;
   const parts = [
+    found.handheld ? 'appareil tactile' : 'poste de travail',
     found.features.has('shader-f16') ? 'f16 pris en charge' : 'sans f16',
     `tampons ${formatVram(found.maxBufferSize / (1024 * 1024))}`,
   ];

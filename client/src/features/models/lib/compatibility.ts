@@ -4,6 +4,7 @@ export interface DeviceProfile {
   features: Set<string>;
   maxBufferSize: number;
   memoryGb: number | null;
+  handheld: boolean;
 }
 
 const COMFORTABLE_BUFFER = 1 << 30;
@@ -20,7 +21,7 @@ function memoryBudget(device: DeviceProfile): number | null {
 }
 
 export function isModest(device: DeviceProfile): boolean {
-  return device.maxBufferSize < COMFORTABLE_BUFFER;
+  return device.handheld || device.maxBufferSize <= COMFORTABLE_BUFFER;
 }
 
 function ceiling(device: DeviceProfile): number | null {

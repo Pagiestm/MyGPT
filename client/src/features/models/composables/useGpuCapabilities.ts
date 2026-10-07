@@ -20,6 +20,7 @@ async function detect(): Promise<void> {
     features: new Set(adapter.features),
     maxBufferSize: adapter.limits.maxBufferSize,
     memoryGb: reportedMemory(),
+    handheld: window.matchMedia('(pointer: coarse)').matches,
   };
 }
 
