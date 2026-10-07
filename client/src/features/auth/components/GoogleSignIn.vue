@@ -13,6 +13,7 @@
       variant="outline"
       class="rounded-full"
       :href="url"
+      external
       :label="label"
     >
       <template #leading>

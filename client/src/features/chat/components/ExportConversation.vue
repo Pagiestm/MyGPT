@@ -5,6 +5,7 @@
       color="neutral"
       variant="ghost"
       :href="url"
+      external
       aria-label="Télécharger la conversation en Markdown"
     />
   </UTooltip>
