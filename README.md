@@ -57,19 +57,38 @@ Le code est monté dans les conteneurs : le rechargement à chaud fonctionne. Ap
 
 ## Déploiement
 
-Images distinctes de celles du développement : build compilé, dépendances de production seules, utilisateur non root, `nginx` pour le client, base et API non exposées sur l'hôte.
+Deux chemins, selon que vous hébergez vous-même ou non.
+
+### Sur Render, avec Neon et Brevo
+
+`render.yaml` décrit les deux services : l'API construite depuis `server/Dockerfile.prod`, et le client en site statique. Créez le blueprint depuis le dépôt, puis renseignez les variables marquées `sync: false` dans le tableau de bord :
+
+| Variable                                   | Où la trouver                                                   |
+| ------------------------------------------ | --------------------------------------------------------------- |
+| `DATABASE_URL`                             | chaîne de connexion Neon, avec `?sslmode=require`               |
+| `SMTP_USER`, `SMTP_PASSWORD`               | identifiants SMTP Brevo                                         |
+| `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                      |
+
+Les deux sous-domaines doivent partager le même domaine racine : le cookie de session est en `sameSite: strict`, il ne franchirait pas deux sites différents.
+
+Le service web gratuit s'endort après quinze minutes et met environ une minute à se réveiller. Un ping régulier sur `/health` l'en empêche. Cette sonde ne touche pas la base, exprès : la tenir éveillée consommerait le quota de calcul de Neon. Pour vérifier aussi la base, utilisez `/health/ready`.
+
+Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non.
+
+### Sur votre propre serveur
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Variables obligatoires, le démarrage échoue sans elles : `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `SESSION_SECRET` (32 caractères minimum), `CLIENT_URL`, `VITE_API_URL`. `HTTP_PORT` vaut 8080 par défaut.
+Images distinctes de celles du développement : build compilé, dépendances de production seules, utilisateur non root, `nginx` pour le client, base et API non exposées sur l'hôte.
+
+Variables obligatoires, le démarrage échoue sans elles : `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `SESSION_SECRET` (32 caractères minimum), `CLIENT_URL`, `VITE_API_URL`, `APP_DOMAIN`, `API_DOMAIN`, `ACME_EMAIL`.
 
 `VITE_API_URL` est figée au build : les variables Vite sont inlinées dans le bundle. Changer d'URL d'API impose de reconstruire l'image client.
 
-`GET /health` vérifie le serveur et sa base, et sert de `HEALTHCHECK` aux deux images. Les migrations s'appliquent au démarrage.
-
-Caddy termine le TLS et obtient les certificats Let's Encrypt tout seul : renseignez `APP_DOMAIN`, `API_DOMAIN` et `ACME_EMAIL`. Lui seul est exposé, sur 80 et 443.
+Caddy termine le TLS et obtient les certificats Let's Encrypt tout seul. Lui seul est exposé, sur 80 et 443.
 
 Un service de sauvegarde dépose un `pg_dump` dans le volume `db-backups`, toutes les 24 heures par défaut (`BACKUP_INTERVAL`), conservé 7 jours (`BACKUP_KEEP_DAYS`). Pour restaurer :
 
@@ -77,6 +96,8 @@ Un service de sauvegarde dépose un `pg_dump` dans le volume `db-backups`, toute
 docker compose -f docker-compose.prod.yml exec db-backup \
   pg_restore -h db -U "$DB_USERNAME" -d "$DB_DATABASE" --clean /backups/mygpt-AAAAMMJJ-HHMMSS.dump
 ```
+
+Les migrations s'appliquent au démarrage dans les deux cas.
 
 ## Comment fonctionnent les modèles
 
