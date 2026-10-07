@@ -1,3 +1,13 @@
+# [1.2.0](https://github.com/Pagiestm/MyGPT/compare/v1.1.0...v1.2.0) (2026-10-07)
+
+### Bug Fixes
+
+- **http:** faire confiance au proxy en production ([06e3109](https://github.com/Pagiestm/MyGPT/commit/06e31095516a0ba23f058da1e9e86166dc7525e4))
+
+### Features
+
+- **ops:** servir le client et l'API sur une seule origine ([294a94c](https://github.com/Pagiestm/MyGPT/commit/294a94c811c3a1d39ce6089ae1afc495feb9dd31))
+
 # [1.1.0](https://github.com/Pagiestm/MyGPT/compare/v1.0.0...v1.1.0) (2026-10-07)
 
 ### Features
