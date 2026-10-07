@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import passport from 'passport';
 import { AppModule } from './app.module';
-import { dataSourceOptions } from './database/data-source.options';
+import { postgresConnection } from './database/data-source.options';
 import { OriginGuard } from './common/http/origin.guard';
 import { SESSION_COOKIE } from './common/http/session-cookie';
 import { DomainErrorFilter } from './common/http/domain-error.filter';
@@ -32,6 +32,7 @@ function sessionSecret(): string {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const database = postgresConnection();
   const isProduction = process.env.NODE_ENV === 'production';
 
   app.enableCors({
@@ -67,11 +68,16 @@ async function bootstrap() {
     session({
       store: new PgStore({
         conObject: {
-          host: dataSourceOptions.type === 'postgres' ? process.env.DB_HOST : undefined,
-          port: Number(process.env.DB_PORT ?? 5432),
-          user: process.env.DB_USERNAME,
-          password: String(process.env.DB_PASSWORD),
-          database: process.env.DB_DATABASE,
+          ...(database.url
+            ? { connectionString: database.url }
+            : {
+                host: database.host,
+                port: database.port,
+                user: database.username,
+                password: database.password,
+                database: database.database,
+              }),
+          ssl: database.ssl ? { rejectUnauthorized: false } : false,
         },
         tableName: 'user_sessions',
         createTableIfMissing: true,

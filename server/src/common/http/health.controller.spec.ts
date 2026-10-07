@@ -22,20 +22,25 @@ describe('HealthController', () => {
     controller = module.get(HealthController);
   });
 
+  it('répond sans réveiller la base, pour qu’un ping régulier ne la tienne pas éveillée', () => {
+    expect(controller.live()).toMatchObject({ status: 'ok' });
+    expect(dataSource.query).not.toHaveBeenCalled();
+  });
+
   it('answers only once the database has actually replied', async () => {
-    await expect(controller.check()).resolves.toMatchObject({ status: 'ok' });
+    await expect(controller.ready()).resolves.toMatchObject({ status: 'ok' });
     expect(dataSource.query).toHaveBeenCalledWith('SELECT 1');
   });
 
   it('reports itself unavailable rather than healthy when the database is down', async () => {
     dataSource.query.mockRejectedValue(new Error('connection refused'));
 
-    await expect(controller.check()).rejects.toThrow(ServiceUnavailableException);
+    await expect(controller.ready()).rejects.toThrow(ServiceUnavailableException);
   });
 
   it('never leaks the database error to the caller', async () => {
     dataSource.query.mockRejectedValue(new Error('password authentication failed for postgres'));
 
-    await expect(controller.check()).rejects.toThrow('Base de données injoignable');
+    await expect(controller.ready()).rejects.toThrow('Base de données injoignable');
   });
 });
