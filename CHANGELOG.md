@@ -1,3 +1,13 @@
+# [1.6.0](https://github.com/Pagiestm/MyGPT/compare/v1.5.1...v1.6.0) (2026-10-07)
+
+### Bug Fixes
+
+- **models:** reconnaître un téléphone qui accorde pile le gigaoctet demandé ([568d64e](https://github.com/Pagiestm/MyGPT/commit/568d64e5b0ffbfdd29af4dbdd62ec29ac38591d7))
+
+### Features
+
+- **models:** amorcer le catalogue avec des modèles pour téléphone ([3f105c8](https://github.com/Pagiestm/MyGPT/commit/3f105c82d139aaad4bddf25c9441d1b1117da712))
+
 ## [1.5.1](https://github.com/Pagiestm/MyGPT/compare/v1.5.0...v1.5.1) (2026-10-07)
 
 ### Bug Fixes
