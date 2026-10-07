@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import ui from '@nuxt/ui/vite';
 import { uiConfig } from './ui.config';
@@ -25,6 +25,7 @@ export default defineConfig({
   optimizeDeps: { include: ['markstream-vue', 'shiki', 'zod'] },
   // .env unique à la racine du monorepo (seules les variables VITE_* sont exposées au navigateur)
   envDir: '..',
+  test: { include: ['src/**/*.spec.ts'], environment: 'node' },
   server: {
     // Polling requis pour le hot-reload dans Docker sur un volume Windows/macOS
     watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true } : undefined,

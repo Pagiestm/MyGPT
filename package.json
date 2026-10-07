@@ -24,6 +24,7 @@
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test -w server",
+    "test:unit": "npm run test:unit -w client",
     "test:cov": "npm run test:cov -w server",
     "test:e2e": "npm run test:e2e -w client"
   },

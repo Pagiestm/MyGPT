@@ -9,6 +9,14 @@
       <UIcon name="i-lucide-download" class="size-4 shrink-0 text-dimmed" />
       <span class="text-highlighted">Préparation du modèle sur votre machine</span>
       <span class="ml-auto tabular-nums text-muted">{{ download.progress }} %</span>
+      <UButton
+        icon="i-lucide-x"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        aria-label="Annuler la préparation du modèle"
+        @click="cancelModelDownload()"
+      />
     </div>
     <UProgress :model-value="download.progress" size="sm" />
     <p class="truncate text-xs text-muted">{{ download.text }}</p>
@@ -19,8 +27,10 @@
 </template>
 
 <script setup lang="ts">
+import UButton from '@nuxt/ui/components/Button.vue';
 import UIcon from '@nuxt/ui/components/Icon.vue';
 import UProgress from '@nuxt/ui/components/Progress.vue';
+import { cancelModelDownload } from '../api/webllm';
 import { useModelDownload } from '../composables/useModelDownload';
 
 const { download } = useModelDownload();

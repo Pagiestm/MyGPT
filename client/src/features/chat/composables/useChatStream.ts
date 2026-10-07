@@ -6,7 +6,7 @@ import type { Message } from '@/features/chat/types/message';
 import { emptyPage, type Page } from '@/shared/types/pagination';
 import { getErrorMessage } from '@/shared/lib/http';
 import { chatApi, type ChatEvent } from '@/features/chat/api/chat.api';
-import { webllm } from '@/features/models';
+import { ModelDownloadCancelledError, useGpuCapabilities, webllm } from '@/features/models';
 import { useAuthStore } from '@/features/auth';
 import { useDocuments } from '@/features/knowledge';
 import { useModels } from '@/features/models';
@@ -25,11 +25,15 @@ export function useChatStream(
   const auth = useAuthStore();
   const { data: catalog, models } = useModels();
   const { items: documents } = useDocuments();
+  const { recommend } = useGpuCapabilities();
   const phase = ref<Phase>('idle');
   let controller: AbortController | null = null;
 
   const effective = (requested?: string) =>
-    requested ?? auth.user?.preferredModel ?? catalog.value?.defaultModel;
+    requested ??
+    auth.user?.preferredModel ??
+    recommend(models.value) ??
+    catalog.value?.defaultModel;
 
   function requireModel(requested?: string) {
     const chosen = effective(requested);
@@ -42,12 +46,13 @@ export function useChatStream(
     return { model: chosen, revision: models.value.find((item) => item.id === chosen)?.revision };
   }
 
-  async function embedQuestion(text: string) {
+  async function embedQuestion(text: string, signal: AbortSignal) {
     if (!documents.value.length || !text.trim()) return undefined;
     try {
-      const [vector] = await webllm.embed([text.slice(0, 2000)]);
+      const [vector] = await webllm.embed([text.slice(0, 2000)], signal);
       return vector;
-    } catch {
+    } catch (error) {
+      if (error instanceof ModelDownloadCancelledError) throw error;
       return undefined;
     }
   }
@@ -117,7 +122,7 @@ export function useChatStream(
     try {
       await start(handle, signal);
     } catch (error) {
-      if (signal.aborted) {
+      if (signal.aborted || error instanceof ModelDownloadCancelledError) {
         update((list) => list.filter((m) => m.id !== STREAMING_ID || m.content));
       } else {
         update((list) =>
@@ -166,7 +171,7 @@ export function useChatStream(
             content,
             attachmentIds: attachments.map((attachment) => attachment.id),
             ...chosen,
-            questionEmbedding: await embedQuestion(content),
+            questionEmbedding: await embedQuestion(content, signal),
           },
           onEvent,
           signal,
@@ -190,7 +195,7 @@ export function useChatStream(
         const asked = [...(page?.items ?? [])].reverse().find((item) => !item.isFromAi);
         return chatApi.regenerate(
           toValue(conversationId),
-          { ...chosen, questionEmbedding: await embedQuestion(asked?.content ?? '') },
+          { ...chosen, questionEmbedding: await embedQuestion(asked?.content ?? '', signal) },
           onEvent,
           signal,
         );
@@ -211,7 +216,7 @@ export function useChatStream(
         const chosen = requireModel(model);
         return chatApi.edit(
           messageId,
-          { content, ...chosen, questionEmbedding: await embedQuestion(content) },
+          { content, ...chosen, questionEmbedding: await embedQuestion(content, signal) },
           onEvent,
           signal,
         );

@@ -1,6 +1,12 @@
 import type { Message } from '@/features/chat/types/message';
 import { http } from '@/shared/lib/http';
-import { WebgpuUnavailableError, webllm, type PromptMessage } from '@/features/models';
+import {
+  ModelDownloadCancelledError,
+  ModelUnsupportedError,
+  WebgpuUnavailableError,
+  webllm,
+  type PromptMessage,
+} from '@/features/models';
 export type ChatEvent =
   | { type: 'user'; message: Message }
   | { type: 'delta'; text: string }
@@ -21,6 +27,19 @@ interface SavedReply {
 }
 
 const AI_ERROR = "Désolé, je n'ai pas pu générer de réponse. Vous pouvez réessayer.";
+
+const REASONS: Record<string, string> = {
+  DeviceLostError:
+    'Le GPU a cédé en cours de route, le plus souvent faute de mémoire. Choisissez un modèle plus léger.',
+  ContextWindowSizeExceededError:
+    'La conversation dépasse la fenêtre de contexte du modèle. Ouvrez une nouvelle conversation ou prenez un modèle au contexte plus large.',
+  ShaderF16SupportError:
+    "Ce modèle exige un GPU compatible f16, que cet appareil n'a pas. Choisissez-en un autre.",
+  WebGPUNotAvailableError: "Cet appareil n'expose pas WebGPU.",
+  WebGPUNotFoundError: "Aucun GPU utilisable n'a été trouvé sur cet appareil.",
+  ModelNotLoadedError: "Le modèle n'était plus chargé. Relancez la génération.",
+  WorkerEngineModelNotLoadedError: "Le modèle n'était plus chargé. Relancez la génération.",
+};
 
 export const chatApi = {
   send: (
@@ -86,7 +105,7 @@ async function exchange(
   if (announceQuestion) onEvent({ type: 'user', message: question });
 
   let text = '';
-  let failed = false;
+  let failure: string | null = null;
   try {
     await webllm.chat(
       { model, messages, revision },
@@ -100,9 +119,9 @@ async function exchange(
     if (signal?.aborted) {
       if (!text) return;
     } else {
-      failed = true;
+      failure = explain(error);
       if (!text) {
-        onEvent({ type: 'error', message: explain(error) });
+        onEvent({ type: 'error', message: failure });
         return;
       }
     }
@@ -119,8 +138,8 @@ async function exchange(
     .then((r) => r.data);
   onEvent({ type: 'done', message });
 
-  if (failed) {
-    onEvent({ type: 'error', message: AI_ERROR });
+  if (failure) {
+    onEvent({ type: 'error', message: `Réponse interrompue. ${failure}` });
     return;
   }
   if (needsTitle && !signal?.aborted) {
@@ -144,8 +163,11 @@ async function nameConversation(
 }
 
 function explain(error: unknown) {
+  if (error instanceof ModelDownloadCancelledError) return error.message;
+  if (error instanceof ModelUnsupportedError) return error.message;
   if (error instanceof WebgpuUnavailableError) return error.message;
   if (!(error instanceof Error) || !error.message) return AI_ERROR;
+  if (REASONS[error.name]) return REASONS[error.name]!;
   if (/out of memory|device lost|OOM/i.test(error.message)) {
     return 'La mémoire graphique est insuffisante pour ce modèle. Choisissez-en un plus léger.';
   }

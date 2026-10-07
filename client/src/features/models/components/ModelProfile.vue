@@ -38,6 +38,11 @@
     <p v-if="requirements.length" class="text-xs text-muted">
       Prérequis : {{ requirements.join(' · ') }}
     </p>
+
+    <p v-if="missing.length" class="text-xs text-error">
+      Cet appareil ne gère pas {{ missing.map(featureLabel).join(', ') }} : ce modèle ne pourra pas
+      être exécuté ici.
+    </p>
   </div>
 </template>
 
@@ -46,8 +51,12 @@ import UBadge from '@nuxt/ui/components/Badge.vue';
 import { computed } from 'vue';
 import type { AiModel } from '../types/ai';
 import { featureLabel, formatContextWindow, formatVram } from '../types/webgpu';
+import { useGpuCapabilities } from '../composables/useGpuCapabilities';
 
 const props = defineProps<{ model: AiModel }>();
+
+const { missingFor } = useGpuCapabilities();
+const missing = computed(() => missingFor(props.model));
 
 const requirements = computed(() => [
   ...(props.model.lowResource ? [] : ['GPU dédié conseillé']),

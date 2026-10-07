@@ -56,6 +56,7 @@ import USelectMenu from '@nuxt/ui/components/SelectMenu.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
 import { computed } from 'vue';
 import { useAuthStore } from '@/features/auth';
+import { useGpuCapabilities } from '../composables/useGpuCapabilities';
 import { useModels } from '../composables/useModels';
 import { formatVram } from '../types/webgpu';
 import ModelProfile from './ModelProfile.vue';
@@ -64,6 +65,7 @@ const model = defineModel<string | undefined>();
 
 const auth = useAuthStore();
 const { data, supported } = useModels();
+const { missingFor, recommend } = useGpuCapabilities();
 
 const available = computed(() => data.value?.models ?? []);
 
@@ -74,11 +76,16 @@ const items = computed(() =>
     description: item.description,
     size: formatVram(item.vramMb),
     strengths: item.strengths.join(' · '),
+    disabled: missingFor(item).length > 0,
   })),
 );
 
 const selected = computed({
-  get: () => model.value ?? auth.user?.preferredModel ?? data.value?.defaultModel,
+  get: () =>
+    model.value ??
+    auth.user?.preferredModel ??
+    recommend(available.value) ??
+    data.value?.defaultModel,
   set: (value) => (model.value = value),
 });
 

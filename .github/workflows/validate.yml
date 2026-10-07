@@ -23,7 +23,7 @@ jobs:
       - run: npm run build
 
   unit-tests:
-    name: Server unit tests
+    name: Unit tests
     needs: quality
     runs-on: ubuntu-latest
     steps:
@@ -34,6 +34,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:cov
+      - run: npm run test:unit
       - uses: actions/upload-artifact@v7
         with:
           name: server-coverage-report

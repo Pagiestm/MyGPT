@@ -2,6 +2,7 @@ import type { AiModel } from '../types/ai';
 import {
   EMBEDDING_DIMENSIONS,
   EMBEDDING_MODEL,
+  featureLabel,
   formatVram,
   toWebllmId,
   withBrowserPrefix,
@@ -23,6 +24,23 @@ export interface PromptMessage {
 
 type Lib = typeof import('@mlc-ai/web-llm');
 type Engine = Awaited<ReturnType<Lib['CreateWebWorkerMLCEngine']>>;
+
+export class ModelUnsupportedError extends Error {
+  constructor(missing: string[]) {
+    super(
+      `Cet appareil ne peut pas exécuter ce modèle : ${missing.map(featureLabel).join(', ')} manquant. ` +
+        'Choisissez un modèle sans cette exigence.',
+    );
+    this.name = 'ModelUnsupportedError';
+  }
+}
+
+export class ModelDownloadCancelledError extends Error {
+  constructor() {
+    super('Préparation du modèle interrompue.');
+    this.name = 'ModelDownloadCancelledError';
+  }
+}
 
 export class WebgpuUnavailableError extends Error {
   constructor() {
@@ -79,6 +97,59 @@ let engine: Engine | null = null;
 let loaded: string | null = null;
 let worker: Worker | null = null;
 
+async function ensureCapable(modelId: string): Promise<void> {
+  if (FAKE_ENGINE || typeof navigator === 'undefined' || !('gpu' in navigator)) return;
+
+  const adapter = await navigator.gpu.requestAdapter().catch(() => null);
+  if (!adapter) throw new WebgpuUnavailableError();
+
+  const { prebuiltAppConfig } = await lib();
+  const record = prebuiltAppConfig.model_list.find((item) => item.model_id === modelId);
+  const missing = (record?.required_features ?? []).filter(
+    (feature) => !adapter.features.has(feature as GPUFeatureName),
+  );
+  if (missing.length) throw new ModelUnsupportedError(missing);
+}
+
+let preparing: AbortController | null = null;
+
+export function cancelModelDownload(): void {
+  preparing?.abort();
+}
+
+async function prepare(
+  create: () => Promise<Engine>,
+  instance: Worker,
+  discard: () => void,
+  signal?: AbortSignal,
+): Promise<Engine> {
+  const own = new AbortController();
+  const relay = () => own.abort();
+  preparing = own;
+  signal?.addEventListener('abort', relay, { once: true });
+
+  try {
+    return await Promise.race([
+      create(),
+      new Promise<never>((_, reject) =>
+        own.signal.addEventListener('abort', () => reject(new ModelDownloadCancelledError()), {
+          once: true,
+        }),
+      ),
+    ]);
+  } catch (error) {
+    if (own.signal.aborted) {
+      instance.terminate();
+      discard();
+    }
+    throw error;
+  } finally {
+    signal?.removeEventListener('abort', relay);
+    if (preparing === own) preparing = null;
+    publish(null);
+  }
+}
+
 const REVISION_KEY = 'mygpt:model-revisions';
 
 function knownRevisions(): Record<string, number> {
@@ -117,51 +188,73 @@ async function dropOutdated(modelId: string, revision?: number) {
   rememberRevision(modelId, revision);
 }
 
-async function engineFor(modelId: string, revision?: number): Promise<Engine> {
+async function engineFor(
+  modelId: string,
+  revision?: number,
+  signal?: AbortSignal,
+): Promise<Engine> {
   const { CreateWebWorkerMLCEngine } = await lib();
   await dropOutdated(modelId, revision);
 
   if (engine && loaded === modelId) return engine;
+  await ensureCapable(modelId);
 
   worker ??= new Worker(new URL('../workers/webllm.worker.ts', import.meta.url), {
     type: 'module',
   });
+  const active = worker;
 
-  try {
-    engine = await CreateWebWorkerMLCEngine(worker, modelId, {
-      initProgressCallback: ({ progress, text }) =>
-        publish({ modelId, progress: Math.round(progress * 100), text }),
-    });
-    loaded = modelId;
-    return engine;
-  } finally {
-    publish(null);
-  }
+  engine = await prepare(
+    () =>
+      CreateWebWorkerMLCEngine(active, modelId, {
+        initProgressCallback: ({ progress, text }) =>
+          publish({ modelId, progress: Math.round(progress * 100), text }),
+      }),
+    active,
+    () => {
+      if (worker === active) worker = null;
+      engine = null;
+      loaded = null;
+    },
+    signal,
+  );
+  loaded = modelId;
+  return engine;
 }
 
 let embedder: Engine | null = null;
 let embedderWorker: Worker | null = null;
 
-async function embeddingEngine(): Promise<Engine> {
+async function embeddingEngine(signal?: AbortSignal): Promise<Engine> {
   const { CreateWebWorkerMLCEngine } = await lib();
   if (embedder) return embedder;
+  await ensureCapable(EMBEDDING_MODEL);
 
   embedderWorker ??= new Worker(new URL('../workers/webllm.worker.ts', import.meta.url), {
     type: 'module',
   });
-  try {
-    embedder = await CreateWebWorkerMLCEngine(embedderWorker, EMBEDDING_MODEL, {
-      initProgressCallback: ({ progress, text }) =>
-        publish({ modelId: EMBEDDING_MODEL, progress: Math.round(progress * 100), text }),
-    });
-    return embedder;
-  } finally {
-    publish(null);
-  }
+  const active = embedderWorker;
+
+  embedder = await prepare(
+    () =>
+      CreateWebWorkerMLCEngine(active, EMBEDDING_MODEL, {
+        initProgressCallback: ({ progress, text }) =>
+          publish({ modelId: EMBEDDING_MODEL, progress: Math.round(progress * 100), text }),
+      }),
+    active,
+    () => {
+      if (embedderWorker === active) embedderWorker = null;
+      embedder = null;
+    },
+    signal,
+  );
+  return embedder;
 }
 
 export const webllm = {
   isSupported: isWebgpuSupported,
+
+  cancelDownload: cancelModelDownload,
 
   async withCacheState(models: AiModel[]): Promise<AiModel[]> {
     if (FAKE_ENGINE) return models.map((model) => ({ ...model, downloaded: false }));
@@ -232,7 +325,8 @@ export const webllm = {
   ): Promise<string> {
     if (FAKE_ENGINE) return playScript(onDelta, signal);
 
-    const instance = await engineFor(toWebllmId(body.model), body.revision);
+    const instance = await engineFor(toWebllmId(body.model), body.revision, signal);
+    if (signal?.aborted) return '';
 
     const interrupt = () => void instance.interruptGenerate();
     signal?.addEventListener('abort', interrupt, { once: true });
@@ -293,10 +387,10 @@ export const webllm = {
     }
   },
 
-  async embed(texts: string[]): Promise<number[][]> {
+  async embed(texts: string[], signal?: AbortSignal): Promise<number[][]> {
     if (!texts.length) return [];
     if (FAKE_ENGINE) return texts.map(() => Array.from({ length: EMBEDDING_DIMENSIONS }, () => 0));
-    const engine = await embeddingEngine();
+    const engine = await embeddingEngine(signal);
     const { data } = await engine.embeddings.create({ input: texts });
 
     const vectors = data.map((entry) => entry.embedding as number[]);
