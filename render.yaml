@@ -13,6 +13,7 @@ services:
         - server/**
         - package.json
         - package-lock.json
+        - render.yaml
     envVars:
       - key: NODE_ENV
         value: production
@@ -52,6 +53,7 @@ services:
         - client/**
         - package.json
         - package-lock.json
+        - render.yaml
     envVars:
       - key: VITE_API_URL
         value: /api
