@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Pagiestm/MyGPT/compare/v1.0.0...v1.1.0) (2026-10-07)
+
+### Features
+
+- **ops:** accepter DATABASE_URL et séparer les sondes de santé ([b22d484](https://github.com/Pagiestm/MyGPT/commit/b22d4848d7c524fb79747fd1d0341b7c1488f812))
+- **ops:** décrire le déploiement Render en blueprint ([72665cd](https://github.com/Pagiestm/MyGPT/commit/72665cd45237a0003e7db3b9e5d36e9dd380ebc2))
+
 # 1.0.0 (2026-10-06)
 
 ### Bug Fixes
