@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/Pagiestm/MyGPT/compare/v1.3.1...v1.3.2) (2026-10-07)
+
+### Bug Fixes
+
+- **client:** forcer la navigation réelle sur les liens vers l'API ([51c4531](https://github.com/Pagiestm/MyGPT/commit/51c45312d55195ba1e5a206916c00b3881487a10))
+
 ## [1.3.1](https://github.com/Pagiestm/MyGPT/compare/v1.3.0...v1.3.1) (2026-10-07)
 
 ### Bug Fixes
