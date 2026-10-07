@@ -1,3 +1,9 @@
+## [1.4.2](https://github.com/Pagiestm/MyGPT/compare/v1.4.1...v1.4.2) (2026-10-07)
+
+### Bug Fixes
+
+- **ops:** rendre le dossier de sortie lisible par Vercel ([e4940fb](https://github.com/Pagiestm/MyGPT/commit/e4940fb34d193a3001d8a9aeb70abea9225f0f2a))
+
 ## [1.4.1](https://github.com/Pagiestm/MyGPT/compare/v1.4.0...v1.4.1) (2026-10-07)
 
 ### Bug Fixes

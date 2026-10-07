@@ -1,6 +1,6 @@
 {
   "name": "mygpt",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "description": "MyGPT – assistant IA conversationnel (Vue 3 + NestJS)",
   "type": "module",
