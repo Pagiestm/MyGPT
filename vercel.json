@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci",
+  "installCommand": "npm ci --include=dev",
   "buildCommand": "npm run build -w client",
   "build": { "env": { "VITE_API_URL": "/api" } },
   "outputDirectory": "client/dist",

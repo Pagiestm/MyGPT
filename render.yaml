@@ -18,7 +18,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        value: https://mygpt.theotimepagies.com,https://mygpt-t4z9.onrender.com
+        value: https://mygpt.theotimepagies.com
       - key: DATABASE_URL
         sync: false
       - key: SESSION_SECRET
@@ -41,30 +41,3 @@ services:
         sync: false
       - key: MAIL_FROM
         sync: false
-
-  - name: mygpt
-    type: web
-    runtime: static
-    buildCommand: npm ci && npm run build -w client
-    staticPublishPath: ./client/dist
-    autoDeployTrigger: commit
-    buildFilter:
-      paths:
-        - client/**
-        - package.json
-        - package-lock.json
-        - render.yaml
-    envVars:
-      - key: VITE_API_URL
-        value: /api
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://mygpt-api.onrender.com/*
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    headers:
-      - path: /assets/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable

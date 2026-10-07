@@ -13,7 +13,7 @@
     "node": ">=24.9"
   },
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "dev": "concurrently -n server,client -c magenta,cyan \"npm run start:dev -w server\" \"npm run dev -w client\"",
     "dev:server": "npm run start:dev -w server",
     "dev:client": "npm run dev -w client",

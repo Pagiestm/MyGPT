@@ -59,15 +59,13 @@ Le code est monté dans les conteneurs : le rechargement à chaud fonctionne. Ap
 
 Deux chemins, selon que vous hébergez vous-même ou non.
 
-### Sur Render, avec Neon et Brevo
+### L'API sur Render, avec Neon et Brevo
 
-`render.yaml` décrit les deux services : l'API construite depuis `server/Dockerfile.prod`, et le client en site statique.
+`render.yaml` décrit le service d'API, construit depuis `server/Dockerfile.prod`. Le client, lui, est servi par Vercel (section suivante).
 
 **Une seule origine.** Le navigateur ne parle qu'à l'hôte du client ; l'API n'est jointe qu'à travers une réécriture `/api/*`. Le cookie de session, en `sameSite: strict`, suit donc sans difficulté, et il n'y a aucun CORS à régler.
 
-Peu importe lequel des deux hôtes porte le site : l'adresse `onrender.com` convient aussi bien qu'un domaine à vous. Le plan gratuit de Render n'inclut que deux domaines personnalisés par espace de travail, au-delà desquels il faut une carte.
-
-Après le premier déploiement, Render attribue une adresse à l'API. Reportez-la dans `render.yaml` comme cible de la réécriture, et reprenez l'adresse du site statique dans `CLIENT_URL` et `GOOGLE_CALLBACK_URL`.
+Après le premier déploiement, Render attribue une adresse à l'API : reportez-la dans `vercel.json` comme cible de la réécriture. Dans l'autre sens, `CLIENT_URL` et `GOOGLE_CALLBACK_URL` portent l'adresse du client.
 
 Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord :
 
@@ -78,19 +76,19 @@ Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord
 | `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                      |
 
-Pour servir le site depuis un domaine à vous, un seul enregistrement DNS suffit : un `CNAME` du sous-domaine vers l'adresse `onrender.com` du site statique, puis le domaine à déclarer dans le service.
-
 ### Le client sur Vercel
 
-`vercel.json` décrit la même architecture, le client étant servi par Vercel et l'API restant sur Render. Le dossier racine du projet Vercel est la racine du dépôt ; tout le reste - build, dossier publié, variable `VITE_API_URL`, réécritures - est déjà dans le fichier, il n'y a rien à régler dans le tableau de bord.
+`vercel.json` porte tout le déploiement du client : installation, build, dossier publié, `VITE_API_URL` et les réécritures. Le dossier racine du projet Vercel est la racine du dépôt, le préréglage de framework est `Other`, et il n'y a rien d'autre à saisir dans le tableau de bord.
 
-Deux raisons d'en passer par là. Le plan gratuit de Render ne compte que deux domaines personnalisés par espace de travail ; Vercel n'impose pas cette limite. Et un sous-domaine `onrender.com` engendré par la plateforme se fait parfois signaler par Google Safe Browsing, l'hébergeur étant très utilisé pour l'hameçonnage - un domaine à vous met le site hors de portée de ce classement.
+Deux raisons d'héberger le client ailleurs que sur Render. Le plan gratuit n'y compte que deux domaines personnalisés par espace de travail, quand Vercel n'impose pas cette limite. Et un sous-domaine `onrender.com` engendré par la plateforme se fait parfois signaler par Google Safe Browsing - l'hébergeur est très utilisé pour l'hameçonnage, et une redirection vers une connexion Google depuis un hôte au nom aléatoire en porte toute la signature. Un domaine à vous met le site hors de portée de ce classement.
 
-L'origine reste unique : le navigateur ne parle qu'à Vercel, qui relaie `/api/*` vers Render. Reportez le domaine dans `CLIENT_URL` et `GOOGLE_CALLBACK_URL` côté Render, puis dans les URI de redirection de la console Google.
+L'installation force les devDependencies : Vercel construit avec `NODE_ENV=production`, qui les écarterait, alors que `vite` et `vue-tsc` en font partie. Pour la même raison le script `prepare` tolère l'absence de husky.
+
+Le domaine se déclare dans **Settings → Domains**, puis se reporte côté Render dans `CLIENT_URL` et `GOOGLE_CALLBACK_URL`, et dans les URI de redirection de la console Google.
 
 Le service web gratuit s'endort après quinze minutes et met environ une minute à se réveiller. Un ping régulier sur `/health` l'en empêche. Cette sonde ne touche pas la base, exprès : la tenir éveillée consommerait le quota de calcul de Neon. Pour vérifier aussi la base, utilisez `/health/ready`.
 
-Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non. Le site statique, lui, ne s'endort jamais : la page reste instantanée.
+Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non. Le client servi par Vercel, lui, ne s'endort jamais : la page reste instantanée.
 
 ### Sur votre propre serveur
 
