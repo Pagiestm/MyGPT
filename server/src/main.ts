@@ -1,4 +1,5 @@
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import session from 'express-session';
@@ -31,9 +32,11 @@ function sessionSecret(): string {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const database = postgresConnection();
   const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) app.set('trust proxy', 1);
 
   app.enableCors({
     origin: (process.env.CLIENT_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
