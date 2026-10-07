@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/Pagiestm/MyGPT/compare/v1.4.0...v1.4.1) (2026-10-07)
+
+### Bug Fixes
+
+- **ops:** installer les devDependencies sur Vercel ([613acfa](https://github.com/Pagiestm/MyGPT/commit/613acfab648a670b792c946142e852704a99a4d1))
+
 # [1.4.0](https://github.com/Pagiestm/MyGPT/compare/v1.3.2...v1.4.0) (2026-10-07)
 
 ### Features
