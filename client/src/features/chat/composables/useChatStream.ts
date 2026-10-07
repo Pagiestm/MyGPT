@@ -6,7 +6,7 @@ import type { Message } from '@/features/chat/types/message';
 import { emptyPage, type Page } from '@/shared/types/pagination';
 import { getErrorMessage } from '@/shared/lib/http';
 import { chatApi, type ChatEvent } from '@/features/chat/api/chat.api';
-import { ModelDownloadCancelledError, useGpuCapabilities, webllm } from '@/features/models';
+import { ModelDownloadCancelledError, webllm } from '@/features/models';
 import { useAuthStore } from '@/features/auth';
 import { useDocuments } from '@/features/knowledge';
 import { useModels } from '@/features/models';
@@ -25,15 +25,11 @@ export function useChatStream(
   const auth = useAuthStore();
   const { data: catalog, models } = useModels();
   const { items: documents } = useDocuments();
-  const { recommend } = useGpuCapabilities();
   const phase = ref<Phase>('idle');
   let controller: AbortController | null = null;
 
   const effective = (requested?: string) =>
-    requested ??
-    auth.user?.preferredModel ??
-    recommend(models.value) ??
-    catalog.value?.defaultModel;
+    requested ?? auth.user?.preferredModel ?? catalog.value?.defaultModel;
 
   function requireModel(requested?: string) {
     const chosen = effective(requested);

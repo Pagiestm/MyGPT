@@ -65,9 +65,14 @@ const model = defineModel<string | undefined>();
 
 const auth = useAuthStore();
 const { data, supported } = useModels();
-const { missingFor, recommend } = useGpuCapabilities();
+const { runnable } = useGpuCapabilities();
 
-const available = computed(() => data.value?.models ?? []);
+const catalogue = computed(() => data.value?.models ?? []);
+
+const available = computed(() => {
+  const usable = runnable(catalogue.value);
+  return usable.length ? usable : catalogue.value;
+});
 
 const items = computed(() =>
   available.value.map((item) => ({
@@ -76,18 +81,13 @@ const items = computed(() =>
     description: item.description,
     size: formatVram(item.vramMb),
     strengths: item.strengths.join(' · '),
-    disabled: missingFor(item).length > 0,
   })),
 );
 
 const selected = computed({
-  get: () =>
-    model.value ??
-    auth.user?.preferredModel ??
-    recommend(available.value) ??
-    data.value?.defaultModel,
+  get: () => model.value ?? auth.user?.preferredModel ?? data.value?.defaultModel,
   set: (value) => (model.value = value),
 });
 
-const current = computed(() => available.value.find((item) => item.id === selected.value));
+const current = computed(() => catalogue.value.find((item) => item.id === selected.value));
 </script>

@@ -22,7 +22,7 @@ export {
   type LibraryFacts,
   type PromptMessage,
 } from './api/webllm';
-export { recommendModel, type DeviceProfile } from './lib/recommend';
+export { canRun, runnableModels, type DeviceProfile } from './lib/compatibility';
 export type { AiModel, AiModels, AiProvider, ModelCatalog } from './types/ai';
 export {
   BROWSER_MODEL_PREFIX,

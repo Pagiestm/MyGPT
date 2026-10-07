@@ -12,37 +12,33 @@ const MEMORY_SHARE = 0.5;
 
 const REPORTED_MEMORY_CAP_GB = 8;
 
+const MODEST_CEILING_MB = 640;
+
 function memoryBudget(device: DeviceProfile): number | null {
   if (device.memoryGb === null || device.memoryGb >= REPORTED_MEMORY_CAP_GB) return null;
   return device.memoryGb * 1024 * MEMORY_SHARE;
 }
 
-function heaviest(models: AiModel[]): AiModel {
-  return models.reduce((best, model) => (model.vramMb > best.vramMb ? model : best));
+export function isModest(device: DeviceProfile): boolean {
+  return device.maxBufferSize < COMFORTABLE_BUFFER;
 }
 
-function lightest(models: AiModel[]): AiModel {
-  return models.reduce((best, model) => (model.vramMb < best.vramMb ? model : best));
-}
-
-export function recommendModel(
-  models: AiModel[],
-  device: DeviceProfile | null,
-): string | undefined {
-  if (!device || !models.length) return undefined;
-
-  const runnable = models.filter((model) =>
-    model.requiredFeatures.every((feature) => device.features.has(feature)),
-  );
-  if (!runnable.length) return undefined;
-
-  const modest = device.maxBufferSize < COMFORTABLE_BUFFER;
-  const frugal = modest ? runnable.filter((model) => model.lowResource) : runnable;
-  const candidates = frugal.length ? frugal : runnable;
-
+function ceiling(device: DeviceProfile): number | null {
   const budget = memoryBudget(device);
-  if (budget === null) return (modest ? lightest(candidates) : heaviest(candidates)).id;
+  if (!isModest(device)) return budget;
+  return budget === null ? MODEST_CEILING_MB : Math.min(budget, MODEST_CEILING_MB);
+}
 
-  const fitting = candidates.filter((model) => model.vramMb <= budget);
-  return (fitting.length ? heaviest(fitting) : lightest(candidates)).id;
+export function canRun(model: AiModel, device: DeviceProfile | null): boolean {
+  if (!device) return true;
+
+  if (!model.requiredFeatures.every((feature) => device.features.has(feature))) return false;
+  if (isModest(device) && !model.lowResource) return false;
+
+  const limit = ceiling(device);
+  return limit === null || model.vramMb <= limit;
+}
+
+export function runnableModels(models: AiModel[], device: DeviceProfile | null): AiModel[] {
+  return models.filter((model) => canRun(model, device));
 }

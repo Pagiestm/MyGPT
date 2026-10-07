@@ -15,6 +15,8 @@
         cache.
       </p>
 
+      <p v-if="device" class="text-xs text-dimmed">Votre appareil : {{ device }}</p>
+
       <ModelDownloadBanner />
 
       <USkeleton v-if="isLoading" class="h-32 w-full" />
@@ -74,6 +76,7 @@ import { computed, ref } from 'vue';
 import { formatVram } from '../types/webgpu';
 import { getErrorMessage } from '@/shared/lib/http';
 import { useDownloadedModels } from '../composables/useModels';
+import { useGpuCapabilities } from '../composables/useGpuCapabilities';
 import { isWebgpuSupported, webllm } from '../api/webllm';
 import ModelDownloadBanner from '../components/ModelDownloadBanner.vue';
 import ModelProfile from '../components/ModelProfile.vue';
@@ -81,6 +84,19 @@ import ModelProfile from '../components/ModelProfile.vue';
 const toast = useToast();
 const supported = isWebgpuSupported();
 const { data, isLoading, refresh } = useDownloadedModels();
+
+const { profile } = useGpuCapabilities();
+
+const device = computed(() => {
+  const found = profile.value;
+  if (!found) return null;
+  const parts = [
+    found.features.has('shader-f16') ? 'f16 pris en charge' : 'sans f16',
+    `tampons ${formatVram(found.maxBufferSize / (1024 * 1024))}`,
+  ];
+  if (found.memoryGb !== null) parts.push(`mémoire annoncée ${found.memoryGb} Go`);
+  return parts.join(' · ');
+});
 
 const webgpuModels = computed(() => data.value ?? []);
 const opened = ref<string | null>(null);
