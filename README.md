@@ -80,6 +80,14 @@ Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord
 
 Pour servir le site depuis un domaine à vous, un seul enregistrement DNS suffit : un `CNAME` du sous-domaine vers l'adresse `onrender.com` du site statique, puis le domaine à déclarer dans le service.
 
+### Le client sur Vercel
+
+`vercel.json` décrit la même architecture, le client étant servi par Vercel et l'API restant sur Render. Le dossier racine du projet Vercel est la racine du dépôt ; tout le reste - build, dossier publié, variable `VITE_API_URL`, réécritures - est déjà dans le fichier, il n'y a rien à régler dans le tableau de bord.
+
+Deux raisons d'en passer par là. Le plan gratuit de Render ne compte que deux domaines personnalisés par espace de travail ; Vercel n'impose pas cette limite. Et un sous-domaine `onrender.com` engendré par la plateforme se fait parfois signaler par Google Safe Browsing, l'hébergeur étant très utilisé pour l'hameçonnage - un domaine à vous met le site hors de portée de ce classement.
+
+L'origine reste unique : le navigateur ne parle qu'à Vercel, qui relaie `/api/*` vers Render. Reportez le domaine dans `CLIENT_URL` et `GOOGLE_CALLBACK_URL` côté Render, puis dans les URI de redirection de la console Google.
+
 Le service web gratuit s'endort après quinze minutes et met environ une minute à se réveiller. Un ping régulier sur `/health` l'en empêche. Cette sonde ne touche pas la base, exprès : la tenir éveillée consommerait le quota de calcul de Neon. Pour vérifier aussi la base, utilisez `/health/ready`.
 
 Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non. Le site statique, lui, ne s'endort jamais : la page reste instantanée.

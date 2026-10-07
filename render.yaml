@@ -18,7 +18,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        value: https://mygpt-t4z9.onrender.com
+        value: https://mygpt.theotimepagies.com,https://mygpt-t4z9.onrender.com
       - key: DATABASE_URL
         sync: false
       - key: SESSION_SECRET
@@ -28,7 +28,7 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_CALLBACK_URL
-        value: https://mygpt-t4z9.onrender.com/api/auth/google/callback
+        value: https://mygpt.theotimepagies.com/api/auth/google/callback
       - key: SMTP_HOST
         value: smtp-relay.brevo.com
       - key: SMTP_PORT
