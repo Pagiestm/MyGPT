@@ -1,3 +1,9 @@
+# [1.5.0](https://github.com/Pagiestm/MyGPT/compare/v1.4.2...v1.5.0) (2026-10-07)
+
+### Features
+
+- **models:** adapter le modèle et son exécution à l'appareil ([0353570](https://github.com/Pagiestm/MyGPT/commit/03535707239f1c9fdb571a3fb699aff0d622f603))
+
 ## [1.4.2](https://github.com/Pagiestm/MyGPT/compare/v1.4.1...v1.4.2) (2026-10-07)
 
 ### Bug Fixes
