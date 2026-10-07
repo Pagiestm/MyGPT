@@ -21,7 +21,7 @@
           color="neutral"
           variant="ghost"
           size="xs"
-          class="mr-1 opacity-0 group-hover/folder:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+          class="mr-1 pointer-fine:opacity-0 group-hover/folder:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
           :aria-label="`Actions pour le dossier ${folder.name}`"
         />
       </UDropdownMenu>
