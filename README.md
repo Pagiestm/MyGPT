@@ -61,7 +61,13 @@ Deux chemins, selon que vous hébergez vous-même ou non.
 
 ### Sur Render, avec Neon et Brevo
 
-`render.yaml` décrit les deux services : l'API construite depuis `server/Dockerfile.prod`, et le client en site statique. Créez le blueprint depuis le dépôt, puis renseignez les variables marquées `sync: false` dans le tableau de bord :
+`render.yaml` décrit les deux services : l'API construite depuis `server/Dockerfile.prod`, et le client en site statique.
+
+**Une seule origine.** Le client porte le domaine ; l'API reste sur son adresse `onrender.com` et n'est jointe qu'à travers une réécriture `/api/*`. Le navigateur ne parle donc qu'à un seul hôte : le cookie de session, en `sameSite: strict`, suit sans difficulté, et il n'y a aucun CORS à régler.
+
+Après le premier déploiement, Render attribue une adresse à l'API. Reportez-la dans `render.yaml` à la place de `mygpt-api-XXXX`, puis redéployez — c'est la cible de la réécriture.
+
+Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord :
 
 | Variable                                   | Où la trouver                                                   |
 | ------------------------------------------ | --------------------------------------------------------------- |
@@ -70,11 +76,11 @@ Deux chemins, selon que vous hébergez vous-même ou non.
 | `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                      |
 
-Les deux sous-domaines doivent partager le même domaine racine : le cookie de session est en `sameSite: strict`, il ne franchirait pas deux sites différents.
+Côté DNS, un seul enregistrement : un `CNAME` du sous-domaine vers l'adresse `onrender.com` du site statique.
 
 Le service web gratuit s'endort après quinze minutes et met environ une minute à se réveiller. Un ping régulier sur `/health` l'en empêche. Cette sonde ne touche pas la base, exprès : la tenir éveillée consommerait le quota de calcul de Neon. Pour vérifier aussi la base, utilisez `/health/ready`.
 
-Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non.
+Render accorde 750 heures d'instance gratuites par mois et par espace de travail, soit à peine plus qu'un mois complet : un seul service maintenu éveillé tient, deux non. Le site statique, lui, ne s'endort jamais : la page reste instantanée.
 
 ### Sur votre propre serveur
 

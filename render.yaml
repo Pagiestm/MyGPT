@@ -1,6 +1,6 @@
 services:
-  - type: web
-    name: mygpt-api
+  - name: mygpt-api
+    type: web
     runtime: docker
     plan: free
     region: frankfurt
@@ -8,8 +8,11 @@ services:
     dockerContext: .
     healthCheckPath: /health
     autoDeployTrigger: commit
-    domains:
-      - api.mygpt.theotimepagies.com
+    buildFilter:
+      paths:
+        - server/**
+        - package.json
+        - package-lock.json
     envVars:
       - key: NODE_ENV
         value: production
@@ -24,7 +27,7 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_CALLBACK_URL
-        value: https://api.mygpt.theotimepagies.com/auth/google/callback
+        value: https://mygpt.theotimepagies.com/api/auth/google/callback
       - key: SMTP_HOST
         value: smtp-relay.brevo.com
       - key: SMTP_PORT
@@ -38,18 +41,26 @@ services:
       - key: MAIL_FROM
         sync: false
 
-  - type: web
-    name: mygpt-client
+  - name: mygpt
+    type: web
     runtime: static
     buildCommand: npm ci && npm run build -w client
     staticPublishPath: ./client/dist
     autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - client/**
+        - package.json
+        - package-lock.json
     domains:
       - mygpt.theotimepagies.com
     envVars:
       - key: VITE_API_URL
-        value: https://api.mygpt.theotimepagies.com
+        value: /api
     routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://mygpt-api-XXXX.onrender.com/*
       - type: rewrite
         source: /*
         destination: /index.html
