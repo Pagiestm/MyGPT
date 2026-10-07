@@ -1,3 +1,9 @@
+# [1.3.0](https://github.com/Pagiestm/MyGPT/compare/v1.2.0...v1.3.0) (2026-10-07)
+
+### Features
+
+- **ops:** servir MyGPT depuis l'adresse onrender.com ([3db5d79](https://github.com/Pagiestm/MyGPT/commit/3db5d799b5b7558da536a941c9654c0404011407))
+
 # [1.2.0](https://github.com/Pagiestm/MyGPT/compare/v1.1.0...v1.2.0) (2026-10-07)
 
 ### Bug Fixes
