@@ -15,8 +15,6 @@
 
 </div>
 
-https://github.com/user-attachments/assets/9b079391-b17d-4230-9721-c40a35a1fa71
-
 ## Fonctionnalités
 
 - **Modèle exécuté dans le navigateur** (WebGPU) : rien à installer, aucune donnée envoyée pour générer
