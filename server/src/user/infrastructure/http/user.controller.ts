@@ -33,7 +33,7 @@ import {
   UpdatePreferences,
 } from '../../application/user.use-cases';
 import { RequestPasswordReset, ResetPassword } from '../../application/password-reset.use-cases';
-import { mailConfigured } from '../../../common/mail/mailer';
+import { mailConfigured } from '../../../common/mail/mail.service';
 import {
   ChangeEmailDto,
   ChangePasswordDto,
