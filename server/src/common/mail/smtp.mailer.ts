@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createTransport, type Transporter } from 'nodemailer';
 import type { Mail, Mailer } from './mailer';
 
+const TIMEOUT_MS = 10_000;
+
 export function smtpConfigured(): boolean {
   return !!process.env.SMTP_HOST && !!process.env.MAIL_FROM;
 }
@@ -28,6 +30,9 @@ export class SmtpMailer implements Mailer {
       auth: process.env.SMTP_USER
         ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
         : undefined,
+      connectionTimeout: TIMEOUT_MS,
+      greetingTimeout: TIMEOUT_MS,
+      socketTimeout: TIMEOUT_MS * 2,
     });
 
     await this.transporter.sendMail({ from: process.env.MAIL_FROM, ...mail });

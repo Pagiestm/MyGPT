@@ -29,18 +29,15 @@ export class RequestPasswordReset {
     user.openReset(hashToken(token), new Date(Date.now() + VALID_FOR_MS));
     await this.users.save(user);
 
-    try {
-      await this.mailer.send({
-        to: user.email,
-        subject: 'Réinitialiser votre mot de passe MyGPT',
-        html: await renderMail('password-reset', {
-          pseudo: user.pseudo,
-          link: `${clientUrl}/reinitialiser/${token}`,
-        }),
-      });
-    } catch (error) {
-      this.logger.error(`Envoi du courriel impossible : ${(error as Error).message}`);
-    }
+    const html = await renderMail('password-reset', {
+      pseudo: user.pseudo,
+      link: `${clientUrl}/reinitialiser/${token}`,
+    });
+    this.mailer
+      .send({ to: user.email, subject: 'Réinitialiser votre mot de passe MyGPT', html })
+      .catch((error: unknown) =>
+        this.logger.error(`Envoi du courriel impossible : ${(error as Error).message}`),
+      );
   }
 }
 

@@ -33,7 +33,7 @@ import {
   UpdatePreferences,
 } from '../../application/user.use-cases';
 import { RequestPasswordReset, ResetPassword } from '../../application/password-reset.use-cases';
-import { smtpConfigured } from '../../../common/mail/smtp.mailer';
+import { mailConfigured } from '../../../common/mail/mailer';
 import {
   ChangeEmailDto,
   ChangePasswordDto,
@@ -162,7 +162,7 @@ export class UserController {
   @ApiOperation({ summary: 'Cette instance sait-elle envoyer un lien de réinitialisation ?' })
   @ApiResponse({ status: 200, schema: { properties: { byEmail: { type: 'boolean' } } } })
   recovery(): { byEmail: boolean } {
-    return { byEmail: smtpConfigured() };
+    return { byEmail: mailConfigured() };
   }
 
   @Get()

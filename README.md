@@ -67,12 +67,12 @@ Après le premier déploiement, Render attribue une adresse à l'API : reportez-
 
 Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord :
 
-| Variable                                   | Où la trouver                                                   |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `DATABASE_URL`                             | chaîne de connexion Neon, avec `?sslmode=require`               |
-| `SMTP_USER`, `SMTP_PASSWORD`               | identifiants SMTP Brevo                                         |
-| `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                      |
+| Variable                                   | Où la trouver                                                                                                                     |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                             | chaîne de connexion Neon, avec `?sslmode=require`                                                                                 |
+| `BREVO_API_KEY`                            | clé API Brevo (SMTP & API, onglet Clés API) : Render bloque les ports SMTP des services gratuits, les courriels passent par HTTPS |
+| `MAIL_FROM`                                | expéditeur **validé** chez Brevo, sinon les envois sont refusés                                                                   |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | facultatif, console Google                                                                                                        |
 
 ### Le client sur Vercel
 
@@ -146,7 +146,7 @@ Le client récupère le jeton sur `GET /csrf`, le met en cache et le renvoie via
 
 ### Mot de passe oublié
 
-Le lien n'apparaît que si l'instance sait envoyer des courriels (`SMTP_HOST` et `MAIL_FROM`). Le jeton est valable une heure, ne sert qu'une fois, et n'est jamais stocké en clair : seule son empreinte l'est. La réponse est la même que l'email existe ou non, pour ne pas révéler qui a un compte.
+Le lien n'apparaît que si l'instance sait envoyer des courriels (`BREVO_API_KEY` ou `SMTP_HOST`, avec `MAIL_FROM`). Le jeton est valable une heure, ne sert qu'une fois, et n'est jamais stocké en clair : seule son empreinte l'est. La réponse est la même que l'email existe ou non, pour ne pas révéler qui a un compte.
 
 Les courriels sont écrits en MJML (`server/src/common/mail/`), compilés en HTML à l'envoi. En développement, Mailpit les capture tous.
 
