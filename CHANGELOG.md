@@ -1,3 +1,9 @@
+## [1.6.2](https://github.com/Pagiestm/MyGPT/compare/v1.6.1...v1.6.2) (2026-10-11)
+
+### Bug Fixes
+
+- **mail:** envoyer les courriels par l'API HTTPS de Brevo ([617a4e3](https://github.com/Pagiestm/MyGPT/commit/617a4e3b0a3dc148496fa800e8eb22aacf763e78))
+
 ## [1.6.1](https://github.com/Pagiestm/MyGPT/compare/v1.6.0...v1.6.1) (2026-10-11)
 
 ### Bug Fixes
