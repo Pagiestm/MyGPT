@@ -1,3 +1,9 @@
+## [1.6.3](https://github.com/Pagiestm/MyGPT/compare/v1.6.2...v1.6.3) (2026-10-13)
+
+### Bug Fixes
+
+- **deps:** update all non-major dependencies ([#17](https://github.com/Pagiestm/MyGPT/issues/17)) ([286f25d](https://github.com/Pagiestm/MyGPT/commit/286f25d67abce79e2a851712333715cf22439e30))
+
 ## [1.6.2](https://github.com/Pagiestm/MyGPT/compare/v1.6.1...v1.6.2) (2026-10-11)
 
 ### Bug Fixes
