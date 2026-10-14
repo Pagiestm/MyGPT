@@ -184,9 +184,11 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     ...initial,
   };
 
+  // Le client appelle l'API sous /api, préfixe retiré par le proxy comme en production
+  const apiPath = (url: URL) => url.pathname.replace(/^\/api/, '');
   const isApi = (url: URL) =>
     /^\/(auth|users|conversations|messages|chat|folders|attachments|knowledge|models|csrf)(\/|$)/.test(
-      url.pathname,
+      apiPath(url),
     );
 
   await page.route(isApi, async (route) => {
@@ -194,7 +196,7 @@ export async function fakeApi(page: Page, initial: Partial<FakeState> = {}) {
     if (request.resourceType() === 'document') return route.fallback();
     const url = new URL(request.url());
     const method = request.method();
-    const path = url.pathname;
+    const path = apiPath(url);
     const body: Record<string, unknown> = readJsonBody(request);
     if (path === '/csrf') {
       return route.fulfill({

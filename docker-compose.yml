@@ -85,7 +85,8 @@ services:
       dockerfile: client/Dockerfile
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:${SERVER_PORT:-3000}
+      VITE_API_URL: /api
+      API_URL: http://server:3000
       VITE_USE_POLLING: 'true' # hot-reload sur volume Windows/macOS
     ports:
       - '${CLIENT_PORT:-5173}:5173'

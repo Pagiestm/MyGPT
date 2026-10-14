@@ -51,6 +51,8 @@ docker compose up -d
 | Mailpit       | http://localhost:8025     | tous les courriels envoyés en dev  |
 | PostgreSQL    | `localhost:5432`          | `postgres` / `root`, base `my-gpt` |
 
+Le navigateur n'appelle jamais l'API directement : il demande `/api/*` au client, que Vite transmet à l'API (`API_URL`, par défaut `http://localhost:3000`). Même chemin qu'en production, donc mêmes cookies et aucun CORS.
+
 Le code est monté dans les conteneurs : le rechargement à chaud fonctionne. Après un changement de dépendances, `docker compose up -d --build`. Sans Docker pour les apps : `docker compose up -d db pgadmin` puis `npm run dev`.
 
 ## Déploiement
@@ -63,7 +65,7 @@ Deux chemins, selon que vous hébergez vous-même ou non.
 
 **Une seule origine.** Le navigateur ne parle qu'à l'hôte du client ; l'API n'est jointe qu'à travers une réécriture `/api/*`. Le cookie de session, en `sameSite: strict`, suit donc sans difficulté, et il n'y a aucun CORS à régler.
 
-Après le premier déploiement, Render attribue une adresse à l'API : reportez-la dans `vercel.json` comme cible de la réécriture. Dans l'autre sens, `CLIENT_URL` et `GOOGLE_CALLBACK_URL` portent l'adresse du client.
+Après le premier déploiement, Render attribue une adresse à l'API : reportez-la dans la variable `API_URL` du projet Vercel, cible de la réécriture. Dans l'autre sens, `CLIENT_URL` et `GOOGLE_CALLBACK_URL` portent l'adresse du client.
 
 Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord :
 
@@ -76,7 +78,9 @@ Renseignez ensuite les variables marquées `sync: false` dans le tableau de bord
 
 ### Le client sur Vercel
 
-`vercel.json` porte tout le déploiement du client : installation, build, dossier publié, `VITE_API_URL` et les réécritures. Le dossier racine du projet Vercel est la racine du dépôt, le préréglage de framework est `Other`, et il n'y a rien d'autre à saisir dans le tableau de bord.
+Le dossier racine du projet Vercel est `client`, le préréglage de framework est `Other`, et l'option « Include files outside the Root Directory » reste cochée : l'installation se fait à la racine du monorepo. `client/vercel.json` porte le reste du déploiement : installation, build, dossier publié, `VITE_API_URL` et le repli des routes vers `index.html`.
+
+`client/middleware.ts` réécrit `/api/*` vers l'API, dont l'adresse est lue dans la variable `API_URL` du projet Vercel (**Settings → Environment Variables**, par exemple `https://mygpt-api-xxxx.onrender.com`). L'adresse de l'API n'apparaît ainsi ni dans le navigateur, ni dans le bundle, ni dans le dépôt - une réécriture de `vercel.json`, elle, ne peut pas lire de variable. Si l'adresse Render change, modifiez `API_URL` puis redéployez ; sans elle, `/api/*` répond 502.
 
 Deux raisons d'héberger le client ailleurs que sur Render. Le plan gratuit n'y compte que deux domaines personnalisés par espace de travail, quand Vercel n'impose pas cette limite. Et un sous-domaine `onrender.com` engendré par la plateforme se fait parfois signaler par Google Safe Browsing - l'hébergeur est très utilisé pour l'hameçonnage, et une redirection vers une connexion Google depuis un hôte au nom aléatoire en porte toute la signature. Un domaine à vous met le site hors de portée de ce classement.
 
