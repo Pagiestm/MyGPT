@@ -1,3 +1,9 @@
+# [1.7.0](https://github.com/Pagiestm/MyGPT/compare/v1.6.3...v1.7.0) (2026-10-14)
+
+### Features
+
+- **ops:** lire l'adresse de l'API dans une variable d'environnement ([7387c2f](https://github.com/Pagiestm/MyGPT/commit/7387c2fe2e236c0ba79a3dbe8a2743111b6992ec))
+
 ## [1.6.3](https://github.com/Pagiestm/MyGPT/compare/v1.6.2...v1.6.3) (2026-10-13)
 
 ### Bug Fixes
