@@ -1,5 +1,5 @@
 # Image de développement (server) — à builder depuis la racine (lockfile du workspace)
-FROM node:24-slim
+FROM node:26-slim
 
 WORKDIR /app
 ENV HUSKY=0

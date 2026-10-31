@@ -1,4 +1,4 @@
-FROM node:24-slim AS build
+FROM node:26-slim AS build
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json package-lock.json ./
@@ -8,7 +8,7 @@ RUN npm ci
 COPY server server
 RUN npm run build -w server
 
-FROM node:24-slim AS deps
+FROM node:26-slim AS deps
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json package-lock.json ./
@@ -16,7 +16,7 @@ COPY client/package.json client/
 COPY server/package.json server/
 RUN npm ci --omit=dev --ignore-scripts
 
-FROM node:24-slim AS runtime
+FROM node:26-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apt-get update \
