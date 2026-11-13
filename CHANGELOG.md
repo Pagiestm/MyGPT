@@ -1,3 +1,9 @@
+## [1.7.5](https://github.com/Pagiestm/MyGPT/compare/v1.7.4...v1.7.5) (2026-11-13)
+
+### Bug Fixes
+
+- **deps:** update all non-major dependencies ([#33](https://github.com/Pagiestm/MyGPT/issues/33)) ([a479845](https://github.com/Pagiestm/MyGPT/commit/a479845246bc42246c62481b90f65d96730cbf0a))
+
 ## [1.7.4](https://github.com/Pagiestm/MyGPT/compare/v1.7.3...v1.7.4) (2026-10-27)
 
 ### Bug Fixes
