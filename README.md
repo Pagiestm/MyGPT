@@ -35,7 +35,7 @@
 
 ## Démarrage
 
-**Prérequis :** Node.js ≥ 24.9, Docker, un navigateur WebGPU (Chrome, Edge, Safari 26+, Firefox récent). Aucune clé d'API.
+**Prérequis :** Node.js ≥ 26, Docker, un navigateur WebGPU (Chrome, Edge, Safari 26+, Firefox récent). Aucune clé d'API.
 
 ```bash
 git clone https://github.com/Pagiestm/MyGPT.git
