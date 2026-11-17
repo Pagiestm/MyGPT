@@ -1,3 +1,9 @@
+## [1.7.7](https://github.com/Pagiestm/MyGPT/compare/v1.7.6...v1.7.7) (2026-11-17)
+
+### Bug Fixes
+
+- **deps:** update dependency @nestjs/schedule to v12.0.4 ([#38](https://github.com/Pagiestm/MyGPT/issues/38)) ([3a047a0](https://github.com/Pagiestm/MyGPT/commit/3a047a06ac142187e45f961a488fdce199ae3cfd))
+
 ## [1.7.6](https://github.com/Pagiestm/MyGPT/compare/v1.7.5...v1.7.6) (2026-11-13)
 
 ### Bug Fixes
