@@ -1,3 +1,9 @@
+## [1.7.9](https://github.com/Pagiestm/MyGPT/compare/v1.7.8...v1.7.9) (2026-11-24)
+
+### Bug Fixes
+
+- **deps:** update dependency nodemailer to v10.6.1 ([#43](https://github.com/Pagiestm/MyGPT/issues/43)) ([63947c0](https://github.com/Pagiestm/MyGPT/commit/63947c0b1ca76c1e9eaad45941b14fdbf1ac9232))
+
 ## [1.7.8](https://github.com/Pagiestm/MyGPT/compare/v1.7.7...v1.7.8) (2026-11-19)
 
 ### Bug Fixes
